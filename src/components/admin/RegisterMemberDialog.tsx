@@ -2,7 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Phone, Plus, Shield } from "lucide-react";
+import { User, Mail, Phone, UserPlus, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -24,14 +24,14 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogTrigger asChild>
       <button className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105">
-        <Plus size={20} />
+        <UserPlus size={20} />
         <span>Add Member</span>
       </button>
     </DialogTrigger>
     <DialogContent className="max-w-md">
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Plus className="w-8 h-8 text-white" />
+          <UserPlus className="w-8 h-8 text-white" />
         </div>
         <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">Add New Member</DialogTitle>
         <DialogDescription>Register a new member to the association</DialogDescription>
