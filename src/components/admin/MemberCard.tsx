@@ -9,10 +9,10 @@ import StatusBadge from "./StatusBadge";
 import MemberInfoSection from "./MemberInfoSection";
 import MemberActionFooter from "./MemberActionFooter";
 
-// REMOVED import MemberDetailModal, as modal will be handled by parent (MembersPage)
-
+// ADDED: Accept currentUser as a prop
 interface MemberCardProps {
   member: Member;
+  currentUser: Member;
   onView: (member: Member) => void;
   onStatusToggle: (id: number) => void;
   onLoanToggle: (id: number) => void;
@@ -22,9 +22,9 @@ interface MemberCardProps {
   readOnly?: boolean;
 }
 
-// Remove local modal state from MemberCard, always use parent's onView
 const MemberCard: React.FC<MemberCardProps> = ({
   member,
+  currentUser,
   onView,
   onStatusToggle,
   onLoanToggle,
@@ -35,13 +35,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
 }) => {
   const [showEdit, setShowEdit] = React.useState(false);
 
-  // Always delegate to parent for viewing
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     onView(member);
   };
 
-  // Keyboard accessibility
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       onView(member);
@@ -97,10 +95,17 @@ const MemberCard: React.FC<MemberCardProps> = ({
             {member.name}
           </span>
           <span className="mt-1">
-            {/* Always show as text, never dropdown for regular members */}
-            <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[100px] flex justify-center mx-auto">
-              {member.role}
-            </div>
+            {/* Conditionally show dropdown for admin, text label for others */}
+            {currentUser?.role === "admin" && !readOnly ? (
+              <RoleSelect
+                member={member}
+                onRoleChange={onRoleChange}
+              />
+            ) : (
+              <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[100px] flex justify-center mx-auto">
+                {member.role}
+              </div>
+            )}
           </span>
         </div>
         <StatusBadge isActive={member.isActive} />
@@ -119,3 +124,4 @@ const MemberCard: React.FC<MemberCardProps> = ({
 };
 
 export default MemberCard;
+

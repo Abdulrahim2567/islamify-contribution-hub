@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -5,6 +6,7 @@ import { Member } from "../admin/types";
 import MemberDetailModal from "../admin/MemberDetailModal";
 import { readMembers } from "../../utils/membersStorage";
 
+// Accept currentUser as before
 interface MembersPageProps {
   currentUser: Member;
 }
@@ -83,6 +85,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
             >
               <MemberCard
                 member={member}
+                currentUser={currentUser}
                 onView={handleView}
                 onStatusToggle={noop}
                 onLoanToggle={noop}
