@@ -457,6 +457,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     onLoanToggle={toggleLoanEligibility}
                     onDelete={deleteMember}
                     onRoleChange={handleChangeRole}
+                    onEdit={handleEditMember}
                   />
                 ))}
               </div>
