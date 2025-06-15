@@ -17,6 +17,7 @@ import MemberTable from "./admin/MemberTable";
 import MemberDetailModal from "./admin/MemberDetailModal";
 import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import SuccessModal from "./admin/SuccessModal";
+import ContributionForm from "./admin/ContributionForm";
 import type { Member } from "./admin/types";
 
 // Mock data for members
@@ -82,6 +83,8 @@ const AdminDashboard = ({ user, onLogout }) => {
     role: 'member'
   });
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [showContributionModal, setShowContributionModal] = useState(false);
+  const [targetMemberId, setTargetMemberId] = useState<number|null>(null);
   const { toast } = useToast();
 
   const generatePassword = () => {
@@ -175,6 +178,33 @@ const AdminDashboard = ({ user, onLogout }) => {
       : accent === "violet"
       ? "from-violet-500 to-violet-700"
       : "from-emerald-500 to-emerald-700";
+
+  // Handle admin adding contribution to a member
+  const handleOpenAddContribution = () => {
+    setShowContributionModal(false);
+    setTargetMemberId(null);
+  };
+  const openContributionModalFor = (memberId: number) => {
+    setTargetMemberId(memberId);
+    setShowContributionModal(true);
+  };
+
+  const handleAddContribution = ({ amount, description }: { amount: number; description?: string }) => {
+    if (!targetMemberId) return;
+    setMembers(members =>
+      members.map(m =>
+        m.id === targetMemberId
+          ? { ...m, totalContributions: m.totalContributions + amount }
+          : m
+      )
+    );
+    setShowContributionModal(false);
+    setTargetMemberId(null);
+    toast({
+      title: "Contribution Added",
+      description: `Added ${amount.toLocaleString()} XAF contribution.`,
+    });
+  };
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
@@ -316,6 +346,19 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <Grid size={20} />
                   </button>
                 </div>
+                {/* Add Contribution Button */}
+                <button
+                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
+                  onClick={() => {
+                    // Open modal and let admin select a member in the modal
+                    setShowContributionModal(true);
+                    setTargetMemberId(null);
+                  }}
+                  type="button"
+                >
+                  <DollarSign size={18} />
+                  Add Contribution
+                </button>
                 <RegisterMemberDialog
                   open={showRegisterModal}
                   onOpenChange={setShowRegisterModal}
@@ -326,6 +369,56 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
+            {/* Contribution Modal (Step 1: Select member, Step 2: Form) */}
+            {showContributionModal && (
+              !targetMemberId ? (
+                // Member selection modal
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                  <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl animate-fade-in">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-bold">Select Member</h2>
+                      <button
+                        onClick={() => { setShowContributionModal(false); setTargetMemberId(null); }}
+                        className="text-gray-400 hover:text-gray-600"
+                        type="button"
+                        aria-label="Close"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {members
+                        .filter(m => m.role !== 'admin')
+                        .map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => setTargetMemberId(m.id)}
+                          className="w-full text-left px-4 py-3 border rounded-lg hover:bg-emerald-50 flex justify-between items-center"
+                        >
+                          <span className="font-semibold text-gray-900">{m.name}</span>
+                          <span className="text-xs text-gray-500">{m.email}</span>
+                        </button>
+                      ))}
+                      {members.filter(m => m.role !== 'admin').length === 0 && (
+                        <div className="py-6 text-center text-gray-400">
+                          No regular members found.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Contribution form for selected member
+                <ContributionForm
+                  memberName={members.find(m => m.id === targetMemberId)?.name ?? "Member"}
+                  onSubmit={handleAddContribution}
+                  onCancel={() => {
+                    setShowContributionModal(false);
+                    setTargetMemberId(null);
+                  }}
+                />
+              )
+            )}
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
