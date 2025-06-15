@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -22,18 +21,15 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  // Filter out demo admin and search
+  // Confirm: Filter out demo admin (always hide "admin@islamify.com")
   const filtered = members.filter(
     (m) =>
-      m.email !== "admin@islamify.com" && // Exclude demo admin
+      m.email !== "admin@islamify.com" &&
       (m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       m.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // All action handlers (noops for read-only directory, except onView)
-  const noop = () => {};
-
-  // View handler for card and table views, sets the currently selected member
+  // View handler (sets selected member for modal)
   const handleView = (member: Member) => setSelectedMember(member);
 
   return (
@@ -124,7 +120,7 @@ interface MTROProps {
   searchTerm: string;
 }
 
-// In table mode: make each member row clickable to view details
+// Table: each row is clickable (handled same as before, for "View" action)
 const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
