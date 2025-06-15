@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AdminDashboard from "@/components/AdminDashboard";
+import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
-import { useNavigate } from "react-router-dom";
 
 // Default admin user: always present as fallback if localstorage empty
 const DEMO_ADMIN = { id: 1, email: "admin@islamify.org", password: "admin123", role: "admin", name: "Admin User" };
@@ -31,61 +32,70 @@ function persistUsers(users: any[]) {
   localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(withAdmin));
 }
 
-interface IndexProps {
-  users: any[];
-  setUsers: (users: any[]) => void;
-  isLoggedIn: boolean;
-  currentUser: any;
-  onLogin: (user: any) => void;
-  onLogout: () => void;
-  updateUsers: (users: any[]) => void;
-}
-
-const Index = ({ users, setUsers, isLoggedIn, currentUser, onLogin, onLogout, updateUsers }: IndexProps) => {
+const Index = () => {
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  // If already logged in, redirect to dashboard
+  // On mount/load: get all users from localStorage (plus demo admin if needed)
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
-      navigate("/dashboard");
-    }
-  }, [isLoggedIn, currentUser, navigate]);
+    const localUsers = getPersistedUsers();
+    setUsers(localUsers);
+  }, []);
+
+  // Helper: write users to both state and localStorage
+  const updateUsers = (newUsers: any[]) => {
+    persistUsers(newUsers);
+    setUsers(getPersistedUsers());
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setShowPasswordChange(false);
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully",
+    });
+  };
 
   const handleLogin = (user: any) => {
-    onLogin(user);
-    navigate("/dashboard");
+    setCurrentUser(user);
+    setIsLoggedIn(true);
   };
 
   const requirePasswordChange = (user: any) => {
+    setCurrentUser(user);
     setShowPasswordChange(true);
-    // We'll handle the user in the password change form
   };
 
-  if (showPasswordChange) {
+  if (showPasswordChange && currentUser) {
     return (
       <ChangePasswordForm
         user={currentUser}
         users={users}
         setUsers={updateUsers}
         onSuccess={(updatedUser) => {
-          onLogin(updatedUser);
+          setCurrentUser(updatedUser);
+          setIsLoggedIn(true);
           setShowPasswordChange(false);
-          navigate("/dashboard");
         }}
         onCancel={() => {
           setShowPasswordChange(false);
-          onLogout();
-          navigate("/");
+          setIsLoggedIn(false);
         }}
       />
     );
   }
 
   if (isLoggedIn && currentUser) {
-    // This should redirect via useEffect, but just in case
-    return null;
+    return currentUser.role === "admin" ? (
+      <AdminDashboard user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users} />
+    ) : (
+      <MemberDashboard user={currentUser} onLogout={handleLogout} />
+    );
   }
 
   return (
@@ -164,3 +174,4 @@ const Index = ({ users, setUsers, isLoggedIn, currentUser, onLogin, onLogout, up
 };
 
 export default Index;
+
