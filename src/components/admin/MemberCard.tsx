@@ -32,10 +32,26 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const maxLoanAmount = member.totalContributions * 3;
   const [showDelete, setShowDelete] = useState(false);
 
+  // Handler to prevent footer buttons from bubbling to card click
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col hover:shadow-xl transition-shadow min-h-[300px]">
+    <div
+      className="group bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col hover:shadow-xl transition-shadow min-h-[300px] relative cursor-pointer"
+      onClick={() => onView(member)}
+      tabIndex={0}
+      role="button"
+      aria-label={`View details of ${member.name}`}
+      onKeyDown={e => {
+        if (e.key === "Enter" || e.key === " ") {
+          onView(member);
+        }
+      }}
+    >
       {/* Card content */}
-      <div className="flex flex-col items-center px-6 py-8 flex-1 animate-fade-in">
+      <div className="flex flex-col items-center px-6 py-8 flex-1">
         {/* Avatar */}
         <Avatar name={member.name} />
         {/* Name and status */}
@@ -98,40 +114,55 @@ const MemberCard: React.FC<MemberCardProps> = ({
         </div>
       </div>
       {/* Action Footer */}
-      <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-2">
+      <div
+        className="flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-2 py-1.5"
+        onClick={stopPropagation}
+      >
         {/* View */}
         <button
           onClick={() => onView(member)}
-          className="hover:bg-emerald-100 text-emerald-600 hover:text-emerald-900 rounded-full p-2 transition"
+          className="flex items-center gap-1 hover:bg-emerald-100 text-emerald-600 hover:text-emerald-900 rounded-lg py-1.5 px-3 text-sm font-medium transition"
           title="View details"
+          tabIndex={0}
+          type="button"
         >
           <Eye size={18} />
+          <span>View</span>
         </button>
         {/* Toggle Loan */}
         <button
           onClick={() => onLoanToggle(member.id)}
-          className={`hover:bg-indigo-100 rounded-full p-2 transition ${member.loanEligible ? "text-indigo-600" : "text-gray-400"}`}
+          className={`flex items-center gap-1 hover:bg-indigo-100 rounded-lg py-1.5 px-3 text-sm font-medium transition ${member.loanEligible ? "text-indigo-600" : "text-gray-400"}`}
           title={member.loanEligible ? "Disable Loan" : "Enable Loan"}
+          tabIndex={0}
+          type="button"
         >
           {member.loanEligible ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+          <span>{member.loanEligible ? "Loan Enabled" : "Loan Disabled"}</span>
         </button>
         {/* Toggle status */}
         <button
           onClick={() => onStatusToggle(member.id)}
-          className={`rounded-full hover:bg-orange-100 p-2 transition ${member.isActive ? "text-orange-600" : "text-green-600"}`}
+          className={`flex items-center gap-1 rounded-lg hover:bg-orange-100 py-1.5 px-3 text-sm font-medium transition ${member.isActive ? "text-orange-600" : "text-green-600"}`}
           title={member.isActive ? "Deactivate" : "Reactivate"}
+          tabIndex={0}
+          type="button"
         >
           <UserX size={18} />
+          <span>{member.isActive ? "Deactivate" : "Reactivate"}</span>
         </button>
         {/* Delete (only for non-admins) */}
         {member.role !== "admin" && (
           <>
             <button
               onClick={() => setShowDelete(true)}
-              className="rounded-full hover:bg-red-100 text-red-600 p-2 transition"
+              className="flex items-center gap-1 rounded-lg hover:bg-red-100 text-red-600 py-1.5 px-3 text-sm font-medium transition"
               title="Delete member"
+              tabIndex={0}
+              type="button"
             >
               <Trash2 size={18} />
+              <span>Delete</span>
             </button>
             <DeleteMemberDialog
               open={showDelete}
@@ -150,4 +181,3 @@ const MemberCard: React.FC<MemberCardProps> = ({
 };
 
 export default MemberCard;
-
