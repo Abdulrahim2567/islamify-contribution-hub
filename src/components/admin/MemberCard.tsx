@@ -17,6 +17,7 @@ interface MemberCardProps {
   onDelete: (id: number) => void;
   onRoleChange: (id: number, newRole: "member" | "admin") => void;
   onEdit?: (id: number, data: { name: string; email: string; phone: string }) => void;
+  readOnly?: boolean;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
@@ -27,6 +28,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   onDelete,
   onRoleChange,
   onEdit,
+  readOnly = false
 }) => {
   const [showEdit, setShowEdit] = useState(false);
 
@@ -46,7 +48,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
       {/* Top section: Avatar, name, role (as SELECT), status */}
       <div className="relative pt-6 pb-4 px-4 flex flex-col items-center bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600 dark:from-emerald-900 dark:to-emerald-700">
         {/* Edit Button in top left */}
-        {onEdit && (
+        {onEdit && !readOnly && (
           <>
             <button
               onClick={e => {
@@ -95,9 +97,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
         onStatusToggle={onStatusToggle}
         onLoanToggle={onLoanToggle}
         onDelete={onDelete}
+        readOnly={readOnly}
       />
     </div>
   );
 };
 
 export default MemberCard;
+

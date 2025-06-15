@@ -63,17 +63,26 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
       </div>
       {viewMode === "card" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((member) => (
-            <MemberCard
+          {filtered.map((member, idx) => (
+            <div
               key={member.id}
-              member={member}
-              onView={noop}
-              onStatusToggle={noop}
-              onLoanToggle={noop}
-              onDelete={noop}
-              onRoleChange={noop}
-              // Do not pass onEdit, disables Edit dialog
-            />
+              className="animate-fade-in"
+              style={{
+                animationDelay: `${idx * 60}ms`,
+                animationFillMode: "both"
+              }}
+            >
+              <MemberCard
+                member={member}
+                onView={noop}
+                onStatusToggle={noop}
+                onLoanToggle={noop}
+                onDelete={noop}
+                onRoleChange={noop}
+                readOnly={true} {/* readOnly disables actions in MemberActionFooter */}
+                // Do not pass onEdit, disables Edit dialog
+              />
+            </div>
           ))}
         </div>
       ) : (
@@ -130,3 +139,4 @@ const MembersTableReadOnly = ({ members }: MTROProps) => (
 );
 
 export default MembersPage;
+
