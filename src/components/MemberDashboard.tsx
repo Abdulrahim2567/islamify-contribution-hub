@@ -37,6 +37,8 @@ const MemberDashboard = ({ user, onLogout }) => {
       const storedActivities = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
       if (storedActivities) {
         const allActivities = JSON.parse(storedActivities);
+        // DEBUG: Log all activities found for inspection
+        console.log("All islamify_recent_activities:", allActivities);
         // Only contributions for this member
         const filtered = allActivities
           .filter(
@@ -45,19 +47,24 @@ const MemberDashboard = ({ user, onLogout }) => {
               typeof a.memberId === "number" &&
               a.memberId === user.id
           );
+        // DEBUG: Log activities filtered for this user
+        console.log("Filtered activities for member", user.id, filtered);
         setMemberActivities(filtered);
       } else {
         setMemberActivities([]);
       }
-    } catch {
+    } catch (err) {
+      console.log("Failed to read member activities", err);
       setMemberActivities([]);
     }
   }, [user.id, tab]);
 
-  // Compute stats from real contributions
+  // Always use sum from activities for display, to match what admin wrote
   const totalContributions = memberActivities.reduce((sum, a) => sum + (a.amount || 0), 0);
+
   const registrationFee = 5000;
-  const maxLoanAmount = (thisMember?.totalContributions || totalContributions) * 3;
+  // For loan, also use activity sum instead of thisMember?.totalContributions
+  const maxLoanAmount = totalContributions * 3;
   const canApplyForLoan = !!thisMember?.loanEligible;
 
   return (
@@ -186,9 +193,18 @@ const MemberDashboard = ({ user, onLogout }) => {
             <MemberContributionHistory
               memberId={user.id}
               memberName={user.name}
-              // default behavior is to read from localStorage again, but you can also pass activities if needed
-              // activities={memberActivities} // Optionally inject
+              activities={memberActivities} // <-- Pass filtered activities directly for reliability!
             />
+            {/* Diagnostics */}
+            <div className="mt-4 text-xs text-gray-400">
+              <div>Loaded <b>{memberActivities.length}</b> activity records.</div>
+              {memberActivities.length > 0 && (
+                <div>
+                  First: {JSON.stringify(memberActivities[0], null, 2)}
+                </div>
+              )}
+              <div className="hidden">{JSON.stringify(memberActivities)}</div>
+            </div>
           </div>
         </div>
       )}
