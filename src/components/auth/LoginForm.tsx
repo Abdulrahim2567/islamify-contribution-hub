@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { LogIn } from "lucide-react";
+import { LogIn, Mail, Lock } from "lucide-react";
 
 interface LoginFormProps {
   users: any[];
@@ -86,10 +86,13 @@ const LoginForm = ({
                 Email
               </Label>
               <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-500">
+                  <Mail className="w-5 h-5" />
+                </span>
                 <Input
                   id="email"
                   type="email"
-                  className="pl-3"
+                  className="pl-10"
                   value={loginForm.email}
                   onChange={(e) =>
                     setLoginForm((prev) => ({
@@ -108,10 +111,13 @@ const LoginForm = ({
                 Password
               </Label>
               <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                  <Lock className="w-5 h-5" />
+                </span>
                 <Input
                   id="password"
                   type="password"
-                  className="pl-3"
+                  className="pl-10"
                   value={loginForm.password}
                   onChange={(e) =>
                     setLoginForm((prev) => ({
