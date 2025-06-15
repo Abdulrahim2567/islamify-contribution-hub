@@ -23,6 +23,7 @@ import { readMembers, writeMembers } from "../utils/membersStorage";
 import AdminStatsCards from "./admin/AdminStatsCards";
 import AdminRecentActivity from "./admin/AdminRecentActivity";
 import AdminSettingsForm from "./admin/AdminSettingsForm";
+import AdminContributionsTable from "./admin/AdminContributionsTable";
 import {
   Pagination,
   PaginationContent,
@@ -375,9 +376,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const totalContributions = Object.values(memberContributionMap).reduce((sum, v) => sum + v, 0);
   const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
 
+  // Add contributions tab for admins only
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: DollarSign },
     { id: 'members', label: 'Members', icon: Users },
+    ...(user.role === "admin"
+      ? [{ id: 'contributions', label: 'Manage Contributions', icon: History }]
+      : []),
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -779,6 +784,12 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           </>
         )}
 
+        {currentView === 'contributions' && user.role === "admin" && (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <AdminContributionsTable />
+          </React.Suspense>
+        )}
+
         {currentView === 'settings' && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8">
@@ -805,4 +816,5 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   );
 };
 
+import AdminContributionsTable from "./admin/AdminContributionsTable";
 export default AdminDashboard;
