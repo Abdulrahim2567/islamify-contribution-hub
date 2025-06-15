@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
-import { ToggleLeft, ToggleRight, Eye, UserX, Trash2 } from "lucide-react";
+import { ToggleLeft, ToggleRight, Eye, Trash2, Edit } from "lucide-react";
 import { Member } from "./types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
+import EditMemberDialog from "./EditMemberDialog";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 interface MemberTableProps {
@@ -13,6 +14,7 @@ interface MemberTableProps {
   onDelete: (id: number) => void;
   searchTerm: string;
   onRoleChange: (id: number, newRole: "member" | "admin") => void;
+  onEdit?: (id: number, data: { name: string; email: string; phone: string }) => void; // Now optional, backward compatible
 }
 
 const MemberTable: React.FC<MemberTableProps> = ({
@@ -23,13 +25,20 @@ const MemberTable: React.FC<MemberTableProps> = ({
   onDelete,
   searchTerm,
   onRoleChange,
+  onEdit,
 }) => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editMember, setEditMember] = useState<Member | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEditSave = (id: number, data: { name: string; email: string; phone: string }) => {
+    if (onEdit) onEdit(id, data);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -49,7 +58,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredMembers.map((member) => {
               const maxLoanAmount = member.totalContributions * 3;
-              
+
               return (
                 <tr key={member.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -114,10 +123,20 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     <button
                       onClick={() => onView(member)}
                       className="text-emerald-600 hover:text-emerald-900"
+                      aria-label="View member"
                     >
                       <Eye size={16} />
                     </button>
-                    {/* Restore delete button for non-admins only */}
+                    <button
+                      onClick={() => {
+                        setEditMember(member);
+                        setEditOpen(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-900"
+                      aria-label="Edit member"
+                    >
+                      <Edit size={16} />
+                    </button>
                     {member.role !== 'admin' && (
                       <>
                         <button
@@ -145,6 +164,15 @@ const MemberTable: React.FC<MemberTableProps> = ({
           </tbody>
         </table>
       </div>
+      <EditMemberDialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open);
+          if (!open) setEditMember(null);
+        }}
+        member={editMember}
+        onSave={handleEditSave}
+      />
     </div>
   );
 };

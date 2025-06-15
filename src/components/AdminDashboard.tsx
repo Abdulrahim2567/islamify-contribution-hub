@@ -248,6 +248,21 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
   };
 
+  // Edit member handler
+  const handleEditMember = (id: number, data: { name: string; email: string; phone: string }) => {
+    setMembers(members =>
+      members.map(m =>
+        m.id === id
+          ? { ...m, ...data }
+          : m
+      )
+    );
+    toast({
+      title: "Member Updated",
+      description: "Member details updated successfully",
+    });
+  };
+
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
       {/* Header */}
@@ -454,6 +469,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 onDelete={deleteMember}
                 searchTerm={searchTerm}
                 onRoleChange={handleChangeRole}
+                onEdit={handleEditMember}
               />
             )}
           </>
