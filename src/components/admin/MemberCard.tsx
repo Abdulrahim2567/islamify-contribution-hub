@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Eye, ToggleRight, ToggleLeft, UserX, Trash2, Mail, Phone, User, CreditCard, Edit } from "lucide-react";
 import { Member } from "./types";
@@ -244,4 +243,3 @@ const MemberCard: React.FC<MemberCardProps> = ({
 };
 
 export default MemberCard;
-
