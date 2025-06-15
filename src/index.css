@@ -198,25 +198,19 @@
   input[type="url"]:focus-visible,
   select:focus-visible,
   .shadcn-ui-input:focus-visible {
+    /* Remove outline and box-shadow, and set border as gradient */
     outline: none !important;
-    border-color: transparent !important;
-    background-clip: padding-box;
-  }
-  input:focus-visible,
-  textarea:focus-visible,
-  .input:focus-visible,
-  .shadcn-ui-input:focus-visible {
-    /* Simulated gradient border via border-image */
-    position: relative;
-    z-index: 1;
+    box-shadow: none !important;
     border-width: 2.5px;
     border-style: solid;
     border-radius: 0.5rem;
     border-image: linear-gradient(90deg, #10b981 0%, #2563eb 100%);
     border-image-slice: 1;
-    /* Remove extra shadows to avoid double outline */
-    box-shadow: none;
+    border-color: transparent !important;
+    background-clip: padding-box;
     transition: border-color 0.2s, border-image 0.2s;
+    position: relative;
+    z-index: 1;
   }
 }
 
