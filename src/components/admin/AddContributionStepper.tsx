@@ -68,97 +68,130 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   };
 
   // Animation classes for steps
-  const animationClass =
-    "transition-all duration-300 ease-in-out will-change-transform";
+  const animationClass = "transition-all duration-300 ease-in-out will-change-transform";
+
+  // Close & reset logic
+  const handleClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setStep(1);
+      setSelectedMember(null);
+      setFormData({ amount: "", description: "" });
+      setPage(0);
+    }, 300);
+  };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-0 relative overflow-hidden animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-0 relative overflow-hidden animate-fade-in">
+        {/* Close Button */}
         <button
-          onClick={() => {
-            onOpenChange(false);
-            setTimeout(() => {
-              setStep(1);
-              setSelectedMember(null);
-              setFormData({ amount: "", description: "" });
-              setPage(0);
-            }, 300);
-          }}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 z-10"
           type="button"
           aria-label="Close"
         >
           <X size={24} />
         </button>
-        {/* Step indicators */}
-        <div className="flex justify-center items-center gap-2 pt-8 mb-6">
-          <div
-            className={
-              "w-4 h-4 rounded-full transition-all duration-300 " +
-              (step === 1
-                ? "bg-emerald-500 scale-110"
-                : "bg-gray-300 opacity-70")
-            }
-          ></div>
-          <div
-            className={
-              "w-4 h-4 rounded-full transition-all duration-300 " +
-              (step === 2
-                ? "bg-emerald-500 scale-110"
-                : "bg-gray-300 opacity-70")
-            }
-          ></div>
+
+        {/* Step progress indicator */}
+        <div className="flex flex-col items-center pt-8 mb-5">
+          <div className="w-full flex items-center justify-center mb-3">
+            <div className="flex items-center relative gap-2 w-48">
+              {/* Step 1 */}
+              <div className={`rounded-full z-10 flex items-center justify-center font-bold border-2 ${
+                  step === 1
+                    ? "bg-white border-emerald-500 text-emerald-600 shadow"
+                    : "bg-white border-gray-200 text-gray-400"
+                } transition-colors w-10 h-10`}>
+                1
+              </div>
+              {/* Connecting line */}
+              <div className="absolute left-10 top-1/2 -translate-y-1/2 w-24 h-1">
+                <div className="w-full h-1 rounded transition-all bg-gray-200">
+                  <div
+                    className={`h-1 rounded transition-all duration-300 ${step === 2 ? "bg-emerald-500 w-full" : "bg-emerald-200 w-1/3"}`}
+                    style={{
+                      width: step === 2 ? "100%" : "33%",
+                      transition: "width 0.3s, background-color 0.3s",
+                    }}
+                  ></div>
+                </div>
+              </div>
+              {/* Step 2 */}
+              <div className={`rounded-full z-10 flex items-center justify-center font-bold border-2 ${
+                  step === 2
+                    ? "bg-white border-emerald-500 text-emerald-600 shadow"
+                    : "bg-white border-gray-200 text-gray-400"
+                } transition-colors w-10 h-10`}>
+                2
+              </div>
+            </div>
+          </div>
+          <div className="flex w-48 justify-between text-xs font-medium select-none">
+            <span className={`${step === 1 ? "text-emerald-600" : "text-gray-400"}`}>Select Member</span>
+            <span className={`${step === 2 ? "text-emerald-600" : "text-gray-400"}`}>Contribution</span>
+          </div>
         </div>
+
         {/* Step 1: Select member */}
         <div
           className={`${animationClass} ${
-            step === 1 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-full absolute"
+            step === 1
+              ? "opacity-100 translate-x-0 relative"
+              : "opacity-0 -translate-x-full absolute pointer-events-none"
           } w-full px-6 pb-6`}
-          style={{ minHeight: 350 }}
+          style={{ minHeight: 376 }}
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-5 text-center">Select Member</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Select Member</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             {pageMembers.map((member) => (
               <button
                 key={member.id}
-                className={`flex items-center gap-3 border rounded-lg px-3 py-3 bg-white shadow hover:bg-emerald-50 transition-colors group w-full ${selectedMember?.id === member.id ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-gray-200'}`}
+                className={`flex flex-col items-center gap-2 border rounded-xl bg-white shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 ${
+                  selectedMember?.id === member.id
+                    ? "border-emerald-500 ring-2 ring-emerald-200"
+                    : "border-gray-200"
+                }`}
                 onClick={() => handleSelectMember(member)}
                 type="button"
                 tabIndex={0}
               >
-                <span className="bg-emerald-100 rounded-full w-10 h-10 flex items-center justify-center">
-                  <User className="text-emerald-500" size={22}/>
+                <span className="bg-emerald-100 rounded-full w-11 h-11 flex items-center justify-center transition-all">
+                  <User className="text-emerald-500" size={24} />
                 </span>
-                <span className="font-semibold text-gray-900 truncate text-base">{member.name}</span>
+                <span className="font-medium text-gray-900 truncate text-base">
+                  {member.name}
+                </span>
               </button>
             ))}
           </div>
-          {/* Pagination controls */}
-          <div className="flex items-center justify-between mt-4">
+          {/* Clean Pagination */}
+          <div className="flex justify-center gap-1 mb-3">
             <button
-              className="flex items-center gap-1 text-gray-500 disabled:opacity-50"
-              disabled={page <= 0}
+              className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
+              disabled={page === 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               type="button"
+              aria-label="Previous page"
             >
               <ArrowLeft size={18} />
-              Prev
             </button>
-            <div className="text-sm text-gray-400">{`Page ${page + 1} of ${totalPages === 0 ? 1 : totalPages}`}</div>
+            <span className="px-3 py-1 text-gray-500 text-sm select-none">{`Page ${page + 1} of ${totalPages === 0 ? 1 : totalPages}`}</span>
             <button
-              className="flex items-center gap-1 text-gray-500 disabled:opacity-50"
+              className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               type="button"
+              aria-label="Next page"
             >
-              Next
               <ArrowRight size={18} />
             </button>
           </div>
           {/* Next step */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end mt-4">
             <button
               className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
               disabled={!selectedMember}
@@ -172,17 +205,19 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
         {/* Step 2: Contribution form */}
         <div
           className={`${animationClass} ${
-            step === 2 ? "opacity-100 translate-x-0 absolute top-0 left-0 w-full h-full bg-white px-6 pb-6" : "opacity-0 translate-x-full absolute"
+            step === 2
+              ? "opacity-100 translate-x-0 absolute top-0 left-0 w-full h-full bg-white px-6 pb-6"
+              : "opacity-0 translate-x-full absolute pointer-events-none"
           }`}
-          style={{ minHeight: 350 }}
+          style={{ minHeight: 376 }}
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-3 text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
             Add Contribution
           </h2>
           {selectedMember && (
             <div className="flex flex-col items-center mb-4">
               <span className="bg-emerald-100 rounded-full w-12 h-12 flex items-center justify-center mb-1">
-                <User className="text-emerald-500" size={25}/>
+                <User className="text-emerald-500" size={25} />
               </span>
               <span className="font-bold text-gray-900">{selectedMember.name}</span>
             </div>
@@ -227,13 +262,13 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                 rows={3}
               />
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 pt-2">
               <button
                 type="button"
                 onClick={handleBack}
                 className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
               >
-                <ArrowLeft size={18}/>
+                <ArrowLeft size={18} />
                 Back
               </button>
               <button
