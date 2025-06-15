@@ -191,7 +191,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          {/* Status toggle styled like Loan Eligible */}
+          {/* Status toggle styled like Loan Eligible, text: Active/Inactive, green/red */}
           <button
             onClick={() => toggleMemberStatus(member.id)}
             className="flex items-center space-x-1"
@@ -199,10 +199,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             {member.isActive ? (
               <ToggleRight className="w-5 h-5 text-green-600" />
             ) : (
-              <ToggleLeft className="w-5 h-5 text-gray-400" />
+              <ToggleLeft className="w-5 h-5 text-red-600" />
             )}
-            <span className={`text-xs ${member.isActive ? "text-green-600" : "text-gray-400"}`}>
-              {member.isActive ? "Enabled" : "Disabled"}
+            <span className={`text-xs ${member.isActive ? "text-green-600" : "text-red-600"}`}>
+              {member.isActive ? "Active" : "Inactive"}
             </span>
           </button>
           
@@ -571,6 +571,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                               {maxLoanAmount.toLocaleString()} XAF
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
+                              {/* Status toggle: text Active/Inactive, green/red */}
                               <button
                                 onClick={() => toggleMemberStatus(member.id)}
                                 className="flex items-center space-x-1"
@@ -578,10 +579,10 @@ const AdminDashboard = ({ user, onLogout }) => {
                                 {member.isActive ? (
                                   <ToggleRight className="w-5 h-5 text-green-600" />
                                 ) : (
-                                  <ToggleLeft className="w-5 h-5 text-gray-400" />
+                                  <ToggleLeft className="w-5 h-5 text-red-600" />
                                 )}
-                                <span className={`text-xs ${member.isActive ? 'text-green-600' : 'text-gray-400'}`}>
-                                  {member.isActive ? 'Enabled' : 'Disabled'}
+                                <span className={`text-xs ${member.isActive ? "text-green-600" : "text-red-600"}`}>
+                                  {member.isActive ? "Active" : "Inactive"}
                                 </span>
                               </button>
                             </td>
