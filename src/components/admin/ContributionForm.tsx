@@ -44,7 +44,7 @@ const ContributionForm: React.FC<ContributionFormProps> = ({
               Amount (XAF)
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
               <input
                 type="number"
                 value={formData.amount}
