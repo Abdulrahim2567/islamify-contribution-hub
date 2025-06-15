@@ -16,8 +16,13 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose }
     "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=10b981&color=fff&size=128";
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50
+      animate-fade-in">
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col
+        animate-scale-in"
+        // The modal can be animated by adding scale/fade transition utilities
+      >
         {/* Close button (absolute, top-right) */}
         <button
           onClick={onClose}
