@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +37,8 @@ const Index = () => {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const { toast } = useToast();
 
   // On mount/load: merge users from localStorage with MOCK_USERS, avoid duplicate IDs/emails.
@@ -90,10 +91,21 @@ const Index = () => {
 
   const handlePasswordChange = (e) => {
     e.preventDefault();
+    setPasswordError("");
     if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters long");
       toast({
         title: "Password Too Short",
         description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      toast({
+        title: "Passwords Do Not Match",
+        description: "Please ensure the passwords match.",
         variant: "destructive",
       });
       return;
@@ -107,6 +119,8 @@ const Index = () => {
     setCurrentUser(updatedUser);
     setIsLoggedIn(true);
     setShowPasswordChange(false);
+    setNewPassword("");
+    setConfirmPassword("");
     toast({
       title: "Password Updated",
       description: "Your password has been changed successfully",
@@ -119,6 +133,7 @@ const Index = () => {
     setLoginForm({ email: "", password: "" });
     setShowPasswordChange(false);
     setNewPassword("");
+    setConfirmPassword("");
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully",
@@ -140,6 +155,10 @@ const Index = () => {
   // }, []);
 
   if (showPasswordChange) {
+    const passwordMismatch = newPassword !== confirmPassword && confirmPassword.length > 0;
+    const passwordTooShort = newPassword.length > 0 && newPassword.length < 6;
+    const canUpdate = newPassword.length >= 6 && newPassword === confirmPassword;
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md animate-fade-in">
@@ -155,12 +174,40 @@ const Index = () => {
                   id="newPassword"
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordError("");
+                  }}
                   placeholder="Enter new password"
                   required
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPasswordError("");
+                  }}
+                  placeholder="Re-enter new password"
+                  required
+                />
+              </div>
+              {(passwordError || passwordMismatch || passwordTooShort) && (
+                <div className="text-red-600 text-sm">
+                  {passwordError ||
+                    (passwordMismatch && "Passwords do not match") ||
+                    (passwordTooShort && "Password must be at least 6 characters long")}
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white hover:from-green-600 hover:to-blue-700 transition-colors"
+                disabled={!canUpdate}
+              >
                 Update Password
               </Button>
             </form>
@@ -297,4 +344,3 @@ const Index = () => {
 export default Index;
 
 // NOTE: This file is now over 250 lines. You should consider refactoring it into smaller files for maintainability.
-
