@@ -16,8 +16,8 @@ export default function DashboardPage(props: any) {
         <AppSidebar current="dashboard" />
         <main className="flex flex-1 flex-col">
           {user.role === "admin"
-            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} tab="dashboard"/>
-            : <MemberDashboard user={user} onLogout={onLogout} tab="dashboard"/>
+            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} />
+            : <MemberDashboard user={user} onLogout={onLogout} />
           }
         </main>
       </div>

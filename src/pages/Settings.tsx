@@ -14,8 +14,8 @@ export default function SettingsPage(props: any) {
         <AppSidebar current="settings" />
         <main className="flex flex-1 flex-col">
           {user.role === "admin"
-            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} tab="settings"/>
-            : <MemberDashboard user={user} onLogout={onLogout} tab="settings"/>
+            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} />
+            : <MemberDashboard user={user} onLogout={onLogout} />
           }
         </main>
       </div>

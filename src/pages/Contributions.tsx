@@ -14,8 +14,8 @@ export default function ContributionsPage(props: any) {
         <AppSidebar current="contributions" />
         <main className="flex flex-1 flex-col">
           {user.role === "admin"
-            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} tab="contributions"/>
-            : <MemberDashboard user={user} onLogout={onLogout} tab="contributions"/>
+            ? <AdminDashboard user={user} users={users} onLogout={onLogout} onNewUser={onNewUser} />
+            : <MemberDashboard user={user} onLogout={onLogout} />
           }
         </main>
       </div>

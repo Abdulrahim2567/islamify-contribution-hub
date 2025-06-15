@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, LogIn } from "lucide-react";
@@ -6,7 +7,7 @@ import AdminDashboard from "@/components/AdminDashboard";
 import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
-import { AdminDashboardWithSidebar, MemberDashboardWithSidebar } from "@/components/DashboardWithSidebar";
+// Removed import { AdminDashboardWithSidebar, MemberDashboardWithSidebar } from "@/components/DashboardWithSidebar";
 import { useNavigate } from "react-router-dom";
 import DashboardPage from "@/pages/Dashboard";
 import MembersPage from "@/pages/Members";
