@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { readMembers } from "../utils/membersStorage";
 import MemberContributionHistory from "./member/MemberContributionHistory";
+import LoanApplication from "./member/LoanApplication";
+import { formatCurrency } from "../utils/calculations";
 
 // Mock data for member contributions
 const MOCK_CONTRIBUTIONS = [
@@ -24,15 +26,20 @@ const MemberDashboard = ({ user, onLogout }) => {
   const [contributions] = useState(MOCK_CONTRIBUTIONS);
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "members">("dashboard");
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState([]);
+  const [showLoanModal, setShowLoanModal] = useState(false);
 
   useEffect(() => {
     setMembers(readMembers());
   }, []);
 
+  // Find myself in members array for up-to-date eligibility/fields
+  const thisMember = members.find((m) => m.id === user.id);
+
   const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
-  const maxLoanAmount = totalContributions * 3;
+  const maxLoanAmount = (thisMember?.totalContributions || 0) * 3;
   const registrationFee = 5000;
+  const canApplyForLoan = !!thisMember?.loanEligible;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,7 +135,34 @@ const MemberDashboard = ({ user, onLogout }) => {
             </Card>
           </div>
 
-          {/* Modern Contribution History (now using activities data) */}
+          {canApplyForLoan && (
+            <div className="flex justify-end mb-6">
+              <button
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-indigo-600 hover:to-purple-600 transition-all"
+                onClick={() => setShowLoanModal(true)}
+              >
+                Apply For Loan
+              </button>
+            </div>
+          )}
+
+          {showLoanModal && (
+            <LoanApplication
+              memberId={user.id.toString()}
+              maxAmount={maxLoanAmount}
+              onSubmit={data => {
+                setShowLoanModal(false);
+                toast({
+                  title: "Loan Application Submitted",
+                  description: `Your application for ${formatCurrency(data.amount)} is pending.`,
+                });
+                // Could persist or push to admin activity here if desired
+              }}
+              onCancel={() => setShowLoanModal(false)}
+            />
+          )}
+
+          {/* Modern Contribution History (activities data) */}
           <div className="mt-8">
             <MemberContributionHistory memberId={user.id} memberName={user.name} />
           </div>
