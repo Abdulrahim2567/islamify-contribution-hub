@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DollarSign, X, ArrowRight, ArrowLeft, User } from "lucide-react";
 import { Member } from "./types";
@@ -291,15 +290,17 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                 >
+                  <ArrowLeft size={20} />
                   Back
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
                 >
                   Add Contribution
+                  <ArrowRight size={20} />
                 </button>
               </div>
             </form>
