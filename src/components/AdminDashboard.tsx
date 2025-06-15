@@ -85,6 +85,11 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [showContributionModal, setShowContributionModal] = useState(false);
   const [targetMemberId, setTargetMemberId] = useState<number|null>(null);
+  const [settings, setSettings] = useState({
+    associationName: "Islamify",
+    registrationFee: 5000,
+    maxLoanMultiplier: 3,
+  });
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -486,8 +491,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  // Add your settings update logic here (e.g. call onUpdateSettings)
-                  // If using state, add it here, else keep as a placeholder.
+                  // Settings update logic placeholder
                 }}
                 className="space-y-6"
               >
@@ -497,7 +501,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                   </label>
                   <input
                     type="text"
-                    // value and onChange logic here; omitted as settings are not fully defined in the current file
+                    value={settings.associationName}
+                    onChange={(e) => setSettings(s => ({ ...s, associationName: e.target.value }))}
                     className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
                     required
                   />
@@ -508,6 +513,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                   </label>
                   <input
                     type="number"
+                    value={settings.registrationFee}
+                    onChange={(e) => setSettings(s => ({ ...s, registrationFee: Number(e.target.value) }))}
                     className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
                     required
                     min="0"
@@ -519,6 +526,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                   </label>
                   <input
                     type="number"
+                    value={settings.maxLoanMultiplier}
+                    onChange={(e) => setSettings(s => ({ ...s, maxLoanMultiplier: Number(e.target.value) }))}
                     className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
                     required
                     min="1"
