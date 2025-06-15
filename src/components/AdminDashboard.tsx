@@ -449,6 +449,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           : m
       )
     );
+    // Log in admin activities
     persistAndSetActivities({
       id: Date.now() + Math.random(),
       timestamp: getNowString(),
@@ -459,6 +460,35 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       adminEmail: user.email,
       adminRole: user.role,
     });
+
+    // ------------ IMPORTANT PART: update islamify_recent_activities for member dashboards ------------
+
+    // Prepare activity object for member dashboard
+    const memberActivity = {
+      type: "contribution",
+      amount,
+      memberId,
+      memberName: member?.name || "",
+      date,
+      performedBy: user.name,
+      description: description || "",
+    };
+
+    // Read recent activities (as member dashboard expects)
+    const MEMBER_ACTIVITY_KEY = "islamify_recent_activities";
+    let recentActivities: any[] = [];
+    try {
+      const stored = localStorage.getItem(MEMBER_ACTIVITY_KEY);
+      if (stored) {
+        recentActivities = JSON.parse(stored);
+      }
+    } catch {}
+    // Prepend new activity, keep to a max size if desired
+    recentActivities = [memberActivity, ...recentActivities];
+    localStorage.setItem(MEMBER_ACTIVITY_KEY, JSON.stringify(recentActivities));
+
+    // ------------ END IMPORTANT PART ------------
+
     setShowAddContributionStepper(false);
     setTargetMemberId(null);
     toast({
