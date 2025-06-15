@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Phone, Pencil } from "lucide-react";
+import { User, Mail, Phone, Pencil, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { Member } from "./types";
 
@@ -46,6 +46,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Pencil className="w-8 h-8 text-white" />
@@ -56,6 +57,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
           </p>
         </div>
 
+        {/* Info Banner */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-emerald-800">
             <strong>Email and phone should be unique.</strong>
@@ -64,6 +66,8 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
             Information will take effect immediately.
           </p>
         </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Full Name</Label>
@@ -122,8 +126,9 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600"
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 flex items-center justify-center gap-2"
             >
+              <Check size={18} className="mr-1" />
               Save Changes
             </Button>
           </div>
@@ -134,4 +139,3 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 };
 
 export default EditMemberDialog;
-
