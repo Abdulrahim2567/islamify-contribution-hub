@@ -73,10 +73,13 @@ const AdminContributionsTable: React.FC = () => {
     if (idx !== -1 && editing) {
       const list = [...contributions];
       const oldRecord = list[idx];
+      // Debug out the current and updated amounts
+      console.log("[edit] Found contribution idx:", idx, "old:", oldRecord, "updated:", updated);
 
       // Update contribution list (member activities)
       list[idx] = updated;
       saveContributions(list);
+      console.log("[edit] Contributions after update:", list);
 
       // --- Update the member's totalContributions in islamify_members ---
       try {
@@ -87,11 +90,20 @@ const AdminContributionsTable: React.FC = () => {
         const mIdx = members.findIndex((m: any) => m.id === editing.memberId);
         if (mIdx !== -1) {
           // Reduce old amount, add new amount for this specific record edit
-          members[mIdx].totalContributions =
-            (members[mIdx].totalContributions || 0)
-            - (oldRecord.amount || 0)
-            + (updated.amount || 0);
+          const before = members[mIdx].totalContributions || 0;
+          const after = before - (oldRecord.amount || 0) + (updated.amount || 0);
+          members[mIdx].totalContributions = after;
           localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
+          console.log(
+            "[edit] Updated member totalContributions:",
+            members[mIdx].name,
+            "before:", before,
+            "oldDelta:", oldRecord.amount,
+            "newDelta:", updated.amount,
+            "after:", after
+          );
+        } else {
+          console.log("[edit] Could not find member to update in islamify_members for id:", editing.memberId);
         }
       } catch (err) {
         // Ignore member update errors
@@ -110,24 +122,54 @@ const AdminContributionsTable: React.FC = () => {
           adminRole: "admin",
         };
         const nowTime = new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-        adminActivities.unshift({
+        const activityObj = {
           id: Date.now() + Math.random(),
           timestamp: nowTime,
           type: "edit_contribution",
           text: `Edited contribution for "${updated.memberName}", new amount: ${updated.amount.toLocaleString()} XAF.`,
           color: "blue",
           ...adminInfo,
-        });
+        };
+        adminActivities.unshift(activityObj);
         localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(adminActivities));
+        console.log("[edit] Added to islamify_admin_activities:", activityObj);
       } catch (err) {
         // Ignore logging errors
         console.log("Failed to log admin edit_contribution activity", err);
+      }
+
+      // --- Optionally, ensure islamify_recent_activities is also consistent with updates ---
+      try {
+        const RECENT_ACTIVITIES_KEY = "islamify_recent_activities";
+        const recentsRaw = localStorage.getItem(RECENT_ACTIVITIES_KEY);
+        let recents = recentsRaw ? JSON.parse(recentsRaw) : [];
+        // Update the matching contribution in recent activities
+        // Find by date, memberId, and optionally description
+        const findIdx = recents.findIndex(
+          (a: any) =>
+            a.type === "contribution" &&
+            a.memberId === updated.memberId &&
+            a.date === editing?.date
+        );
+        if (findIdx !== -1) {
+          console.log("[edit] Updating islamify_recent_activities at", findIdx, "old:", recents[findIdx]);
+          recents[findIdx] = { ...recents[findIdx], ...updated };
+          localStorage.setItem(RECENT_ACTIVITIES_KEY, JSON.stringify(recents));
+          console.log("[edit] islamify_recent_activities after update:", recents[findIdx]);
+        } else {
+          console.log("[edit] No matching activity found in islamify_recent_activities, maybe new record?");
+        }
+      } catch (err) {
+        // Ignore logging errors
+        console.log("Failed to update islamify_recent_activities on edit", err);
       }
 
       toast({
         title: "Contribution Updated",
         description: `Contribution for ${updated.memberName} updated.`,
       });
+    } else {
+      console.log("[edit] Could not find editing record when saving, idx:", idx, "editing:", editing);
     }
     setEditOpen(false);
     setEditing(null);
