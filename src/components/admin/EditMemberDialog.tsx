@@ -72,7 +72,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Full Name</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
               <Input
                 className="pl-10"
                 name="name"
@@ -87,7 +87,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Email Address</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
               <Input
                 name="email"
                 type="email"
@@ -103,7 +103,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
               <Input
                 name="phone"
                 className="pl-10"
