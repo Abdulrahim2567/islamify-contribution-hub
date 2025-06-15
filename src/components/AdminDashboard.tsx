@@ -327,10 +327,49 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- Load admin activities, including contribution records ---
+  const [activities, setActivities] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Every time activities changes, update localStorage
+  useEffect(() => {
+    localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
+  }, [activities]);
+  
+  // --- Calculate real contribution totals via activities ---
+  function getRealMemberContributions(memberId: number): number {
+    // Only count "contribution" type activities for this member
+    return activities
+      .filter(
+        (act) =>
+          act.type === "add_contribution" &&
+          typeof act.text === "string" &&
+          (act.text.includes(`"${members.find(m=>m.id===memberId)?.name}"`))
+      )
+      .reduce((sum, act) => {
+        // Extract contribution from text: "Added contribution of 5,000 XAF for "John Doe"..."
+        const match = /contribution of ([\d,]+) XAF/.exec(act.text);
+        const amt = match ? parseInt(match[1].replace(/,/g, "")) : 0;
+        return sum + (isNaN(amt) ? 0 : amt);
+      }, 0);
+  }
+
+  // For all members: create a map, defaulting to 0 if none
+  const memberContributionMap = members.reduce((map, m) => {
+    map[m.id] = getRealMemberContributions(m.id);
+    return map;
+  }, {} as Record<number, number>);
+
   const totalMembers = members.length;
   const activeMembers = members.filter(m => m.isActive).length;
   const inactiveMembers = totalMembers - activeMembers;
-  const totalContributions = members.reduce((sum, m) => sum + m.totalContributions, 0);
+  const totalContributions = Object.values(memberContributionMap).reduce((sum, v) => sum + v, 0);
   const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
 
   const navItems = [
@@ -836,7 +875,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               </div>
             ) : (
               <MemberTable
-                members={members}
+                members={members.map(m => ({
+                  ...m,
+                  totalContributions: memberContributionMap[m.id] || 0
+                }))}
                 onView={setSelectedMember}
                 onStatusToggle={toggleMemberStatus}
                 onLoanToggle={toggleLoanEligibility}
