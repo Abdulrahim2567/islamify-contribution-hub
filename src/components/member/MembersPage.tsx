@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -9,6 +10,8 @@ import { readMembers } from "../../utils/membersStorage";
 interface MembersPageProps {
   currentUser: Member;
 }
+
+const noop = () => {};
 
 const MembersPage = ({ currentUser }: MembersPageProps) => {
   const [members, setMembers] = useState<Member[]>([]);
