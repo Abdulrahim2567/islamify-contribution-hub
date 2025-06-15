@@ -328,19 +328,19 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   );
 
   // --- Load admin activities, including contribution records ---
-  const [activities, setActivities] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  // const [activities, setActivities] = useState<any[]>(() => {
+  //   try {
+  //     const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+  //     return stored ? JSON.parse(stored) : [];
+  //   } catch {
+  //     return [];
+  //   }
+  // });
 
   // Every time activities changes, update localStorage
-  useEffect(() => {
-    localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
-  }, [activities]);
+  // useEffect(() => {
+  //   localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
+  // }, [activities]);
   
   // --- Calculate real contribution totals via activities ---
   function getRealMemberContributions(memberId: number): number {
