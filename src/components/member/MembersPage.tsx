@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
-import MemberTable from "../admin/MemberTable";
 import { Member } from "../admin/types";
 
 interface MembersPageProps {
@@ -23,7 +22,6 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
 
   // These "actions" are disabled for regular members
   const noop = () => {};
-  const notAllowed = () => alert("Action not permitted.");
 
   return (
     <div className="max-w-5xl mx-auto px-2 py-7">
@@ -61,6 +59,7 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
           />
         </div>
       </div>
+
       {viewMode === "card" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((member, idx) => (
@@ -79,7 +78,7 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
                 onLoanToggle={noop}
                 onDelete={noop}
                 onRoleChange={noop}
-                readOnly={true} {/* readOnly disables actions in MemberActionFooter */}
+                readOnly={true} // disables action buttons
                 // Do not pass onEdit, disables Edit dialog
               />
             </div>
@@ -89,7 +88,6 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
         <div>
           <MembersTableReadOnly
             members={filtered}
-            // Only required props, all actions as no-ops
             onView={noop}
             searchTerm={searchTerm}
           />
@@ -99,13 +97,12 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
   );
 };
 
-// Table version for members, with no edit/delete/change role/status
 interface MTROProps {
   members: Member[];
   onView: (member: Member) => void;
   searchTerm: string;
 }
-// No actions, only info
+
 const MembersTableReadOnly = ({ members }: MTROProps) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
@@ -139,4 +136,3 @@ const MembersTableReadOnly = ({ members }: MTROProps) => (
 );
 
 export default MembersPage;
-
