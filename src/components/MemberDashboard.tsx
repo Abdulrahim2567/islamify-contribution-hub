@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,50 +18,15 @@ const MOCK_CONTRIBUTIONS = [
   { id: 5, date: "2024-02-01", amount: 5000, type: "Monthly Contribution" },
 ];
 
-const MOCK_MEMBERS: Member[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+237123456789",
-    registrationFee: 5000,
-    totalContributions: 25000,
-    isActive: true,
-    loanEligible: true,
-    joinDate: "2024-01-15",
-    role: "member"
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "+237987654321",
-    registrationFee: 5000,
-    totalContributions: 18000,
-    isActive: true,
-    loanEligible: false,
-    joinDate: "2024-02-20",
-    role: "member"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+237555666777",
-    registrationFee: 5000,
-    totalContributions: 32000,
-    isActive: false,
-    loanEligible: true,
-    joinDate: "2024-01-10",
-    role: "member"
-  }
-];
-
 const MemberDashboard = ({ user, onLogout }) => {
   const [contributions] = useState(MOCK_CONTRIBUTIONS);
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "members">("dashboard");
-  const [members] = useState<Member[]>(MOCK_MEMBERS);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    setMembers(readMembers());
+  }, []);
 
   const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
   const maxLoanAmount = totalContributions * 3;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import SuccessModal from "./admin/SuccessModal";
 import type { Member } from "./admin/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
+import { readMembers, writeMembers } from "../utils/membersStorage";
 
 // Mock data for members
 const MOCK_MEMBERS: Member[] = [
@@ -76,7 +77,29 @@ function persistUsers(users) {
 }
 
 const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
-  const [members, setMembers] = useState<Member[]>(MOCK_MEMBERS);
+  // Replace default members with loaded/persisted state
+  const [members, setMembers] = useState<Member[]>([]);
+
+  // On mount, load from localStorage, defaulting with MOCK_MEMBERS only if nothing is present
+  useEffect(() => {
+    const loaded = readMembers();
+    if (loaded.length > 0) {
+      setMembers(loaded);
+    } else {
+      setMembers(MOCK_MEMBERS);
+      writeMembers(MOCK_MEMBERS);
+    }
+  }, []);
+
+  // Helper to always persist after updates
+  const persistAndSetMembers = (updateFn) => {
+    setMembers(prev => {
+      const updated = typeof updateFn === "function" ? updateFn(prev) : updateFn;
+      writeMembers(updated);
+      return updated;
+    });
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -126,7 +149,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       loanEligible: false,
       joinDate: new Date().toISOString().split('T')[0]
     };
-    setMembers([...members, member]);
+    persistAndSetMembers([...members, member]);
     setGeneratedPassword(password);
 
     // Update localStorage users for login
@@ -155,9 +178,11 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   };
 
   const toggleMemberStatus = (id) => {
-    setMembers(members.map(member => 
-      member.id === id ? { ...member, isActive: !member.isActive } : member
-    ));
+    persistAndSetMembers(members =>
+      members.map(member => 
+        member.id === id ? { ...member, isActive: !member.isActive } : member
+      )
+    );
     toast({
       title: "Member Status Updated",
       description: "Member status has been changed successfully",
@@ -165,9 +190,11 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   };
 
   const toggleLoanEligibility = (id) => {
-    setMembers(members.map(member => 
-      member.id === id ? { ...member, loanEligible: !member.loanEligible } : member
-    ));
+    persistAndSetMembers(members =>
+      members.map(member => 
+        member.id === id ? { ...member, loanEligible: !member.loanEligible } : member
+      )
+    );
     toast({
       title: "Loan Eligibility Updated",
       description: "Member loan eligibility has been changed successfully",
@@ -177,7 +204,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const deleteMember = (id) => {
     const member = members.find(m => m.id === id);
     if (window.confirm(`Are you sure you want to delete ${member?.name}? This action cannot be undone.`)) {
-      setMembers(members.filter(member => member.id !== id));
+      persistAndSetMembers(members => members.filter(member => member.id !== id));
       toast({
         title: "Member Deleted",
         description: "Member has been removed from the system",
@@ -226,7 +253,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   const handleAddContribution = ({ amount, description }: { amount: number; description?: string }) => {
     if (!targetMemberId) return;
-    setMembers(members =>
+    persistAndSetMembers(members =>
       members.map(m =>
         m.id === targetMemberId
           ? { ...m, totalContributions: m.totalContributions + amount }
@@ -254,7 +281,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     date: string;
     description?: string;
   }) => {
-    setMembers((members) =>
+    persistAndSetMembers((members) =>
       members.map((m) =>
         m.id === memberId
           ? { ...m, totalContributions: m.totalContributions + amount }
@@ -271,7 +298,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   // NEW: Change role handler
   const handleChangeRole = (id: number, newRole: "member" | "admin") => {
-    setMembers(members =>
+    persistAndSetMembers(members =>
       members.map(m =>
         m.id === id ? { ...m, role: newRole } : m
       )
@@ -284,7 +311,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   // Edit member handler
   const handleEditMember = (id: number, data: { name: string; email: string; phone: string }) => {
-    setMembers(members =>
+    persistAndSetMembers(members =>
       members.map(m =>
         m.id === id
           ? { ...m, ...data }

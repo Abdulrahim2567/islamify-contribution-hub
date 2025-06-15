@@ -1,16 +1,21 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
 import { Member } from "../admin/types";
 import MemberDetailModal from "../admin/MemberDetailModal";
+import { readMembers } from "../../utils/membersStorage";
 
 interface MembersPageProps {
-  members: Member[];
   currentUser: Member;
 }
 
-const MembersPage = ({ members, currentUser }: MembersPageProps) => {
+const MembersPage = ({ currentUser }: MembersPageProps) => {
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    setMembers(readMembers());
+  }, []);
+
   const [viewMode, setViewMode] = useState<"card" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
