@@ -191,25 +191,20 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            member.isActive 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {member.isActive ? 'Active' : 'Inactive'}
-          </span>
-          
-          {/* Status switch */}
-          <div className="flex items-center space-x-1">
-            <Switch
-              checked={member.isActive}
-              onCheckedChange={() => toggleMemberStatus(member.id)}
-              className={`mr-2 data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-400`}
-            />
-            <span className={`text-xs ${member.isActive ? "text-green-700" : "text-gray-400"}`}>
+          {/* Status toggle styled like Loan Eligible */}
+          <button
+            onClick={() => toggleMemberStatus(member.id)}
+            className="flex items-center space-x-1"
+          >
+            {member.isActive ? (
+              <ToggleRight className="w-5 h-5 text-green-600" />
+            ) : (
+              <ToggleLeft className="w-5 h-5 text-gray-400" />
+            )}
+            <span className={`text-xs ${member.isActive ? "text-green-600" : "text-gray-400"}`}>
               {member.isActive ? "Enabled" : "Disabled"}
             </span>
-          </div>
+          </button>
           
           <button
             onClick={() => toggleLoanEligibility(member.id)}
@@ -235,7 +230,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           </button>
           <button
             onClick={() => toggleMemberStatus(member.id)}
-            className={`p-1 ${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+            className={`${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} p-1`}
           >
             <UserX size={16} />
           </button>
