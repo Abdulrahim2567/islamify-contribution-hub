@@ -114,11 +114,28 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     return () => window.removeEventListener('storage', syncMembers);
   }, []);
 
-  // Helper to always persist after updates
+  // Helper to always persist after updates (members)
   const persistAndSetMembers = (updateFn) => {
     setMembers(prev => {
       const updated = typeof updateFn === "function" ? updateFn(prev) : updateFn;
       writeMembers(updated);
+      return updated;
+    });
+  };
+
+  // Helper to always persist after updates (activities)
+  const persistAndSetActivities = (activityOrUpdateFn) => {
+    setActivities(prev => {
+      let updated;
+      if (typeof activityOrUpdateFn === "function") {
+        updated = activityOrUpdateFn(prev);
+      } else {
+        // Accept single activity or array
+        updated = Array.isArray(activityOrUpdateFn)
+          ? activityOrUpdateFn
+          : [activityOrUpdateFn, ...prev];
+      }
+      writeActivities(updated);
       return updated;
     });
   };
