@@ -33,6 +33,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { formatCurrency } from "../utils/calculations";
 
 // Mock data for members
 const MOCK_MEMBERS: Member[] = [
