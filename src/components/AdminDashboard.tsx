@@ -131,6 +131,21 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     });
   };
 
+  // Retrieve from localStorage only on mount
+  const [activities, setActivities] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Every time activities changes, update localStorage
+  useEffect(() => {
+    localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
+  }, [activities]);
+
   // Helper to always persist after updates (activities)
   const persistAndSetActivities = (activityOrUpdateFn) => {
     setActivities(prev => {
@@ -143,7 +158,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           ? activityOrUpdateFn
           : [activityOrUpdateFn, ...prev];
       }
-      writeActivities(updated);
+      // No need to set localStorage here, useEffect handles it
       return updated;
     });
   };
@@ -169,7 +184,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     maxLoanMultiplier: 3,
   });
   const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
-  const [activities, setActivities] = useState<any[]>([]);
   const [activityPage, setActivityPage] = useState(1);
   const perPage = 10;
   const { toast } = useToast();
