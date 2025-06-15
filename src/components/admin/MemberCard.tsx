@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { Eye, ToggleRight, ToggleLeft, UserX, Trash2, Mail, Phone, User, CreditCard } from "lucide-react";
 import { Member } from "./types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 // Minimal avatar generator based on initials
 const Avatar = ({ name }: { name: string }) => {
@@ -25,6 +25,7 @@ interface MemberCardProps {
   onStatusToggle: (id: number) => void;
   onLoanToggle: (id: number) => void;
   onDelete: (id: number) => void;
+  onRoleChange: (id: number, newRole: "member" | "admin") => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
@@ -33,6 +34,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   onStatusToggle,
   onLoanToggle,
   onDelete,
+  onRoleChange,
 }) => {
   const maxLoanAmount = member.totalContributions * 3;
   const [showDelete, setShowDelete] = useState(false);
@@ -55,24 +57,31 @@ const MemberCard: React.FC<MemberCardProps> = ({
         }
       }}
     >
-      {/* Top section: Avatar, name, role, status */}
+      {/* Top section: Avatar, name, role (as SELECT), status */}
       <div className="relative pt-6 pb-4 px-4 flex flex-col items-center bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600 dark:from-emerald-900 dark:to-emerald-700">
         {/* Avatar */}
         <div className="z-10">
           <Avatar name={member.name} />
         </div>
-        {/* Name and role */}
+        {/* Name and (role as select) */}
         <div className="mt-2 flex flex-col items-center z-10">
           <span className="flex items-center gap-2 text-lg font-bold text-white drop-shadow">
             <User size={18} className="text-white" />
             {member.name}
           </span>
-          <span className={`text-xs px-2 py-0.5 rounded-full uppercase font-semibold mt-1 tracking-widest ${
-            member.role === "admin"
-              ? "bg-purple-100 text-purple-700"
-              : "bg-blue-100 text-blue-700"
-          }`}>
-            {member.role}
+          <span className="mt-1">
+            <Select
+              value={member.role}
+              onValueChange={(newRole) => onRoleChange(member.id, newRole as "member" | "admin")}
+            >
+              <SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[100px] flex justify-center mx-auto hover:bg-blue-100">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </span>
         </div>
         {/* Status badge floated to top right */}

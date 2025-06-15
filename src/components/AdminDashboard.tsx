@@ -235,6 +235,19 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
   };
 
+  // NEW: Change role handler
+  const handleChangeRole = (id: number, newRole: "member" | "admin") => {
+    setMembers(members =>
+      members.map(m =>
+        m.id === id ? { ...m, role: newRole } : m
+      )
+    );
+    toast({
+      title: "Role Updated",
+      description: `Member role changed to ${newRole}`,
+    });
+  };
+
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
       {/* Header */}
@@ -428,6 +441,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     onStatusToggle={toggleMemberStatus}
                     onLoanToggle={toggleLoanEligibility}
                     onDelete={deleteMember}
+                    onRoleChange={handleChangeRole}
                   />
                 ))}
               </div>
@@ -439,6 +453,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 onLoanToggle={toggleLoanEligibility}
                 onDelete={deleteMember}
                 searchTerm={searchTerm}
+                onRoleChange={handleChangeRole}
               />
             )}
           </>

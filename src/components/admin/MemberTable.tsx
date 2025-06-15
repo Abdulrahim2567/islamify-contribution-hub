@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Eye, UserX, Trash2 } from "lucide-react";
 import { Member } from "./types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 interface MemberTableProps {
   members: Member[];
@@ -10,6 +12,7 @@ interface MemberTableProps {
   onLoanToggle: (id: number) => void;
   onDelete: (id: number) => void;
   searchTerm: string;
+  onRoleChange: (id: number, newRole: "member" | "admin") => void;
 }
 
 const MemberTable: React.FC<MemberTableProps> = ({
@@ -19,6 +22,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
   onLoanToggle,
   onDelete,
   searchTerm,
+  onRoleChange,
 }) => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -56,13 +60,19 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      member.role === 'admin' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {member.role}
-                    </span>
+                    {/* Role Select dropdown */}
+                    <Select
+                      value={member.role}
+                      onValueChange={(newRole) => onRoleChange(member.id, newRole as "member" | "admin")}
+                    >
+                      <SelectTrigger className={`px-2 py-1 w-[110px] bg-blue-50 text-blue-800 rounded-full font-semibold text-xs hover:bg-blue-100`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {member.totalContributions.toLocaleString()} XAF
