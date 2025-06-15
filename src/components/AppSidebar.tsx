@@ -55,11 +55,19 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
                   <SidebarMenuButton 
                     asChild
                     onClick={() => onTabChange(item.value)}
-                    className={activeTab === item.value ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : ""}
+                    className={`
+                      transition-all duration-300 ease-in-out transform
+                      ${activeTab === item.value 
+                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 scale-105 animate-fade-in" 
+                        : "hover:scale-102 hover:bg-gray-50"
+                      }
+                    `}
                   >
                     <button className="w-full">
-                      <item.icon />
-                      <span>{item.title}</span>
+                      <item.icon className={`transition-colors duration-200 ${
+                        activeTab === item.value ? 'text-emerald-600' : ''
+                      }`} />
+                      <span className="transition-colors duration-200">{item.title}</span>
                     </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
