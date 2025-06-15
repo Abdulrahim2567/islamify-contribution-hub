@@ -22,11 +22,12 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  // Filter out yourself
+  // Filter out demo admin and search
   const filtered = members.filter(
     (m) =>
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchTerm.toLowerCase())
+      m.email !== "admin@islamify.com" && // Exclude demo admin
+      (m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // All action handlers (noops for read-only directory, except onView)
