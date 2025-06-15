@@ -138,9 +138,10 @@ const MemberDashboard = ({ user, onLogout }) => {
           {canApplyForLoan && (
             <div className="flex justify-end mb-6">
               <button
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-indigo-600 hover:to-purple-600 transition-all"
+                className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
                 onClick={() => setShowLoanModal(true)}
               >
+                <CreditCard className="w-5 h-5" />
                 Apply For Loan
               </button>
             </div>
@@ -156,7 +157,6 @@ const MemberDashboard = ({ user, onLogout }) => {
                   title: "Loan Application Submitted",
                   description: `Your application for ${formatCurrency(data.amount)} is pending.`,
                 });
-                // Could persist or push to admin activity here if desired
               }}
               onCancel={() => setShowLoanModal(false)}
             />
