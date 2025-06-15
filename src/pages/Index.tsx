@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+import { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Users, TrendingUp, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { LogIn, Users, TrendingUp } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import MemberDashboard from "@/components/MemberDashboard";
+import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
+import LoginForm from "@/components/auth/LoginForm";
 
 // Mock data - In real app, this would come from Supabase
 const MOCK_USERS = [
@@ -26,25 +26,20 @@ function getPersistedUsers() {
   return [];
 }
 
-function persistUsers(users) {
+function persistUsers(users: any[]) {
   localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
 }
 
 const Index = () => {
   const [users, setUsers] = useState(MOCK_USERS);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const { toast } = useToast();
 
   // On mount/load: merge users from localStorage with MOCK_USERS, avoid duplicate IDs/emails.
   useEffect(() => {
     const localUsers = getPersistedUsers();
-    // Remove duplicate emails favoring localUsers (so updated info persists)
     const mergedUsers = [
       ...MOCK_USERS.filter(m => !localUsers.some(u => u.email === m.email)),
       ...localUsers,
@@ -53,167 +48,49 @@ const Index = () => {
   }, []);
 
   // Helper: write users to both state and localStorage
-  const updateUsers = (newUsers) => {
+  const updateUsers = (newUsers: any[]) => {
     setUsers(newUsers);
     persistUsers(newUsers.filter(u => !MOCK_USERS.some(m => m.email === u.email) || u.id > MOCK_USERS.length));
-  };
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const user = users.find(u =>
-      u.email === loginForm.email && u.password === loginForm.password
-    );
-
-    if (user) {
-      if (user.needsPasswordChange) {
-        setCurrentUser(user);
-        setShowPasswordChange(true);
-        toast({
-          title: "Password Change Required",
-          description: "Please change your default password to continue.",
-        });
-      } else {
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-        toast({
-          title: "Welcome to Islamify",
-          description: `Logged in successfully as ${user.role}`,
-        });
-      }
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    setPasswordError("");
-    if (newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters long");
-      toast({
-        title: "Password Too Short",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      toast({
-        title: "Passwords Do Not Match",
-        description: "Please ensure the passwords match.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Update local user password and needsPasswordChange
-    const updatedUser = { ...currentUser, password: newPassword, needsPasswordChange: false };
-    const updatedUsers = users.map(u => u.email === updatedUser.email ? updatedUser : u);
-    updateUsers(updatedUsers);
-
-    setCurrentUser(updatedUser);
-    setIsLoggedIn(true);
-    setShowPasswordChange(false);
-    setNewPassword("");
-    setConfirmPassword("");
-    toast({
-      title: "Password Updated",
-      description: "Your password has been changed successfully",
-    });
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
-    setLoginForm({ email: "", password: "" });
     setShowPasswordChange(false);
-    setNewPassword("");
-    setConfirmPassword("");
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully",
     });
   };
 
-  // Listen for storage change (optional: support multi-tab, not required)
-  // useEffect(() => {
-  //   const listener = () => {
-  //     const localUsers = getPersistedUsers();
-  //     const mergedUsers = [
-  //       ...MOCK_USERS.filter(m => !localUsers.some(u => u.email === m.email)),
-  //       ...localUsers,
-  //     ];
-  //     setUsers(mergedUsers);
-  //   };
-  //   window.addEventListener("storage", listener);
-  //   return () => window.removeEventListener("storage", listener);
-  // }, []);
+  const handleLogin = (user: any) => {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+  };
 
-  if (showPasswordChange) {
-    const passwordMismatch = newPassword !== confirmPassword && confirmPassword.length > 0;
-    const passwordTooShort = newPassword.length > 0 && newPassword.length < 6;
-    const canUpdate = newPassword.length >= 6 && newPassword === confirmPassword;
+  const requirePasswordChange = (user: any) => {
+    setCurrentUser(user);
+    setShowPasswordChange(true);
+  };
 
+  if (showPasswordChange && currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md animate-fade-in">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-800">Change Password</CardTitle>
-            <CardDescription>Please set a new password to continue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              <div>
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    setPasswordError("");
-                  }}
-                  placeholder="Enter new password"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setPasswordError("");
-                  }}
-                  placeholder="Re-enter new password"
-                  required
-                />
-              </div>
-              {(passwordError || passwordMismatch || passwordTooShort) && (
-                <div className="text-red-600 text-sm">
-                  {passwordError ||
-                    (passwordMismatch && "Passwords do not match") ||
-                    (passwordTooShort && "Password must be at least 6 characters long")}
-                </div>
-              )}
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white hover:from-green-600 hover:to-blue-700 transition-colors"
-                disabled={!canUpdate}
-              >
-                Update Password
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <ChangePasswordForm
+        user={currentUser}
+        users={users}
+        setUsers={(u) => {
+          updateUsers(u);
+        }}
+        onSuccess={(updatedUser) => {
+          setCurrentUser(updatedUser);
+          setIsLoggedIn(true);
+          setShowPasswordChange(false);
+        }}
+        onCancel={() => {
+          setShowPasswordChange(false);
+          setIsLoggedIn(false);
+        }}
+      />
     );
   }
 
@@ -293,54 +170,15 @@ const Index = () => {
         </div>
 
         {/* Login Form */}
-        <div className="max-w-md mx-auto">
-          <Card className="shadow-xl animate-scale-in">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold text-blue-800">Sign In</CardTitle>
-              <CardDescription>Access your Islamify account</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Enter your password"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 transition-colors">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
-                </Button>
-              </form>
-              <div className="mt-4 text-center text-sm text-gray-600">
-                <p>Demo credentials:</p>
-                <p>Admin: admin@islamify.org / admin123</p>
-                <p>Member: member@islamify.org / member123</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <LoginForm
+          users={users}
+          onLogin={handleLogin}
+          onRequirePasswordChange={requirePasswordChange}
+          toast={toast}
+        />
       </div>
     </div>
   );
 };
 
 export default Index;
-
-// NOTE: This file is now over 250 lines. You should consider refactoring it into smaller files for maintainability.
