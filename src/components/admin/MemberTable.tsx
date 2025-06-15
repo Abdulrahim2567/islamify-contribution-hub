@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Eye, UserX, Trash2 } from "lucide-react";
 import { Member } from "./types";
@@ -60,7 +59,6 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {/* Role Select dropdown */}
                     <Select
                       value={member.role}
                       onValueChange={(newRole) => onRoleChange(member.id, newRole as "member" | "admin")}
@@ -118,31 +116,6 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     >
                       <Eye size={16} />
                     </button>
-                    <button
-                      onClick={() => onStatusToggle(member.id)}
-                      className={`${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
-                    >
-                      <UserX size={16} />
-                    </button>
-                    {member.role !== 'admin' && (
-                      <>
-                        <button
-                          onClick={() => setDeleteId(member.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <DeleteMemberDialog
-                          open={deleteId === member.id}
-                          onOpenChange={(open: boolean) => setDeleteId(open ? member.id : null)}
-                          memberName={member.name}
-                          onConfirm={() => {
-                            setDeleteId(null);
-                            onDelete(member.id);
-                          }}
-                        />
-                      </>
-                    )}
                   </td>
                 </tr>
               );
