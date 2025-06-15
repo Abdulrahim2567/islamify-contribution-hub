@@ -73,7 +73,17 @@ export default function App() {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={
+              <Index
+                users={users}
+                setUsers={setUsers}
+                isLoggedIn={isLoggedIn}
+                currentUser={currentUser}
+                onLogin={login}
+                onLogout={logout}
+                updateUsers={updateUsers}
+              />
+            } />
             <Route path="/dashboard" element={
               isLoggedIn && currentUser ?
                   <DashboardPage
@@ -81,7 +91,15 @@ export default function App() {
                     users={users}
                     onLogout={logout}
                     onNewUser={updateUsers}
-                  /> : <Index />
+                  /> : <Index
+                    users={users}
+                    setUsers={setUsers}
+                    isLoggedIn={isLoggedIn}
+                    currentUser={currentUser}
+                    onLogin={login}
+                    onLogout={logout}
+                    updateUsers={updateUsers}
+                  />
             } />
             <Route path="/members" element={
               isLoggedIn && currentUser ?
@@ -90,7 +108,15 @@ export default function App() {
                     users={users}
                     onLogout={logout}
                     onNewUser={updateUsers}
-                  /> : <Index />
+                  /> : <Index
+                    users={users}
+                    setUsers={setUsers}
+                    isLoggedIn={isLoggedIn}
+                    currentUser={currentUser}
+                    onLogin={login}
+                    onLogout={logout}
+                    updateUsers={updateUsers}
+                  />
             } />
             <Route path="/contributions" element={
               isLoggedIn && currentUser ?
@@ -99,7 +125,15 @@ export default function App() {
                     users={users}
                     onLogout={logout}
                     onNewUser={updateUsers}
-                  /> : <Index />
+                  /> : <Index
+                    users={users}
+                    setUsers={setUsers}
+                    isLoggedIn={isLoggedIn}
+                    currentUser={currentUser}
+                    onLogin={login}
+                    onLogout={logout}
+                    updateUsers={updateUsers}
+                  />
             } />
             <Route path="/settings" element={
               isLoggedIn && currentUser ?
@@ -108,7 +142,15 @@ export default function App() {
                     users={users}
                     onLogout={logout}
                     onNewUser={updateUsers}
-                  /> : <Index />
+                  /> : <Index
+                    users={users}
+                    setUsers={setUsers}
+                    isLoggedIn={isLoggedIn}
+                    currentUser={currentUser}
+                    onLogin={login}
+                    onLogout={logout}
+                    updateUsers={updateUsers}
+                  />
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
