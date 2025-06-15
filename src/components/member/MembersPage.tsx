@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -21,9 +22,10 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
       m.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // All action handlers (noops for read-only directory, except onView)
   const noop = () => {};
 
-  // View handler for card and table views
+  // View handler for card and table views, sets the currently selected member
   const handleView = (member: Member) => setSelectedMember(member);
 
   return (
@@ -85,13 +87,6 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
               />
             </div>
           ))}
-          {/* Member detail modal */}
-          {selectedMember && (
-            <MemberDetailModal
-              member={selectedMember}
-              onClose={() => setSelectedMember(null)}
-            />
-          )}
         </div>
       ) : (
         <div>
@@ -100,14 +95,15 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
             onView={handleView}
             searchTerm={searchTerm}
           />
-          {/* Member detail modal for table view */}
-          {selectedMember && (
-            <MemberDetailModal
-              member={selectedMember}
-              onClose={() => setSelectedMember(null)}
-            />
-          )}
         </div>
+      )}
+
+      {/* Show MemberDetailModal if a member is selected */}
+      {selectedMember && (
+        <MemberDetailModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+        />
       )}
     </div>
   );
@@ -119,7 +115,8 @@ interface MTROProps {
   searchTerm: string;
 }
 
-const MembersTableReadOnly = ({ members }: MTROProps) => (
+// In table mode: make each member row clickable to view details
+const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -133,7 +130,13 @@ const MembersTableReadOnly = ({ members }: MTROProps) => (
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {members.map((member) => (
-            <tr key={member.id} className="hover:bg-gray-50">
+            <tr
+              key={member.id}
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => onView(member)}
+              tabIndex={0}
+              role="button"
+            >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div>
                   <div className="text-sm font-medium text-gray-900">{member.name}</div>
