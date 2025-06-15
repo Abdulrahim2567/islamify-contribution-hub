@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, LogIn } from "lucide-react";
@@ -7,6 +6,7 @@ import AdminDashboard from "@/components/AdminDashboard";
 import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
+import { AdminDashboardWithSidebar, MemberDashboardWithSidebar } from "@/components/DashboardWithSidebar";
 
 // Default admin user: always present as fallback if localstorage empty
 const DEMO_ADMIN = { id: 1, email: "admin@islamify.org", password: "admin123", role: "admin", name: "Admin User" };
@@ -91,10 +91,11 @@ const Index = () => {
   }
 
   if (isLoggedIn && currentUser) {
+    // Switch: show dashboard with sidebar wrappers
     return currentUser.role === "admin" ? (
-      <AdminDashboard user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users} />
+      <AdminDashboardWithSidebar user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users}/>
     ) : (
-      <MemberDashboard user={currentUser} onLogout={handleLogout} />
+      <MemberDashboardWithSidebar user={currentUser} onLogout={handleLogout} />
     );
   }
 
@@ -174,4 +175,3 @@ const Index = () => {
 };
 
 export default Index;
-
