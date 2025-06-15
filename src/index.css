@@ -198,7 +198,6 @@
   input[type="url"]:focus-visible,
   select:focus-visible,
   .shadcn-ui-input:focus-visible {
-    /* Remove outline and box-shadow, and set border as gradient */
     outline: none !important;
     box-shadow: none !important;
     border-width: 2.5px;
@@ -207,7 +206,6 @@
     border-image: linear-gradient(90deg, #10b981 0%, #2563eb 100%);
     border-image-slice: 1;
     border-color: transparent !important;
-    background-clip: padding-box;
     transition: border-color 0.2s, border-image 0.2s;
     position: relative;
     z-index: 1;
