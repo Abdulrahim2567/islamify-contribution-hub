@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { DollarSign, X } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 
 interface ContributionFormProps {
   memberName: string;
@@ -32,18 +32,10 @@ const ContributionForm: React.FC<ContributionFormProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="mb-6 flex items-center justify-center">
+          <h2 className="text-xl font-bold text-gray-900 text-center w-full">
             Add Contribution for <span className="text-emerald-600">{memberName}</span>
           </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600"
-            type="button"
-            aria-label="Close"
-          >
-            <X size={24} />
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
