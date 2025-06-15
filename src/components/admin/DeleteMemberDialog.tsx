@@ -29,7 +29,8 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
   <AlertDialog open={open} onOpenChange={onOpenChange}>
     <AlertDialogPortal>
       <AlertDialogOverlay />
-      <AlertDialogContent className="animate-fade-in">
+      {/* Modal width reduced from max-w-lg (32rem) to max-w-md (28rem), padding decreased */}
+      <AlertDialogContent className="animate-fade-in max-w-md p-4 sm:p-6">
         <AlertDialogHeader>
           <AlertDialogTitle>
             Delete member
@@ -38,13 +39,13 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
         <AlertDialogDescription className="mb-4">
           Are you sure you want to delete <span className="font-semibold text-red-600">{memberName}</span>? This action cannot be undone.
         </AlertDialogDescription>
-        {/* Override the default to always stack vertically */}
-        <AlertDialogFooter className="flex flex-col gap-2 !flex-col !sm:flex-col">
-          <AlertDialogCancel className="w-full py-3 text-base rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-none border-none hover:bg-gray-200 dark:hover:bg-gray-700">
+        {/* Modal footer: always stacks vertically, gap for spacing, and removes top margin on first, bottom on last */}
+        <AlertDialogFooter className="flex flex-col gap-3 !flex-col !sm:flex-col">
+          <AlertDialogCancel className="w-full py-3 text-base rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-none border-none hover:bg-gray-200 dark:hover:bg-gray-700 mb-0">
             No, don&apos;t delete
           </AlertDialogCancel>
           <AlertDialogAction
-            className="w-full py-3 text-base rounded-lg bg-red-600 text-white hover:bg-red-700"
+            className="w-full py-3 text-base rounded-lg bg-red-600 text-white hover:bg-red-700 mt-0"
             onClick={onConfirm}
           >
             Yes, delete
@@ -56,3 +57,4 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
 );
 
 export default DeleteMemberDialog;
+
