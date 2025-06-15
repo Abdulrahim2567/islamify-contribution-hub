@@ -8,6 +8,7 @@ import { Member } from "./admin/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { readMembers } from "../utils/membersStorage";
 
 // Mock data for member contributions
 const MOCK_CONTRIBUTIONS = [
@@ -173,7 +174,6 @@ const MemberDashboard = ({ user, onLogout }) => {
       )}
       {tab === "members" && (
         <MembersPage
-          members={members}
           currentUser={user}
         />
       )}
