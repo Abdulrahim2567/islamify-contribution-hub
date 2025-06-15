@@ -1,7 +1,7 @@
 // Modern, clean manage contributions table for ADMIN
 
 import React, { useState, useEffect } from "react";
-import { Pencil, Trash2, Coins, FileText, Check } from "lucide-react";
+import { Pencil, Trash2, Coins, FileText, Check, DollarSign } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,8 +89,8 @@ function EditContributionDialog({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Amount (XAF)</label>
             <div className="relative">
-              {/* Make the icon always visible */}
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" size={20} />
+              {/* Change the icon to a DollarSign for amount */}
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" size={20} />
               <Input
                 type="number"
                 className="pl-10"
