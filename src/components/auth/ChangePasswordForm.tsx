@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ShieldCheck } from "lucide-react";
 
 interface ChangePasswordFormProps {
   user: any;
@@ -14,7 +15,13 @@ interface ChangePasswordFormProps {
   onCancel: () => void;
 }
 
-const ChangePasswordForm = ({ user, users, setUsers, onSuccess, onCancel }: ChangePasswordFormProps) => {
+const ChangePasswordForm = ({
+  user,
+  users,
+  setUsers,
+  onSuccess,
+  onCancel,
+}: ChangePasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -47,7 +54,7 @@ const ChangePasswordForm = ({ user, users, setUsers, onSuccess, onCancel }: Chan
     }
 
     const updatedUser = { ...user, password: newPassword, needsPasswordChange: false };
-    const updatedUsers = users.map(u => u.email === updatedUser.email ? updatedUser : u);
+    const updatedUsers = users.map((u) => (u.email === updatedUser.email ? updatedUser : u));
     setUsers(updatedUsers);
 
     toast({
@@ -60,19 +67,37 @@ const ChangePasswordForm = ({ user, users, setUsers, onSuccess, onCancel }: Chan
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-800">Change Password</CardTitle>
-          <CardDescription>Please set a new password to continue</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
+      <Card className="w-full max-w-md shadow-lg animate-fade-in">
+        <CardHeader className="text-center pb-2">
+          <div className="flex flex-col items-center mb-3">
+            <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-3">
+              <ShieldCheck className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900 mb-1">Set New Password</CardTitle>
+            <CardDescription>
+              Choose a strong new password to finish account setup
+            </CardDescription>
+          </div>
         </CardHeader>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mx-6 mb-5 mt-2">
+          <p className="text-sm text-emerald-800">
+            <strong>Password requirements:</strong> Minimum 6 characters.<br />
+            <span className="text-xs text-emerald-600">
+              Make sure your password is difficult to guess and unique to this platform.
+            </span>
+          </p>
+        </div>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-2">
             <div>
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="newPassword">
+                New Password
+              </Label>
               <Input
                 id="newPassword"
                 type="password"
+                className="pl-3"
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value);
@@ -80,13 +105,18 @@ const ChangePasswordForm = ({ user, users, setUsers, onSuccess, onCancel }: Chan
                 }}
                 placeholder="Enter new password"
                 required
+                minLength={6}
+                autoFocus
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="confirmPassword">
+                Confirm Password
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
+                className="pl-3"
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -94,25 +124,33 @@ const ChangePasswordForm = ({ user, users, setUsers, onSuccess, onCancel }: Chan
                 }}
                 placeholder="Re-enter new password"
                 required
+                minLength={6}
               />
             </div>
             {(passwordError || passwordMismatch || passwordTooShort) && (
-              <div className="text-red-600 text-sm">
+              <div className="text-red-600 text-sm text-center">
                 {passwordError ||
                   (passwordMismatch && "Passwords do not match") ||
                   (passwordTooShort && "Password must be at least 6 characters long")}
               </div>
             )}
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white hover:from-green-600 hover:to-blue-700 transition-colors"
-              disabled={!canUpdate}
-            >
-              Update Password
-            </Button>
-            <Button type="button" variant="outline" className="w-full mt-2" onClick={onCancel}>
-              Cancel
-            </Button>
+            <div className="flex space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white transition-colors"
+                disabled={!canUpdate}
+              >
+                Update Password
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
