@@ -35,46 +35,6 @@ import {
 } from "@/components/ui/pagination";
 import { formatCurrency } from "../utils/calculations";
 
-// Mock data for members
-const MOCK_MEMBERS: Member[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+237123456789",
-    registrationFee: 5000,
-    totalContributions: 25000,
-    isActive: true,
-    loanEligible: true,
-    joinDate: "2024-01-15",
-    role: "member"
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "+237987654321",
-    registrationFee: 5000,
-    totalContributions: 18000,
-    isActive: true,
-    loanEligible: false,
-    joinDate: "2024-02-20",
-    role: "member"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+237555666777",
-    registrationFee: 5000,
-    totalContributions: 32000,
-    isActive: false,
-    loanEligible: true,
-    joinDate: "2024-01-10",
-    role: "member"
-  }
-];
-
 // Add this type for the new member state
 type NewMember = {
   name: string;
@@ -104,36 +64,51 @@ function writeActivities(activities: any[]) {
 }
 
 const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
-  // Replace default members with loaded/persisted state
+  // Always load members from localStorage. If empty, create/save DEMO_ADMIN as sole member.
+  const DEMO_ADMIN_MEMBER: Member = {
+    id: 1,
+    name: "Admin User",
+    email: "admin@islamify.org",
+    phone: "",
+    registrationFee: 0,
+    totalContributions: 0,
+    isActive: true,
+    loanEligible: false,
+    joinDate: (new Date()).toISOString().split("T")[0],
+    role: "admin",
+  };
+
   const [members, setMembers] = useState<Member[]>([]);
 
-  // On mount, always get members from localStorage (if empty, fall back to MOCK_MEMBERS!)
   useEffect(() => {
+    // On mount: get members from localStorage, fallback only to DEMO_ADMIN_MEMBER.
     const loaded = readMembers();
     if (loaded.length > 0) {
       setMembers(loaded);
     } else {
-      setMembers(MOCK_MEMBERS);
-      writeMembers(MOCK_MEMBERS);
+      setMembers([DEMO_ADMIN_MEMBER]);
+      writeMembers([DEMO_ADMIN_MEMBER]);
     }
   }, []);
 
-  // On *every* readMembers() change (from add/edit/delete), update live.
   useEffect(() => {
     const syncMembers = () => {
       const loaded = readMembers();
-      setMembers(loaded.length > 0 ? loaded : MOCK_MEMBERS);
+      setMembers(loaded.length > 0 ? loaded : [DEMO_ADMIN_MEMBER]);
     };
-    window.addEventListener('storage', syncMembers); // Handles changes from other tabs, too.
+    window.addEventListener('storage', syncMembers);
     return () => window.removeEventListener('storage', syncMembers);
   }, []);
 
-  // Helper to always persist after updates (members)
+  // Helper to persist and update (never fallback to mock)
   const persistAndSetMembers = (updateFn) => {
     setMembers(prev => {
       const updated = typeof updateFn === "function" ? updateFn(prev) : updateFn;
-      writeMembers(updated);
-      return updated;
+      // Ensure DEMO_ADMIN_MEMBER is always present
+      const hasDemoAdmin = updated.some(u => u.email === DEMO_ADMIN_MEMBER.email);
+      const finalMembers = hasDemoAdmin ? updated : [DEMO_ADMIN_MEMBER, ...updated];
+      writeMembers(finalMembers); // save to localStorage
+      return finalMembers;
     });
   };
 

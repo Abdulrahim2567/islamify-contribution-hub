@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, Check } from "lucide-react";
 import { Member } from "./types";
@@ -21,10 +20,12 @@ interface AddContributionStepperProps {
 
 const PAGE_SIZE = 6;
 
+const DEMO_ADMIN_EMAIL = "admin@islamify.org";
+
 const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   open,
   onOpenChange,
-  members: _propMembers, // ignore propMembers; always use freshly loaded members from localStorage
+  members: _propMembers, // ignore propMembers
   onSubmit,
 }) => {
   const [step, setStep] = useState<1 | 2>(1);
@@ -33,11 +34,29 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   const [formData, setFormData] = useState({ amount: "", description: "" });
   const [localMembers, setLocalMembers] = useState<Member[]>([]);
 
-  // Always get the freshest members from localStorage when modal opens
   useEffect(() => {
     if (open) {
+      // Only get members from localStorage. If empty, insert only demo admin.
       const freshMembers = readMembers();
-      setLocalMembers(freshMembers && freshMembers.length > 0 ? freshMembers : []);
+      // Only demo admin user if no other persisted members
+      if (!freshMembers || freshMembers.length === 0) {
+        setLocalMembers([
+          {
+            id: 1,
+            name: "Admin User",
+            email: DEMO_ADMIN_EMAIL,
+            phone: "",
+            registrationFee: 0,
+            totalContributions: 0,
+            isActive: true,
+            loanEligible: false,
+            joinDate: (new Date()).toISOString().split("T")[0],
+            role: "admin",
+          },
+        ]);
+      } else {
+        setLocalMembers(freshMembers);
+      }
     }
   }, [open]);
 
