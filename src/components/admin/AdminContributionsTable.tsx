@@ -1,4 +1,3 @@
-
 // Modern, clean manage contributions table for ADMIN
 
 import React, { useState, useEffect } from "react";
@@ -8,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import DeleteContributionDialog from "./DeleteContributionDialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 // Type for islamify_recent_activities
 interface ContributionRecord {
@@ -134,6 +141,10 @@ const AdminContributionsTable: React.FC = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [toDelete, setToDelete] = useState<ContributionRecord | null>(null);
 
+  // Pagination state
+  const PER_PAGE = 10;
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
     const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
     if (stored) {
@@ -147,6 +158,19 @@ const AdminContributionsTable: React.FC = () => {
       }
     }
   }, []);
+
+  // Pagination derived values
+  const totalPages = Math.ceil(contributions.length / PER_PAGE);
+  const paginatedContributions = contributions.slice(
+    (page - 1) * PER_PAGE,
+    page * PER_PAGE
+  );
+
+  // When the data changes, reset to first page if necessary
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) setPage(totalPages);
+    if (totalPages === 0 && page !== 1) setPage(1);
+  }, [contributions, page, totalPages]);
 
   const saveContributions = (updatedList: ContributionRecord[]) => {
     setContributions(updatedList);
@@ -221,14 +245,14 @@ const AdminContributionsTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {contributions.length === 0 && (
+              {paginatedContributions.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-gray-400">
                     No contributions yet.
                   </td>
                 </tr>
               )}
-              {contributions.map((rec, idx) => (
+              {paginatedContributions.map((rec, idx) => (
                 <tr key={idx} className="border-b last:border-b-0 bg-white">
                   <td className="py-3 px-4 font-medium text-gray-900">{rec.memberName}</td>
                   <td className="py-3 px-4 text-cyan-700 font-semibold">{rec.amount.toLocaleString()}</td>
@@ -264,6 +288,52 @@ const AdminContributionsTable: React.FC = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination (matches recent activity pagination design) */}
+          {totalPages > 1 && (
+            <div className="flex justify-center py-3 border-t border-gray-100 bg-white/90 sticky bottom-0 z-10">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      aria-disabled={page === 1}
+                      tabIndex={page === 1 ? -1 : 0}
+                      onClick={e => {
+                        e.preventDefault();
+                        if (page > 1) setPage(page - 1);
+                      }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === i + 1}
+                        onClick={e => {
+                          e.preventDefault();
+                          setPage(i + 1);
+                        }}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      aria-disabled={page === totalPages}
+                      tabIndex={page === totalPages ? -1 : 0}
+                      onClick={e => {
+                        e.preventDefault();
+                        if (page < totalPages) setPage(page + 1);
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
       <EditContributionDialog
