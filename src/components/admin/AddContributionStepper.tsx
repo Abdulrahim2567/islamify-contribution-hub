@@ -28,7 +28,8 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   const [page, setPage] = useState(0);
   const [formData, setFormData] = useState({ amount: "", description: "" });
 
-  // Only non-admins selectable.
+  // Only non-admins selectable for contributions
+  // If you want to allow contributions to admins, remove the .filter
   const nonAdminMembers = members.filter((m) => m.role !== "admin");
   const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 

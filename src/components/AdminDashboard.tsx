@@ -80,7 +80,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   // Replace default members with loaded/persisted state
   const [members, setMembers] = useState<Member[]>([]);
 
-  // On mount, load from localStorage, defaulting with MOCK_MEMBERS only if nothing is present
+  // On mount, always get members from localStorage (if empty, fall back to MOCK_MEMBERS!)
   useEffect(() => {
     const loaded = readMembers();
     if (loaded.length > 0) {
@@ -89,6 +89,16 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       setMembers(MOCK_MEMBERS);
       writeMembers(MOCK_MEMBERS);
     }
+  }, []);
+
+  // On *every* readMembers() change (from add/edit/delete), update live.
+  useEffect(() => {
+    const syncMembers = () => {
+      const loaded = readMembers();
+      setMembers(loaded.length > 0 ? loaded : MOCK_MEMBERS);
+    };
+    window.addEventListener('storage', syncMembers); // Handles changes from other tabs, too.
+    return () => window.removeEventListener('storage', syncMembers);
   }, []);
 
   // Helper to always persist after updates
@@ -518,7 +528,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
             <AddContributionStepper
               open={showAddContributionStepper}
               onOpenChange={setShowAddContributionStepper}
-              members={members}
+              members={members}   {/* this is always the latest from localStorage */}
               onSubmit={handleAddContributionStepper}
             />
 
