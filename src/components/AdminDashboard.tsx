@@ -377,12 +377,12 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </div>
                 {/* Add Contribution Button (opens stepper) */}
                 <button
-                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
+                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
                   onClick={() => setShowAddContributionStepper(true)}
                   type="button"
                   aria-label="Add contribution"
                 >
-                  <DollarSign size={18} />
+                  <DollarSign size={20} />
                   Add Contribution
                 </button>
                 <RegisterMemberDialog
