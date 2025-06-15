@@ -220,17 +220,9 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
             `}
             style={{ minHeight: 430 }}
           >
-            {/* Top Bar */}
-            <div className="flex items-center justify-between mb-6 pt-2">
-              <h2 className="text-xl font-bold text-gray-900">Add Contribution</h2>
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600"
-                type="button"
-                aria-label="Close"
-              >
-                <X size={24} />
-              </button>
+            {/* Centered Add Contribution Heading, no Close Button */}
+            <div className="mb-6 flex items-center justify-center pt-2">
+              <h2 className="text-xl font-bold text-gray-900 text-center w-full">Add Contribution</h2>
             </div>
             {selectedMember && (
               <div className="flex flex-col items-center mb-2">
