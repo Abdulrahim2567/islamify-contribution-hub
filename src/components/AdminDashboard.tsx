@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Users, Plus, Search, Eye, UserCheck, DollarSign, UserX, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { LogOut, Users, Plus, Search, Eye, UserCheck, DollarSign, UserX, Trash2, ToggleLeft, ToggleRight, Settings, Grid, List, Mail, Phone, User, Shield, CreditCard, TrendingUp, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -56,6 +56,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
   const [newMember, setNewMember] = useState({
     name: '',
     email: '',
@@ -136,270 +138,481 @@ const AdminDashboard = ({ user, onLogout }) => {
   const totalContributions = members.reduce((sum, m) => sum + m.totalContributions, 0);
   const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
 
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: DollarSign },
+    { id: 'members', label: 'Members', icon: Users },
+    { id: 'settings', label: 'Settings', icon: Settings }
+  ];
+
+  const renderMemberCard = (member) => {
+    const maxLoanAmount = member.totalContributions * 3;
+    
+    return (
+      <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{member.name}</h3>
+            <p className="text-sm text-gray-500">{member.email}</p>
+            <p className="text-sm text-gray-500">{member.phone}</p>
+          </div>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            member.role === 'admin' 
+              ? 'bg-purple-100 text-purple-800' 
+              : 'bg-blue-100 text-blue-800'
+          }`}>
+            {member.role}
+          </span>
+        </div>
+        
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Contributions:</span>
+            <span className="font-medium">{member.totalContributions.toLocaleString()} XAF</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Max Loan:</span>
+            <span className="font-medium">{maxLoanAmount.toLocaleString()} XAF</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            member.isActive 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {member.isActive ? 'Active' : 'Inactive'}
+          </span>
+          
+          <button
+            onClick={() => toggleLoanEligibility(member.id)}
+            className="flex items-center space-x-1"
+          >
+            {member.loanEligible ? (
+              <ToggleRight className="w-4 h-4 text-green-600" />
+            ) : (
+              <ToggleLeft className="w-4 h-4 text-gray-400" />
+            )}
+            <span className={`text-xs ${member.loanEligible ? 'text-green-600' : 'text-gray-400'}`}>
+              Loan {member.loanEligible ? 'Enabled' : 'Disabled'}
+            </span>
+          </button>
+        </div>
+
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setSelectedMember(member)}
+            className="text-emerald-600 hover:text-emerald-900 p-1"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={() => toggleMemberStatus(member.id)}
+            className={`p-1 ${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+          >
+            <UserX size={16} />
+          </button>
+          {member.role !== 'admin' && (
+            <button
+              onClick={() => deleteMember(member.id)}
+              className="text-red-600 hover:text-red-900 p-1"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Islamify Admin</h1>
-                <p className="text-gray-600">Welcome back, {user.name}</p>
-              </div>
-            </div>
-            <Button onClick={onLogout} variant="outline" className="flex items-center space-x-2">
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="animate-fade-in">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Members</p>
-                  <p className="text-3xl font-bold text-blue-600">{totalMembers}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-fade-in">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Members</p>
-                  <p className="text-3xl font-bold text-green-600">{activeMembers}</p>
-                </div>
-                <Eye className="w-8 h-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-fade-in">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Contributions</p>
-                  <p className="text-3xl font-bold text-purple-600">{totalContributions.toLocaleString()} XAF</p>
-                </div>
-                <DollarSign className="w-8 h-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-fade-in">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Registration Fees</p>
-                  <p className="text-3xl font-bold text-orange-600">{totalRegistrationFees.toLocaleString()} XAF</p>
-                </div>
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 font-bold">₣</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Header Section */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Members Management</h1>
-            <p className="text-gray-600">Manage association members and their contributions</p>
-          </div>
-          <Dialog open={showRegisterModal} onOpenChange={setShowRegisterModal}>
-            <DialogTrigger asChild>
-              <button className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105">
-                <Plus size={20} />
-                <span>Add Member</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Register New Member</DialogTitle>
-                <DialogDescription>
-                  Add a new member to the association
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleRegisterMember} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={newMember.name}
-                    onChange={(e) => setNewMember({...newMember, name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newMember.email}
-                    onChange={(e) => setNewMember({...newMember, email: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={newMember.phone}
-                    onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={newMember.role} onValueChange={(value) => setNewMember({...newMember, role: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Registration Fee:</strong> 5,000 XAF
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1">
-                    A default password will be generated and must be changed on first login.
-                  </p>
-                </div>
-                <Button type="submit" className="w-full">
-                  Register Member
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              placeholder="Search members..."
-            />
-          </div>
-        </div>
-
-        {/* Members Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributions</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Loan</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Eligible</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMembers.map((member) => {
-                  const maxLoanAmount = member.totalContributions * 3;
-
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                Islamify
+              </h1>
+              
+              <nav className="hidden md:flex space-x-4">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
                   return (
-                    <tr key={member.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                          <div className="text-sm text-gray-500">{member.email}</div>
-                          <div className="text-sm text-gray-500">{member.phone}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          member.role === 'admin' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {member.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {member.totalContributions.toLocaleString()} XAF
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {maxLoanAmount.toLocaleString()} XAF
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          member.isActive 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {member.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => toggleLoanEligibility(member.id)}
-                          className="flex items-center space-x-1"
-                        >
-                          {member.loanEligible ? (
-                            <ToggleRight className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <ToggleLeft className="w-5 h-5 text-gray-400" />
-                          )}
-                          <span className={`text-xs ${member.loanEligible ? 'text-green-600' : 'text-gray-400'}`}>
-                            {member.loanEligible ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => setSelectedMember(member)}
-                          className="text-emerald-600 hover:text-emerald-900"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => toggleMemberStatus(member.id)}
-                          className={`${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
-                        >
-                          <UserX size={16} />
-                        </button>
-                        {member.role !== 'admin' && (
-                          <button
-                            onClick={() => deleteMember(member.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                    <button
+                      key={item.id}
+                      onClick={() => setCurrentView(item.id)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === item.id
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
+              </nav>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Welcome, {user.name}
+              </span>
+              <button
+                onClick={onLogout}
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {currentView === 'dashboard' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage your association finances</p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Members</p>
+                    <p className="text-2xl font-bold text-gray-900">{activeMembers}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Contributions</p>
+                    <p className="text-2xl font-bold text-gray-900">{totalContributions.toLocaleString()} XAF</p>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-emerald-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Registration Fees</p>
+                    <p className="text-2xl font-bold text-gray-900">{totalRegistrationFees.toLocaleString()} XAF</p>
+                  </div>
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-indigo-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Funds</p>
+                    <p className="text-2xl font-bold text-gray-900">{(totalContributions + totalRegistrationFees).toLocaleString()} XAF</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-500 text-center py-8">No recent activity</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {currentView === 'members' && (
+          <>
+            {/* Header Section */}
+            <div className="mb-8 flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Members Management</h1>
+                <p className="text-gray-600">Manage association members and their contributions</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    <List size={20} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('card')}
+                    className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    <Grid size={20} />
+                  </button>
+                </div>
+                <Dialog open={showRegisterModal} onOpenChange={setShowRegisterModal}>
+                  <DialogTrigger asChild>
+                    <button className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105">
+                      <Plus size={20} />
+                      <span>Add Member</span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <div className="text-center mb-8">
+                      <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Plus className="w-8 h-8 text-white" />
+                      </div>
+                      <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">Add New Member</DialogTitle>
+                      <DialogDescription>Register a new member to the association</DialogDescription>
+                    </div>
+
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+                      <p className="text-sm text-emerald-800">
+                        <strong>Registration Fee:</strong> 5,000 XAF
+                      </p>
+                      <p className="text-xs text-emerald-600 mt-1">
+                        A default password will be generated and must be changed on first login.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleRegisterMember} className="space-y-6">
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Full Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <Input
+                            className="pl-10"
+                            value={newMember.name}
+                            onChange={(e) => setNewMember({...newMember, name: e.target.value})}
+                            placeholder="Enter full name"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <Input
+                            type="email"
+                            className="pl-10"
+                            value={newMember.email}
+                            onChange={(e) => setNewMember({...newMember, email: e.target.value})}
+                            placeholder="Enter email address"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <Input
+                            className="pl-10"
+                            value={newMember.phone}
+                            onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
+                            placeholder="Enter phone number"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-3">Role</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNewMember({...newMember, role: 'member'})}
+                            className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-all ${
+                              newMember.role === 'member'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <User size={20} />
+                            <span>Member</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewMember({...newMember, role: 'admin'})}
+                            className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-all ${
+                              newMember.role === 'admin'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <Shield size={20} />
+                            <span>Admin</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowRegisterModal(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600"
+                        >
+                          Add Member
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Search members..."
+                />
+              </div>
+            </div>
+
+            {/* Members Display */}
+            {viewMode === 'card' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMembers.map(renderMemberCard)}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributions</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Loan</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Eligible</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredMembers.map((member) => {
+                        const maxLoanAmount = member.totalContributions * 3;
+
+                        return (
+                          <tr key={member.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                                <div className="text-sm text-gray-500">{member.email}</div>
+                                <div className="text-sm text-gray-500">{member.phone}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                member.role === 'admin' 
+                                  ? 'bg-purple-100 text-purple-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {member.role}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {member.totalContributions.toLocaleString()} XAF
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {maxLoanAmount.toLocaleString()} XAF
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                member.isActive 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {member.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button
+                                onClick={() => toggleLoanEligibility(member.id)}
+                                className="flex items-center space-x-1"
+                              >
+                                {member.loanEligible ? (
+                                  <ToggleRight className="w-5 h-5 text-green-600" />
+                                ) : (
+                                  <ToggleLeft className="w-5 h-5 text-gray-400" />
+                                )}
+                                <span className={`text-xs ${member.loanEligible ? 'text-green-600' : 'text-gray-400'}`}>
+                                  {member.loanEligible ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => setSelectedMember(member)}
+                                className="text-emerald-600 hover:text-emerald-900"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                onClick={() => toggleMemberStatus(member.id)}
+                                className={`${member.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+                              >
+                                <UserX size={16} />
+                              </button>
+                              {member.role !== 'admin' && (
+                                <button
+                                  onClick={() => deleteMember(member.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {currentView === 'settings' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+            <p className="text-gray-500">Settings panel coming soon...</p>
+          </div>
+        )}
       </div>
 
       {/* Member Details Modal */}
