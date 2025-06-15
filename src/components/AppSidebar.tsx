@@ -16,45 +16,60 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React from "react";
 
 interface AppSidebarProps {
-  current: "dashboard" | "members" | "contributions" | "settings";
+  current?: "dashboard" | "members" | "contributions" | "settings";
   onMenuClick?: (menu: string) => void;
 }
 
 export function AppSidebar({ current, onMenuClick }: AppSidebarProps) {
   const navigate = useNavigate();
-  // Don't rely on route for highlight, use current prop
-  
-  // Menu items definition
+  const location = useLocation();
+
+  // Path-based keys to highlight current nav even on page reload
+  const routeToKey: Record<string, "dashboard" | "members" | "contributions" | "settings"> = {
+    "/dashboard": "dashboard",
+    "/members": "members",
+    "/contributions": "contributions",
+    "/settings": "settings"
+  };
+  // Detect active tab: use props.current if set (for internal tab switch), else from URL
+  const activeKey = current || routeToKey[location.pathname] || "dashboard";
+
+  // Unified navigation and prop callback
+  function handleNav(key: string, path: string) {
+    if (onMenuClick) onMenuClick(key);
+    navigate(path);
+  }
+
   const menuItems = [
     {
       key: "dashboard",
       label: "Dashboard",
       icon: Home,
-      onClick: () => onMenuClick ? onMenuClick("dashboard") : navigate("/dashboard"),
+      path: "/dashboard",
     },
     {
       key: "members",
       label: "Members",
       icon: Users,
-      onClick: () => onMenuClick ? onMenuClick("members") : navigate("/members"),
+      path: "/members",
     },
     {
       key: "contributions",
       label: "Manage Contributions",
       icon: Coins,
-      onClick: () => onMenuClick ? onMenuClick("contributions") : navigate("/contributions"),
+      path: "/contributions",
     },
     {
       key: "settings",
       label: "Settings",
       icon: Settings,
-      onClick: () => onMenuClick ? onMenuClick("settings") : navigate("/settings"),
+      path: "/settings",
     },
   ];
 
   return (
     <>
-      {/* Hamburger for mobile */}
+      {/* Hamburger only for mobile */}
       <div className="fixed top-4 left-4 z-50 md:hidden">
         <SidebarTrigger>
           <Menu size={28} />
@@ -69,8 +84,8 @@ export function AppSidebar({ current, onMenuClick }: AppSidebarProps) {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
-                      isActive={current === item.key}
-                      onClick={item.onClick}
+                      isActive={activeKey === item.key}
+                      onClick={() => handleNav(item.key, item.path)}
                     >
                       <item.icon className="mr-2" />
                       <span>{item.label}</span>
