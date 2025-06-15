@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -816,5 +816,4 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   );
 };
 
-import AdminContributionsTable from "./admin/AdminContributionsTable";
 export default AdminDashboard;
