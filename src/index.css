@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -161,4 +160,26 @@
   .gradient-secondary {
     background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
   }
+}
+
+:root {
+  --accent-main: #10b981; /* emerald-500 default */
+}
+[data-accent="emerald"] {
+  --accent-main: #10b981; /* emerald-500 */
+}
+[data-accent="blue"] {
+  --accent-main: #2563eb; /* blue-600 */
+}
+[data-accent="indigo"] {
+  --accent-main: #6366f1; /* indigo-500 */
+}
+[data-accent="violet"] {
+  --accent-main: #8b5cf6; /* violet-500 */
+}
+.bg-accent {
+  background-color: var(--accent-main) !important;
+}
+.text-accent {
+  color: var(--accent-main) !important;
 }

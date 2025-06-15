@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { AccentColorToggle } from "@/components/ui/AccentColorToggle";
+import { useTheme } from "@/components/ui/ThemeProvider";
 
 // Mock data for members
 const MOCK_MEMBERS = [
@@ -144,11 +147,23 @@ const AdminDashboard = ({ user, onLogout }) => {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
+  const { theme, accent } = useTheme();
+
+  // Helper for accent classes
+  const accentGradient =
+    accent === "blue"
+      ? "from-blue-500 to-blue-700"
+      : accent === "indigo"
+      ? "from-indigo-500 to-indigo-700"
+      : accent === "violet"
+      ? "from-violet-500 to-violet-700"
+      : "from-emerald-500 to-emerald-700";
+
   const renderMemberCard = (member) => {
     const maxLoanAmount = member.totalContributions * 3;
     
     return (
-      <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+      <div key={member.id} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{member.name}</h3>
@@ -183,6 +198,18 @@ const AdminDashboard = ({ user, onLogout }) => {
           }`}>
             {member.isActive ? 'Active' : 'Inactive'}
           </span>
+          
+          {/* Status switch */}
+          <div className="flex items-center space-x-1">
+            <Switch
+              checked={member.isActive}
+              onCheckedChange={() => toggleMemberStatus(member.id)}
+              className={`mr-2 data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-400`}
+            />
+            <span className={`text-xs ${member.isActive ? "text-green-700" : "text-gray-400"}`}>
+              {member.isActive ? "Enabled" : "Disabled"}
+            </span>
+          </div>
           
           <button
             onClick={() => toggleLoanEligibility(member.id)}
@@ -226,16 +253,13 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-                Islamify
-              </h1>
-              
+              <h1 className={`text-2xl font-bold bg-gradient-to-r ${accentGradient} bg-clip-text text-transparent transition-colors`}>Islamify</h1>
               <nav className="hidden md:flex space-x-4">
                 {navItems.map((item) => {
                   const Icon = item.icon;
@@ -257,13 +281,14 @@ const AdminDashboard = ({ user, onLogout }) => {
               </nav>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <ThemeToggle/>
+              <span className="text-sm text-gray-600 dark:text-gray-100">
                 Welcome, {user.name}
               </span>
               <button
                 onClick={onLogout}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-100 hover:text-red-600 transition-colors"
               >
                 <LogOut size={16} />
                 <span>Logout</span>
@@ -551,12 +576,13 @@ const AdminDashboard = ({ user, onLogout }) => {
                               {maxLoanAmount.toLocaleString()} XAF
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                member.isActive 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {member.isActive ? 'Active' : 'Inactive'}
+                              <Switch
+                                checked={member.isActive}
+                                onCheckedChange={() => toggleMemberStatus(member.id)}
+                                className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-400"
+                              />
+                              <span className={`ml-2 text-xs ${member.isActive ? "text-green-700" : "text-gray-400"}`}>
+                                {member.isActive ? "Enabled" : "Disabled"}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -608,8 +634,9 @@ const AdminDashboard = ({ user, onLogout }) => {
         )}
 
         {currentView === 'settings' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
+            <AccentColorToggle />
             <p className="text-gray-500">Settings panel coming soon...</p>
           </div>
         )}
