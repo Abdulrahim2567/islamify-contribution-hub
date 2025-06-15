@@ -50,7 +50,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
           <>
             <button
               onClick={e => {
-                e.stopPropagation();
+                e.stopPropagation(); // <--- prevent opening modal when clicking edit
                 setShowEdit(true);
               }}
               className="absolute left-3 top-3 z-20 bg-white/90 rounded-full p-1.5 hover:bg-blue-100 hover:text-blue-700 text-blue-600 shadow transition"
