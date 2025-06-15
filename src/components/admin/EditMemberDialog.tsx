@@ -1,8 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { User, Mail, Phone, Pencil } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import type { Member } from "./types";
 
 interface EditMemberDialogProps {
@@ -40,47 +45,88 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Member</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogContent className="max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Pencil className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Member</h1>
+          <p className="text-sm text-muted-foreground">
+            Update this member's account information.
+          </p>
+        </div>
+
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-emerald-800">
+            <strong>Email and phone should be unique.</strong>
+          </p>
+          <p className="text-xs text-emerald-600 mt-1">
+            Information will take effect immediately.
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              maxLength={100}
-            />
+            <Label className="block text-sm font-medium text-gray-700 mb-2">Full Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                className="pl-10"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Enter full name"
+                required
+                maxLength={100}
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <Input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              maxLength={100}
-            />
+            <Label className="block text-sm font-medium text-gray-700 mb-2">Email Address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                name="email"
+                type="email"
+                className="pl-10"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Enter email address"
+                required
+                maxLength={100}
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <Input
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              required
-              maxLength={20}
-            />
+            <Label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                name="phone"
+                className="pl-10"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="Enter phone number"
+                required
+                maxLength={20}
+              />
+            </div>
           </div>
-          <DialogFooter>
-            <Button type="submit" className="w-full">
+          <div className="flex space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600"
+            >
               Save Changes
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -88,3 +134,4 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 };
 
 export default EditMemberDialog;
+
