@@ -48,7 +48,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-2">Full Name</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
             <Input
               className="pl-10"
               value={newMember.name}
@@ -61,7 +61,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-2">Email Address</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
             <Input
               type="email"
               className="pl-10"
@@ -75,7 +75,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</Label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
             <Input
               className="pl-10"
               value={newMember.phone}
@@ -136,3 +136,4 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
 );
 
 export default RegisterMemberDialog;
+
