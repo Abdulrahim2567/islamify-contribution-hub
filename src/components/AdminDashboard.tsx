@@ -230,6 +230,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   const totalMembers = members.length;
   const activeMembers = members.filter(m => m.isActive).length;
+  const inactiveMembers = totalMembers - activeMembers;
   const totalContributions = members.reduce((sum, m) => sum + m.totalContributions, 0);
   const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
 
@@ -416,6 +417,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Members</p>
                     <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Active: {activeMembers} &bull; Inactive: {inactiveMembers}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <Users className="w-6 h-6 text-blue-600" />
