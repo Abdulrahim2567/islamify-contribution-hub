@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, TrendingUp, Wallet, CreditCard } from "lucide-react";
 import MembersPage from "./member/MembersPage";
-import { Member } from "./admin/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -17,52 +16,48 @@ import { formatCurrency } from "../utils/calculations";
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 
 const MemberDashboard = ({ user, onLogout }) => {
-  // Remove MOCK_CONTRIBUTIONS
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "members">("dashboard");
   const [members, setMembers] = useState([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
-  const [memberContributions, setMemberContributions] = useState<{id: string, amount: number, date: string, type: string, description?: string}[]>([]);
+
+  // Store all activities for this member (contributions history)
+  const [memberActivities, setMemberActivities] = useState([]);
 
   useEffect(() => {
     setMembers(readMembers());
   }, []);
 
-  // Find myself for up-to-date eligibility/fields
+  // Find current member record for up-to-date fields
   const thisMember = members.find((m) => m.id === user.id);
 
-  // Fetch member's real contributions from localStorage activities
+  // Fetch member's real contributions from localStorage recent activities
   useEffect(() => {
     try {
       const storedActivities = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
       if (storedActivities) {
-        const activities = JSON.parse(storedActivities);
+        const allActivities = JSON.parse(storedActivities);
         // Only contributions for this member
-        const contribs = activities.filter(
-          (a) =>
-            a.type === "contribution" &&
-            typeof a.memberId === "number" &&
-            a.memberId === user.id
-        ).map((a, idx) => ({
-          id: a.date || idx, // fallback id
-          amount: a.amount,
-          date: a.date,
-          type: "Monthly Contribution",
-          description: a.description
-        }));
-        setMemberContributions(contribs);
+        const filtered = allActivities
+          .filter(
+            (a) =>
+              a.type === "contribution" &&
+              typeof a.memberId === "number" &&
+              a.memberId === user.id
+          );
+        setMemberActivities(filtered);
       } else {
-        setMemberContributions([]);
+        setMemberActivities([]);
       }
     } catch {
-      setMemberContributions([]);
+      setMemberActivities([]);
     }
   }, [user.id, tab]);
 
   // Compute stats from real contributions
-  const totalContributions = memberContributions.reduce((sum, c) => sum + (c.amount || 0), 0);
+  const totalContributions = memberActivities.reduce((sum, a) => sum + (a.amount || 0), 0);
   const registrationFee = 5000;
-  const maxLoanAmount = (thisMember?.totalContributions || 0) * 3;
+  const maxLoanAmount = (thisMember?.totalContributions || totalContributions) * 3;
   const canApplyForLoan = !!thisMember?.loanEligible;
 
   return (
@@ -188,7 +183,12 @@ const MemberDashboard = ({ user, onLogout }) => {
 
           {/* Contribution History */}
           <div className="mt-8">
-            <MemberContributionHistory memberId={user.id} memberName={user.name} />
+            <MemberContributionHistory
+              memberId={user.id}
+              memberName={user.name}
+              // default behavior is to read from localStorage again, but you can also pass activities if needed
+              // activities={memberActivities} // Optionally inject
+            />
           </div>
         </div>
       )}
@@ -202,3 +202,4 @@ const MemberDashboard = ({ user, onLogout }) => {
 };
 
 export default MemberDashboard;
+
