@@ -20,6 +20,14 @@ import SuccessModal from "./admin/SuccessModal";
 import type { Member } from "./admin/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
 import { readMembers, writeMembers } from "../utils/membersStorage";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 // Mock data for members
 const MOCK_MEMBERS: Member[] = [
@@ -162,6 +170,8 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   });
   const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const perPage = 10;
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -478,6 +488,16 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
   };
 
+  // PAGINATION LOGIC FOR ACTIVITIES
+  const paginatedActivities = activities.slice((activityPage - 1) * perPage, activityPage * perPage);
+  const totalPages = Math.ceil(activities.length / perPage);
+
+  // Handler for pagination clicks
+  const handleActivityPageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setActivityPage(page);
+  };
+
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
       {/* Header */}
@@ -602,42 +622,92 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                       <span>No recent activity</span>
                     </div>
                   ) : (
-                    <ol className="flex flex-col">
-                      {activities.map((act, idx) => (
-                        <li
-                          key={act.id}
-                          className={
-                            `flex items-center gap-4 px-6 py-4 animate-fade-in relative group
-                            ${idx === 0 ? "bg-emerald-50/60 border-l-4 border-emerald-500 shadow-md": ""}
-                            hover:bg-emerald-100/40 transition-all`
-                          }
-                          style={{
-                            animationDelay: (idx * 50) + "ms",
-                            animationFillMode: "both",
-                          }}
-                        >
-                          {/* Icon and "avatar" */}
-                          <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50`}>
-                            <History size={26} className={`text-${act.color || "gray"}-500`} />
-                          </div>
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-emerald-700 text-base">{act.adminName || "Admin"}</span>
-                              <span className="ml-1 px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500">{act.adminEmail}</span>
-                              <span className={`ml-2 text-xs px-2 py-0.5 rounded-full bg-${act.color || "gray"}-100 text-${act.color || "gray"}-700 capitalize`}>
-                                {act.type.replace(/_/g, " ")}
-                              </span>
+                    <>
+                      <ol className="flex flex-col">
+                        {paginatedActivities.map((act, idx) => (
+                          <li
+                            key={act.id}
+                            className={
+                              `flex items-center gap-4 px-6 py-4 animate-fade-in relative group
+                              ${idx === 0 && activityPage === 1 ? "bg-emerald-50/60 border-l-4 border-emerald-500 shadow-md": ""}
+                              hover:bg-emerald-100/40 transition-all`
+                            }
+                            style={{
+                              animationDelay: (idx * 50) + "ms",
+                              animationFillMode: "both",
+                            }}
+                          >
+                            {/* Icon and "avatar" */}
+                            <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50`}>
+                              <History size={26} className={`text-${act.color || "gray"}-500`} />
                             </div>
-                            <div className="text-gray-800">{act.text}</div>
-                          </div>
-                          {/* Timestamp, right-aligned */}
-                          <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
-                            {act.timestamp}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-emerald-700 text-base">{act.adminName || "Admin"}</span>
+                                <span className="ml-1 px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500">{act.adminEmail}</span>
+                                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full bg-${act.color || "gray"}-100 text-${act.color || "gray"}-700 capitalize`}>
+                                  {act.type.replace(/_/g, " ")}
+                                </span>
+                              </div>
+                              <div className="text-gray-800">{act.text}</div>
+                            </div>
+                            {/* Timestamp, right-aligned */}
+                            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
+                              {act.timestamp}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center py-3 border-t border-gray-100 bg-white/90 sticky bottom-0 z-10">
+                          <Pagination>
+                            <PaginationContent>
+                              {/* Previous button */}
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  href="#"
+                                  aria-disabled={activityPage === 1}
+                                  tabIndex={activityPage === 1 ? -1 : 0}
+                                  onClick={e => {
+                                    e.preventDefault();
+                                    handleActivityPageChange(activityPage - 1);
+                                  }}
+                                />
+                              </PaginationItem>
+                              {/* Page links */}
+                              {Array.from({ length: totalPages }).map((_, i) => (
+                                <PaginationItem key={i}>
+                                  <PaginationLink
+                                    href="#"
+                                    isActive={activityPage === i + 1}
+                                    onClick={e => {
+                                      e.preventDefault();
+                                      handleActivityPageChange(i + 1);
+                                    }}
+                                  >
+                                    {i + 1}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              ))}
+                              {/* Next button */}
+                              <PaginationItem>
+                                <PaginationNext
+                                  href="#"
+                                  aria-disabled={activityPage === totalPages}
+                                  tabIndex={activityPage === totalPages ? -1 : 0}
+                                  onClick={e => {
+                                    e.preventDefault();
+                                    handleActivityPageChange(activityPage + 1);
+                                  }}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
