@@ -303,6 +303,27 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
         m.id === id ? { ...m, role: newRole } : m
       )
     );
+
+    // Update user object in localStorage USERS_LOCALSTORAGE_KEY
+    let persistedUsers = [];
+    try {
+      const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
+      if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
+    } catch {}
+    // Find the member for the user
+    const member = members.find(m => m.id === id);
+    if (member) {
+      // Find the index of the user matching the member's email.
+      const updatedUsers = persistedUsers.map(u =>
+        (u.email === member.email || u.id === id)
+          ? { ...u, role: newRole }
+          : u
+      );
+      persistUsers(updatedUsers);
+      // Update parent state if needed (triggers re-render for login, etc)
+      if (onNewUser) onNewUser(updatedUsers);
+    }
+
     toast({
       title: "Role Updated",
       description: `Member role changed to ${newRole}`,
