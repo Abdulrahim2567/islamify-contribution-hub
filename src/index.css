@@ -201,17 +201,12 @@
     outline: none !important;
     border-color: transparent !important;
     background-clip: padding-box;
-    box-shadow:
-      0 0 0 3px transparent,
-      0 0 0 2.5px
-        /* Gradient border using border-image */ 
-        #16a34a; /* fallback in case gradient not supported */
   }
   input:focus-visible,
   textarea:focus-visible,
   .input:focus-visible,
   .shadcn-ui-input:focus-visible {
-    /* simulated gradient border via double background */
+    /* Simulated gradient border via border-image */
     position: relative;
     z-index: 1;
     border-width: 2.5px;
@@ -219,8 +214,9 @@
     border-radius: 0.5rem;
     border-image: linear-gradient(90deg, #10b981 0%, #2563eb 100%);
     border-image-slice: 1;
-    box-shadow: 0 0 0 2px rgba(16,185,129,0.4), 0 0 0 4px rgba(37,99,235,0.22);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    /* Remove extra shadows to avoid double outline */
+    box-shadow: none;
+    transition: border-color 0.2s, border-image 0.2s;
   }
 }
 
