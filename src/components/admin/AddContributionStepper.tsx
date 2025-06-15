@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { DollarSign, X, ArrowRight, ArrowLeft, User, Plus, Check } from "lucide-react";
 import { Member } from "./types";
 import { readMembers } from "../../utils/membersStorage";
+import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
+import ContributionFormStep from "./AddContributionStepper/ContributionFormStep";
 
 interface AddContributionStepperProps {
   open: boolean;
@@ -43,11 +44,6 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
   const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 
-  const pageMembers = nonAdminMembers.slice(
-    page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE
-  );
-
   const handleSelectMember = (member: Member) => {
     setSelectedMember(member);
   };
@@ -68,6 +64,10 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
       setFormData({ amount: "", description: "" });
       setPage(0);
     }, 250);
+  };
+
+  const handleFormDataChange = (data: { amount: string; description: string }) => {
+    setFormData(data);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -152,161 +152,28 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
           </div>
         </div>
 
-        {/* Step 1: Select Member */}
+        {/* Step 1: Member select */}
         {step === 1 && (
-          <div
-            className={`
-              transition-all duration-300 ease-in-out w-full px-6 pb-6
-              opacity-100 translate-x-0 relative z-10
-            `}
-            style={{ minHeight: 384 }}
-          >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Select Member</h2>
-            {/* Minimal cards, 2 columns if space */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {pageMembers.map((member) => (
-                <button
-                  key={member.id}
-                  className={`flex flex-col items-center gap-2 border rounded-xl bg-white shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 ${
-                    selectedMember?.id === member.id
-                      ? "border-emerald-500 ring-2 ring-emerald-200"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => handleSelectMember(member)}
-                  type="button"
-                  tabIndex={0}
-                >
-                  <span className="bg-emerald-100 rounded-full w-11 h-11 flex items-center justify-center transition-all">
-                    <User className="text-emerald-500" size={24} />
-                  </span>
-                  <span className="font-medium text-gray-900 truncate text-base">
-                    {member.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {/* Clean Pagination */}
-            <div className="flex justify-center gap-1 mb-3">
-              <button
-                className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
-                disabled={page === 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                type="button"
-                aria-label="Previous page"
-              >
-                <ArrowLeft size={18} />
-              </button>
-              <span className="px-3 py-1 text-gray-500 text-sm select-none">{`Page ${page + 1} of ${totalPages === 0 ? 1 : totalPages}`}</span>
-              <button
-                className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                type="button"
-                aria-label="Next page"
-              >
-                <ArrowRight size={18} />
-              </button>
-            </div>
-            {/* Next step */}
-            <div className="flex justify-end mt-4">
-              <button
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
-                disabled={!selectedMember}
-                onClick={handleNext}
-                type="button"
-              >
-                Next <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
+          <MemberSelectStep
+            members={nonAdminMembers}
+            selectedMember={selectedMember}
+            onSelect={handleSelectMember}
+            onNext={handleNext}
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+          />
         )}
 
         {/* Step 2: Contribution Form */}
-        {step === 2 && (
-          <div
-            className={`
-              transition-all duration-300 ease-in-out w-full px-6 pb-6
-              opacity-100 translate-x-0 relative z-10
-            `}
-            style={{ minHeight: 430 }}
-          >
-            {/* Centered Add Contribution Heading, no Close Button */}
-            <div className="mb-6 flex items-center justify-center pt-2">
-              <h2 className="text-xl font-bold text-gray-900 text-center w-full">Add Contribution</h2>
-            </div>
-            {selectedMember && (
-              <div className="flex flex-col items-center mb-2">
-                <span className="bg-emerald-100 rounded-full w-12 h-12 flex items-center justify-center mb-1">
-                  <User className="text-emerald-500" size={25} />
-                </span>
-                <span className="font-bold text-gray-900">{selectedMember.name}</span>
-              </div>
-            )}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-6"
-              style={{ maxWidth: 400, margin: "0 auto" }}
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount (XAF)
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon" size={20} />
-                  <input
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        amount: e.target.value,
-                      }))
-                    }
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Enter amount"
-                    required
-                    min="1"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description (optional)
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Add a note..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex space-x-4">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ArrowLeft size={20} />
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
-                >
-                  Add Contribution
-                  <Plus size={20} />
-                </button>
-              </div>
-            </form>
-          </div>
+        {step === 2 && selectedMember && (
+          <ContributionFormStep
+            selectedMember={selectedMember}
+            formData={formData}
+            onFormDataChange={handleFormDataChange}
+            onBack={handleBack}
+            onSubmit={handleSubmit}
+          />
         )}
       </div>
     </div>
@@ -314,4 +181,3 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 };
 
 export default AddContributionStepper;
-
