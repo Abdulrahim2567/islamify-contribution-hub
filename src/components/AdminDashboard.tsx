@@ -34,6 +34,8 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { formatCurrency } from "../utils/calculations";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 
 // Add this type for the new member state
 type NewMember = {
@@ -582,260 +584,239 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
 
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className={`text-2xl font-bold bg-gradient-to-r ${accentGradient} bg-clip-text text-transparent transition-colors`}>Islamify</h1>
-              <nav className="hidden md:flex space-x-4">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setCurrentView(item.id)}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        currentView === item.id
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                      }`}
-                    >
-                      <Icon size={16} />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <ThemeToggle/>
-              <span className="text-sm text-gray-600 dark:text-gray-100">
-                Welcome, {user.name}
-              </span>
-              <button
-                onClick={onLogout}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-100 hover:text-red-600 transition-colors"
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentView === 'dashboard' && (
-          <>
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage your association finances</p>
-            </div>
-            {/* Stats Cards */}
-            <AdminStatsCards
-              totalMembers={totalMembers}
-              activeMembers={activeMembers}
-              inactiveMembers={inactiveMembers}
-              totalContributions={totalContributions}
-              totalRegistrationFees={totalRegistrationFees}
-            />
-
-            {/* Allow admin to apply for a loan (just like member dashboard) */}
-            {adminCanApplyForLoan && (
-              <div className="flex justify-end mb-6">
-                <button
-                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
-                  onClick={() => setShowLoanModal(true)}
-                >
-                  <CreditCard className="w-5 h-5" />
-                  Apply For Loan
-                </button>
-              </div>
-            )}
-            {showLoanModal && (
-              <LoanApplication
-                memberId={String(adminMemberId)}
-                maxAmount={adminMaxLoanAmount}
-                onSubmit={data => {
-                  setShowLoanModal(false);
-                  // Store the application in localStorage or activities (not specified, just notify for now)
-                  // Optionally, you can handle storage as an enhancement.
-                  // Show a toast notification
-                  toast({
-                    title: "Loan Application Submitted",
-                    description: `Your application for ${formatCurrency(data.amount)} is pending.`,
-                  });
-                }}
-                onCancel={() => setShowLoanModal(false)}
-              />
-            )}
-
-            {/* Recent Activity */}
-            <AdminRecentActivity
-              activities={activities}
-              paginatedActivities={paginatedActivities}
-              totalPages={totalPages}
-              activityPage={activityPage}
-              onActivityPageChange={handleActivityPageChange}
-            />
-          </>
-        )}
-
-        {currentView === 'members' && (
-          <>
-            {/* Header Section */}
-            <div className="mb-8 flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Members Management</h1>
-                <p className="text-gray-600">Manage association members and their contributions</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {
-                      // Only animate if switching from another mode to "table"
-                      setViewMode('table');
-                      setCardsShouldAnimate(false);
-                    }}
-                    className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    <List size={20} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewMode('card');
-                      setCardsShouldAnimate(true);
-                      // Reset animation after 700ms (time for anims to finish)
-                      setTimeout(() => setCardsShouldAnimate(false), 700);
-                    }}
-                    className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    <Grid size={20} />
-                  </button>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={onLogout}
+          user={user}
+        />
+        <SidebarInset>
+          <div className="flex-1">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <SidebarTrigger />
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      {activeTab === "dashboard" && "Dashboard"}
+                      {activeTab === "members" && "Members"}
+                      {activeTab === "contributions" && "Manage Contributions"}
+                      {activeTab === "settings" && "Settings"}
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      Welcome back, {user.name || user.email}
+                    </p>
+                  </div>
                 </div>
-                {/* Add Contribution Button (opens stepper) */}
-                <button
-                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
-                  onClick={() => setShowAddContributionStepper(true)}
-                  type="button"
-                  aria-label="Add contribution"
-                >
-                  <DollarSign size={20} />
-                  Add Contribution
-                </button>
-                <RegisterMemberDialog
-                  open={showRegisterModal}
-                  onOpenChange={setShowRegisterModal}
-                  newMember={newMember}
-                  setNewMember={setNewMember}
-                  onSubmit={handleRegisterMember}
-                />
               </div>
             </div>
 
-            {/* Add Contribution Stepper Modal */}
-            <AddContributionStepper
-              open={showAddContributionStepper}
-              onOpenChange={setShowAddContributionStepper}
-              members={members}
-              onSubmit={handleAddContributionStepper}
-            />
+            {/* Content */}
+            <div className="p-6">
+              {currentView === 'dashboard' && (
+                <>
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+                    <p className="text-gray-600">Manage your association finances</p>
+                  </div>
+                  {/* Stats Cards */}
+                  <AdminStatsCards
+                    totalMembers={totalMembers}
+                    activeMembers={activeMembers}
+                    inactiveMembers={inactiveMembers}
+                    totalContributions={totalContributions}
+                    totalRegistrationFees={totalRegistrationFees}
+                  />
 
-            {/* Search */}
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Search members..."
-                />
-              </div>
-            </div>
+                  {/* Allow admin to apply for a loan (just like member dashboard) */}
+                  {adminCanApplyForLoan && (
+                    <div className="flex justify-end mb-6">
+                      <button
+                        className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
+                        onClick={() => setShowLoanModal(true)}
+                      >
+                        <CreditCard className="w-5 h-5" />
+                        Apply For Loan
+                      </button>
+                    </div>
+                  )}
+                  {showLoanModal && (
+                    <LoanApplication
+                      memberId={String(adminMemberId)}
+                      maxAmount={adminMaxLoanAmount}
+                      onSubmit={data => {
+                        setShowLoanModal(false);
+                        // Store the application in localStorage or activities (not specified, just notify for now)
+                        // Optionally, you can handle storage as an enhancement.
+                        // Show a toast notification
+                        toast({
+                          title: "Loan Application Submitted",
+                          description: `Your application for ${formatCurrency(data.amount)} is pending.`,
+                        });
+                      }}
+                      onCancel={() => setShowLoanModal(false)}
+                    />
+                  )}
 
-            {/* Members Display */}
-            {viewMode === 'card' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredMembers.map((member, idx) => (
-                  <div
-                    key={member.id}
-                    className={
-                      cardsShouldAnimate
-                        ? "animate-fade-in animate-scale-in"
-                        : ""
-                    }
-                    style={{
-                      animationDelay: cardsShouldAnimate
-                        ? (idx * 70) + "ms"
-                        : undefined,
-                      animationFillMode: cardsShouldAnimate ? "both" : undefined,
-                    }}
-                  >
-                    <MemberCard
-                      member={member}
-                      currentUser={user}
+                  {/* Recent Activity */}
+                  <AdminRecentActivity
+                    activities={activities}
+                    paginatedActivities={paginatedActivities}
+                    totalPages={totalPages}
+                    activityPage={activityPage}
+                    onActivityPageChange={handleActivityPageChange}
+                  />
+                </>
+              )}
+
+              {currentView === 'members' && (
+                <>
+                  {/* Header Section */}
+                  <div className="mb-8 flex justify-between items-center">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900 mb-2">Members Management</h1>
+                      <p className="text-gray-600">Manage association members and their contributions</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            // Only animate if switching from another mode to "table"
+                            setViewMode('table');
+                            setCardsShouldAnimate(false);
+                          }}
+                          className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                          <List size={20} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setViewMode('card');
+                            setCardsShouldAnimate(true);
+                            // Reset animation after 700ms (time for anims to finish)
+                            setTimeout(() => setCardsShouldAnimate(false), 700);
+                          }}
+                          className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                          <Grid size={20} />
+                        </button>
+                      </div>
+                      {/* Add Contribution Button (opens stepper) */}
+                      <button
+                        className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
+                        onClick={() => setShowAddContributionStepper(true)}
+                        type="button"
+                        aria-label="Add contribution"
+                      >
+                        <DollarSign size={20} />
+                        Add Contribution
+                      </button>
+                      <RegisterMemberDialog
+                        open={showRegisterModal}
+                        onOpenChange={setShowRegisterModal}
+                        newMember={newMember}
+                        setNewMember={setNewMember}
+                        onSubmit={handleRegisterMember}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Add Contribution Stepper Modal */}
+                  <AddContributionStepper
+                    open={showAddContributionStepper}
+                    onOpenChange={setShowAddContributionStepper}
+                    members={members}
+                    onSubmit={handleAddContributionStepper}
+                  />
+
+                  {/* Search */}
+                  <div className="mb-6">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Search members..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Members Display */}
+                  {viewMode === 'card' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredMembers.map((member, idx) => (
+                        <div
+                          key={member.id}
+                          className={
+                            cardsShouldAnimate
+                              ? "animate-fade-in animate-scale-in"
+                              : ""
+                          }
+                          style={{
+                            animationDelay: cardsShouldAnimate
+                              ? (idx * 70) + "ms"
+                              : undefined,
+                            animationFillMode: cardsShouldAnimate ? "both" : undefined,
+                          }}
+                        >
+                          <MemberCard
+                            member={member}
+                            currentUser={user}
+                            onView={setSelectedMember}
+                            onStatusToggle={toggleMemberStatus}
+                            onLoanToggle={toggleLoanEligibility}
+                            onDelete={deleteMember}
+                            onRoleChange={handleChangeRole}
+                            onEdit={handleEditMember}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <MemberTable
+                      members={members.map(m => ({
+                        ...m,
+                        totalContributions: memberContributionMap[m.id] || 0
+                      }))}
                       onView={setSelectedMember}
                       onStatusToggle={toggleMemberStatus}
                       onLoanToggle={toggleLoanEligibility}
                       onDelete={deleteMember}
+                      searchTerm={searchTerm}
                       onRoleChange={handleChangeRole}
                       onEdit={handleEditMember}
                     />
+                  )}
+                </>
+              )}
+
+              {currentView === 'contributions' && user.role === "admin" && (
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <AdminContributionsTable />
+                </React.Suspense>
+              )}
+
+              {currentView === 'settings' && (
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
+                    <p className="text-gray-600 dark:text-gray-300">Manage association configuration</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <MemberTable
-                members={members.map(m => ({
-                  ...m,
-                  totalContributions: memberContributionMap[m.id] || 0
-                }))}
-                onView={setSelectedMember}
-                onStatusToggle={toggleMemberStatus}
-                onLoanToggle={toggleLoanEligibility}
-                onDelete={deleteMember}
-                searchTerm={searchTerm}
-                onRoleChange={handleChangeRole}
-                onEdit={handleEditMember}
-              />
-            )}
-          </>
-        )}
-
-        {currentView === 'contributions' && user.role === "admin" && (
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <AdminContributionsTable />
-          </React.Suspense>
-        )}
-
-        {currentView === 'settings' && (
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-              <p className="text-gray-600 dark:text-gray-300">Manage association configuration</p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
-              <AdminSettingsForm settings={settings} setSettings={setSettings} />
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
+                    <AdminSettingsForm settings={settings} setSettings={setSettings} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </SidebarInset>
       </div>
-
-      {/* Member Details Modal */}
-      <MemberDetailModal member={selectedMember} onClose={() => setSelectedMember(null)} />
-
-      {/* Success Modal */}
-      <SuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        generatedPassword={generatedPassword}
-      />
-    </div>
+    </SidebarProvider>
   );
 };
 
