@@ -20,7 +20,7 @@ import SuccessModal from "./admin/SuccessModal";
 import type { Member } from "./admin/types";
 
 // Mock data for members
-const MOCK_MEMBERS = [
+const MOCK_MEMBERS: Member[] = [
   {
     id: 1,
     name: "John Doe",
@@ -59,15 +59,23 @@ const MOCK_MEMBERS = [
   }
 ];
 
+// Add this type for the new member state
+type NewMember = {
+  name: string;
+  email: string;
+  phone: string;
+  role: "member" | "admin";
+};
+
 const AdminDashboard = ({ user, onLogout }) => {
-  const [members, setMembers] = useState(MOCK_MEMBERS);
+  const [members, setMembers] = useState<Member[]>(MOCK_MEMBERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
-  const [newMember, setNewMember] = useState({
+  const [newMember, setNewMember] = useState<NewMember>({
     name: '',
     email: '',
     phone: '',
@@ -88,9 +96,12 @@ const AdminDashboard = ({ user, onLogout }) => {
   const handleRegisterMember = (e) => {
     e.preventDefault();
     const password = generatePassword();
-    const member = {
+    const member: Member = {
       id: members.length + 1,
-      ...newMember,
+      name: newMember.name,
+      email: newMember.email,
+      phone: newMember.phone,
+      role: newMember.role, // Now always of type "member" | "admin"
       registrationFee: 5000,
       totalContributions: 0,
       isActive: true,
