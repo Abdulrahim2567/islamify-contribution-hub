@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
 import { Member } from "../admin/types";
+import MemberDetailModal from "../admin/MemberDetailModal";
 
 interface MembersPageProps {
   members: Member[];
