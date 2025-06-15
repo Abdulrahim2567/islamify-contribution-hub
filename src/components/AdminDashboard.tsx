@@ -527,7 +527,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                         : ""
                     }
                     style={{
-                      // Stagger the animation a bit, for a nice effect
                       animationDelay: cardsShouldAnimate
                         ? (idx * 70) + "ms"
                         : undefined,
@@ -536,6 +535,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   >
                     <MemberCard
                       member={member}
+                      currentUser={user}
                       onView={setSelectedMember}
                       onStatusToggle={toggleMemberStatus}
                       onLoanToggle={toggleLoanEligibility}
