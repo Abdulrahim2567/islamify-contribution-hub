@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, TrendingUp, Wallet, CreditCard, Plus } from "lucide-react";
+// Removed imports related to Dialog for contributions
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 // Mock data for member contributions
@@ -19,42 +19,12 @@ const MOCK_CONTRIBUTIONS = [
 ];
 
 const MemberDashboard = ({ user, onLogout }) => {
-  const [contributions, setContributions] = useState(MOCK_CONTRIBUTIONS);
-  const [showContributeModal, setShowContributeModal] = useState(false);
-  const [contributionAmount, setContributionAmount] = useState('');
+  const [contributions] = useState(MOCK_CONTRIBUTIONS);
   const { toast } = useToast();
 
   const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
   const maxLoanAmount = totalContributions * 3;
   const registrationFee = 5000;
-
-  const handleContribution = (e) => {
-    e.preventDefault();
-    const amount = parseInt(contributionAmount);
-    if (amount < 1000) {
-      toast({
-        title: "Invalid Amount",
-        description: "Minimum contribution is 1,000 XAF",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newContribution = {
-      id: contributions.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      amount: amount,
-      type: "Manual Contribution"
-    };
-
-    setContributions([newContribution, ...contributions]);
-    setContributionAmount('');
-    setShowContributeModal(false);
-    toast({
-      title: "Contribution Added",
-      description: `Successfully added ${amount.toLocaleString()} XAF to your contributions`,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,56 +95,8 @@ const MemberDashboard = ({ user, onLogout }) => {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <Card className="mb-8 animate-fade-in">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your contributions and loans</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Dialog open={showContributeModal} onOpenChange={setShowContributeModal}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Make Contribution
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Make a Contribution</DialogTitle>
-                    <DialogDescription>
-                      Add to your total contributions
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleContribution} className="space-y-4">
-                    <div>
-                      <Label htmlFor="amount">Amount (XAF)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={contributionAmount}
-                        onChange={(e) => setContributionAmount(e.target.value)}
-                        placeholder="Enter amount"
-                        min="1000"
-                        required
-                      />
-                      <p className="text-sm text-gray-600 mt-1">Minimum: 1,000 XAF</p>
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Add Contribution
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-
-              <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-                <CreditCard className="w-4 h-4 mr-2" />
-                Apply for Loan
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quick Actions - removed the Make Contribution dialog/button */}
+        {/* Removed Card for Quick Actions (Make Contribution) */}
 
         {/* Contribution History */}
         <Card className="animate-fade-in">
