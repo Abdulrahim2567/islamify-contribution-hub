@@ -588,29 +588,58 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
             {/* Recent Activity */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+                <span className="text-xs text-gray-500">
+                  {activities.length} entries
+                </span>
               </div>
-              <div className="p-6">
-                {activities.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No recent activity</p>
-                ) : (
-                  <ol className="space-y-2">
-                    {activities.map((act) => (
-                      <li key={act.id} className="flex items-start gap-2">
-                        <History className="mt-0.5 w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className={`mt-1 w-2 h-2 rounded-full bg-${act.color}-500`} />
-                        <span>
-                          <span className="block text-sm text-gray-800">
-                            <span className="font-semibold text-emerald-700">{act.adminName || "Admin"}</span>{' '}
-                            <span className="text-gray-600">({act.adminEmail || ""})</span> — {act.text}
+              <div className="p-0">
+                <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+                  {activities.length === 0 ? (
+                    <div className="py-12 flex justify-center items-center text-gray-400">
+                      <History className="mr-2 w-6 h-6" />
+                      <span>No recent activity</span>
+                    </div>
+                  ) : (
+                    <ol className="flex flex-col">
+                      {activities.map((act, idx) => (
+                        <li
+                          key={act.id}
+                          className={
+                            `flex items-center gap-4 px-6 py-4 animate-fade-in relative group
+                            ${idx === 0 ? "bg-emerald-50/60 border-l-4 border-emerald-500 shadow-md": ""}
+                            hover:bg-emerald-100/40 transition-all`
+                          }
+                          style={{
+                            animationDelay: (idx * 50) + "ms",
+                            animationFillMode: "both",
+                          }}
+                        >
+                          {/* Icon and "avatar" */}
+                          <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50`}>
+                            <History size={26} className={`text-${act.color || "gray"}-500`} />
+                          </div>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-emerald-700 text-base">{act.adminName || "Admin"}</span>
+                              <span className="ml-1 px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500">{act.adminEmail}</span>
+                              <span className={`ml-2 text-xs px-2 py-0.5 rounded-full bg-${act.color || "gray"}-100 text-${act.color || "gray"}-700 capitalize`}>
+                                {act.type.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                            <div className="text-gray-800">{act.text}</div>
+                          </div>
+                          {/* Timestamp, right-aligned */}
+                          <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
+                            {act.timestamp}
                           </span>
-                          <span className="block text-xs text-gray-400">{act.timestamp}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
               </div>
             </div>
           </>
