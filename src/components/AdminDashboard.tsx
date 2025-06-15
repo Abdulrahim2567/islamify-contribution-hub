@@ -528,7 +528,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
             <AddContributionStepper
               open={showAddContributionStepper}
               onOpenChange={setShowAddContributionStepper}
-              members={members}   {/* this is always the latest from localStorage */}
+              members={members}
               onSubmit={handleAddContributionStepper}
             />
 
