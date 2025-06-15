@@ -20,6 +20,9 @@ import SuccessModal from "./admin/SuccessModal";
 import type { Member } from "./admin/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
 import { readMembers, writeMembers } from "../utils/membersStorage";
+import AdminStatsCards from "./admin/AdminStatsCards";
+import AdminRecentActivity from "./admin/AdminRecentActivity";
+import AdminSettingsForm from "./admin/AdminSettingsForm";
 import {
   Pagination,
   PaginationContent,
@@ -634,167 +637,22 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
               <p className="text-gray-600">Manage your association finances</p>
             </div>
-
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Members</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Active: {activeMembers} &bull; Inactive: {inactiveMembers}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Contributions</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalContributions.toLocaleString()} XAF</p>
-                  </div>
-                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <DollarSign className="w-6 h-6 text-emerald-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Registration Fees</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalRegistrationFees.toLocaleString()} XAF</p>
-                  </div>
-                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-indigo-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Funds</p>
-                    <p className="text-2xl font-bold text-gray-900">{(totalContributions + totalRegistrationFees).toLocaleString()} XAF</p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            <AdminStatsCards
+              totalMembers={totalMembers}
+              activeMembers={activeMembers}
+              inactiveMembers={inactiveMembers}
+              totalContributions={totalContributions}
+              totalRegistrationFees={totalRegistrationFees}
+            />
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-                <span className="text-xs text-gray-500">
-                  {activities.length} entries
-                </span>
-              </div>
-              <div className="p-0">
-                <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
-                  {activities.length === 0 ? (
-                    <div className="py-12 flex justify-center items-center text-gray-400">
-                      <History className="mr-2 w-6 h-6" />
-                      <span>No recent activity</span>
-                    </div>
-                  ) : (
-                    <>
-                      <ol className="flex flex-col">
-                        {paginatedActivities.map((act, idx) => (
-                          <li
-                            key={act.id}
-                            className={
-                              `flex items-center gap-4 px-6 py-4 animate-fade-in relative group
-                              ${idx === 0 && activityPage === 1 ? "bg-emerald-50/60 border-l-4 border-emerald-500 shadow-md": ""}
-                              hover:bg-emerald-100/40 transition-all`
-                            }
-                            style={{
-                              animationDelay: (idx * 50) + "ms",
-                              animationFillMode: "both",
-                            }}
-                          >
-                            {/* Icon and "avatar" */}
-                            <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50`}>
-                              <History size={26} className={`text-${act.color || "gray"}-500`} />
-                            </div>
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-emerald-700 text-base">{act.adminName || "Admin"}</span>
-                                <span className="ml-1 px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-500">{act.adminEmail}</span>
-                                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full bg-${act.color || "gray"}-100 text-${act.color || "gray"}-700 capitalize`}>
-                                  {act.type.replace(/_/g, " ")}
-                                </span>
-                              </div>
-                              <div className="text-gray-800">{act.text}</div>
-                            </div>
-                            {/* Timestamp, right-aligned */}
-                            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
-                              {act.timestamp}
-                            </span>
-                          </li>
-                        ))}
-                      </ol>
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex justify-center py-3 border-t border-gray-100 bg-white/90 sticky bottom-0 z-10">
-                          <Pagination>
-                            <PaginationContent>
-                              {/* Previous button */}
-                              <PaginationItem>
-                                <PaginationPrevious
-                                  href="#"
-                                  aria-disabled={activityPage === 1}
-                                  tabIndex={activityPage === 1 ? -1 : 0}
-                                  onClick={e => {
-                                    e.preventDefault();
-                                    handleActivityPageChange(activityPage - 1);
-                                  }}
-                                />
-                              </PaginationItem>
-                              {/* Page links */}
-                              {Array.from({ length: totalPages }).map((_, i) => (
-                                <PaginationItem key={i}>
-                                  <PaginationLink
-                                    href="#"
-                                    isActive={activityPage === i + 1}
-                                    onClick={e => {
-                                      e.preventDefault();
-                                      handleActivityPageChange(i + 1);
-                                    }}
-                                  >
-                                    {i + 1}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              ))}
-                              {/* Next button */}
-                              <PaginationItem>
-                                <PaginationNext
-                                  href="#"
-                                  aria-disabled={activityPage === totalPages}
-                                  tabIndex={activityPage === totalPages ? -1 : 0}
-                                  onClick={e => {
-                                    e.preventDefault();
-                                    handleActivityPageChange(activityPage + 1);
-                                  }}
-                                />
-                              </PaginationItem>
-                            </PaginationContent>
-                          </Pagination>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+            <AdminRecentActivity
+              activities={activities}
+              paginatedActivities={paginatedActivities}
+              totalPages={totalPages}
+              activityPage={activityPage}
+              onActivityPageChange={handleActivityPageChange}
+            />
           </>
         )}
 
@@ -928,63 +786,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               <p className="text-gray-600 dark:text-gray-300">Manage association configuration</p>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  // Settings update logic placeholder
-                }}
-                className="space-y-6"
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    Association Name
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.associationName}
-                    onChange={(e) => setSettings(s => ({ ...s, associationName: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    Registration Fee (XAF)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.registrationFee}
-                    onChange={(e) => setSettings(s => ({ ...s, registrationFee: Number(e.target.value) }))}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
-                    required
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    Maximum Loan Multiplier
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.maxLoanMultiplier}
-                    onChange={(e) => setSettings(s => ({ ...s, maxLoanMultiplier: Number(e.target.value) }))}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
-                    required
-                    min="1"
-                    max="10"
-                  />
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Members can borrow up to this many times their savings amount
-                  </p>
-                </div>
-                <button
-                  type="submit"
-                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
-                >
-                  <Save size={20} />
-                  <span>Save Settings</span>
-                </button>
-              </form>
+              <AdminSettingsForm settings={settings} setSettings={setSettings} />
             </div>
           </div>
         )}
