@@ -8,55 +8,47 @@ import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
 
-// Mock data - In real app, this would come from Supabase
-const MOCK_USERS = [
-  { id: 1, email: "admin@islamify.org", password: "admin123", role: "admin", name: "Admin User" },
-  { id: 2, email: "member@islamify.org", password: "member123", role: "member", name: "John Doe", needsPasswordChange: false }
-];
-
-const USERS_LOCALSTORAGE_KEY = 'islamify_users';
+// Default admin user: always present as fallback if localstorage empty
+const DEMO_ADMIN = { id: 1, email: "admin@islamify.org", password: "admin123", role: "admin", name: "Admin User" };
+const USERS_LOCALSTORAGE_KEY = "islamify_users";
 
 function getPersistedUsers() {
   try {
     const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
-    if (fromStorage) {
-      return JSON.parse(fromStorage) || [];
-    }
-  } catch {}
-  return [];
+    const parsed = fromStorage ? JSON.parse(fromStorage) : [];
+    // Always include the demo admin if not in localStorage
+    const hasAdmin = parsed.some(u => u.email === DEMO_ADMIN.email);
+    return hasAdmin ? parsed : [DEMO_ADMIN, ...parsed];
+  } catch {
+    return [DEMO_ADMIN];
+  }
 }
 
 function persistUsers(users: any[]) {
-  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
+  // Always ensure the demo admin remains present in the users list
+  const withAdmin = users.some(u => u.email === DEMO_ADMIN.email)
+    ? users
+    : [DEMO_ADMIN, ...users];
+  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(withAdmin));
 }
 
 const Index = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const { toast } = useToast();
 
-  // On mount/load: merge users from localStorage with MOCK_USERS, avoid duplicate IDs/emails.
+  // On mount/load: get all users from localStorage (plus demo admin if needed)
   useEffect(() => {
     const localUsers = getPersistedUsers();
-    const mergedUsers = [
-      ...MOCK_USERS.filter(m => !localUsers.some(u => u.email === m.email)),
-      ...localUsers,
-    ];
-    setUsers(mergedUsers);
+    setUsers(localUsers);
   }, []);
 
   // Helper: write users to both state and localStorage
   const updateUsers = (newUsers: any[]) => {
-    persistUsers(newUsers.filter(u => !MOCK_USERS.some(m => m.email === u.email) || u.id > MOCK_USERS.length));
-    // Always re-fetch from persisted store (authoritative) to update current roles/status
-    const latestUsers = getPersistedUsers();
-    const mergedUsers = [
-      ...MOCK_USERS.filter(m => !latestUsers.some(u => u.email === m.email)),
-      ...latestUsers,
-    ];
-    setUsers(mergedUsers);
+    persistUsers(newUsers);
+    setUsers(getPersistedUsers());
   };
 
   const handleLogout = () => {
@@ -84,9 +76,7 @@ const Index = () => {
       <ChangePasswordForm
         user={currentUser}
         users={users}
-        setUsers={(u) => {
-          updateUsers(u);
-        }}
+        setUsers={updateUsers}
         onSuccess={(updatedUser) => {
           setCurrentUser(updatedUser);
           setIsLoggedIn(true);
@@ -101,7 +91,7 @@ const Index = () => {
   }
 
   if (isLoggedIn && currentUser) {
-    return currentUser.role === 'admin' ? (
+    return currentUser.role === "admin" ? (
       <AdminDashboard user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users} />
     ) : (
       <MemberDashboard user={currentUser} onLogout={handleLogout} />
@@ -128,9 +118,7 @@ const Index = () => {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Manage Your Association
-          </h2>
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">Manage Your Association</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Track contributions, manage members, and facilitate loans with our comprehensive management system
           </p>
@@ -149,7 +137,6 @@ const Index = () => {
               </p>
             </CardContent>
           </Card>
-
           <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105">
             <CardHeader className="text-center">
               <TrendingUp className="w-12 h-12 text-green-600 mx-auto mb-4" />
@@ -161,7 +148,6 @@ const Index = () => {
               </p>
             </CardContent>
           </Card>
-
           <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105">
             <CardHeader className="text-center">
               <LogIn className="w-12 h-12 text-purple-600 mx-auto mb-4" />

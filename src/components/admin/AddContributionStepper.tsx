@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { DollarSign, X, ArrowRight, ArrowLeft, User, Plus, Check } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Member } from "./types";
 import { readMembers } from "../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
@@ -8,7 +9,7 @@ import ContributionFormStep from "./AddContributionStepper/ContributionFormStep"
 interface AddContributionStepperProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  members: Member[];
+  members: Member[]; // unused now
   onSubmit: (data: {
     memberId: number;
     amount: number;
@@ -23,7 +24,7 @@ const PAGE_SIZE = 6;
 const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   open,
   onOpenChange,
-  members: propMembers, // still for fallback compatibility
+  members: _propMembers, // ignore propMembers; always use freshly loaded members from localStorage
   onSubmit,
 }) => {
   const [step, setStep] = useState<1 | 2>(1);
@@ -36,9 +37,9 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   useEffect(() => {
     if (open) {
       const freshMembers = readMembers();
-      setLocalMembers(freshMembers && freshMembers.length > 0 ? freshMembers : propMembers);
+      setLocalMembers(freshMembers && freshMembers.length > 0 ? freshMembers : []);
     }
-  }, [open, propMembers]);
+  }, [open]);
 
   // Only non-admins selectable for contributions
   const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
