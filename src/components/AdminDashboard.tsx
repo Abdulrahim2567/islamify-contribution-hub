@@ -24,6 +24,7 @@ import AdminStatsCards from "./admin/AdminStatsCards";
 import AdminRecentActivity from "./admin/AdminRecentActivity";
 import AdminSettingsForm from "./admin/AdminSettingsForm";
 import AdminContributionsTable from "./admin/AdminContributionsTable";
+import LoanApplication from "./member/LoanApplication";
 import {
   Pagination,
   PaginationContent,
@@ -190,6 +191,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
   const [activityPage, setActivityPage] = useState(1);
   const perPage = 10;
+  const [showLoanModal, setShowLoanModal] = useState(false);
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -589,6 +591,20 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     setActivityPage(page);
   };
 
+  // For admin, find "self" as a member record, e.g., by email
+  const thisAdminMember = members.find((m) => m.email === user.email || m.id === user.id);
+
+  // For loan, use sum of admin's contributions (like member dashboard logic)
+  const adminMemberId = thisAdminMember?.id ?? user.id;
+  // Fallback: If no member record, default contributions to 0
+  const adminContributions = thisAdminMember
+    ? memberContributionMap[thisAdminMember.id] || 0
+    : 0;
+  const adminMaxLoanAmount = adminContributions * 3;
+
+  // Allow admin to apply for loan if they are found as a member and eligible
+  const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
+
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200`}>
       {/* Header */}
@@ -650,6 +666,37 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               totalContributions={totalContributions}
               totalRegistrationFees={totalRegistrationFees}
             />
+
+            {/* Allow admin to apply for a loan (just like member dashboard) */}
+            {adminCanApplyForLoan && (
+              <div className="flex justify-end mb-6">
+                <button
+                  className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
+                  onClick={() => setShowLoanModal(true)}
+                >
+                  <CreditCard className="w-5 h-5" />
+                  Apply For Loan
+                </button>
+              </div>
+            )}
+            {showLoanModal && (
+              <LoanApplication
+                memberId={String(adminMemberId)}
+                maxAmount={adminMaxLoanAmount}
+                onSubmit={data => {
+                  setShowLoanModal(false);
+                  // Store the application in localStorage or activities (not specified, just notify for now)
+                  // Optionally, you can handle storage as an enhancement.
+                  // Show a toast notification
+                  toast({
+                    title: "Loan Application Submitted",
+                    description: `Your application for ${formatCurrency(data.amount)} is pending.`,
+                  });
+                }}
+                onCancel={() => setShowLoanModal(false)}
+              />
+            )}
+
             {/* Recent Activity */}
             <AdminRecentActivity
               activities={activities}
