@@ -23,10 +23,30 @@ export default function DashboardPage(props: any) {
   const [members, setMembers] = useState([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [memberActivities, setMemberActivities] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [activityPage, setActivityPage] = useState(1);
 
   useEffect(() => {
     setMembers(readMembers());
   }, []);
+
+  // Load activities for admin
+  useEffect(() => {
+    if (user?.role === "admin") {
+      try {
+        const storedActivities = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+        if (storedActivities) {
+          const allActivities = JSON.parse(storedActivities);
+          setActivities(allActivities);
+        } else {
+          setActivities([]);
+        }
+      } catch (err) {
+        console.log("Failed to read activities", err);
+        setActivities([]);
+      }
+    }
+  }, [user?.role]);
 
   // For members: Fetch member's real contributions from localStorage recent activities
   useEffect(() => {
@@ -178,6 +198,30 @@ export default function DashboardPage(props: any) {
     );
   }
 
+  // Calculate stats for admin dashboard
+  const activeMembers = members.filter(m => m.status === 'active').length;
+  const inactiveMembers = members.filter(m => m.status === 'inactive').length;
+  const totalMembers = members.length;
+  
+  // Calculate total contributions from activities
+  const contributionActivities = activities.filter(a => a.type === 'contribution');
+  const totalContributions = contributionActivities.reduce((sum, a) => sum + (a.amount || 0), 0);
+  
+  // Calculate registration fees (5000 XAF per member)
+  const totalRegistrationFees = totalMembers * 5000;
+
+  // Pagination for activities
+  const activitiesPerPage = 5;
+  const totalPages = Math.ceil(activities.length / activitiesPerPage);
+  const startIndex = (activityPage - 1) * activitiesPerPage;
+  const paginatedActivities = activities.slice(startIndex, startIndex + activitiesPerPage);
+
+  const handleActivityPageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setActivityPage(page);
+    }
+  };
+
   // Admin dashboard content
   return (
     <SidebarProvider>
@@ -208,11 +252,23 @@ export default function DashboardPage(props: any) {
 
             <div className="container mx-auto px-4 py-8">
               {/* Stats Cards */}
-              <AdminStatsCards users={users} />
+              <AdminStatsCards
+                totalMembers={totalMembers}
+                activeMembers={activeMembers}
+                inactiveMembers={inactiveMembers}
+                totalContributions={totalContributions}
+                totalRegistrationFees={totalRegistrationFees}
+              />
               
               {/* Recent Activity */}
               <div className="mt-8">
-                <AdminRecentActivity />
+                <AdminRecentActivity
+                  activities={activities}
+                  paginatedActivities={paginatedActivities}
+                  totalPages={totalPages}
+                  activityPage={activityPage}
+                  onActivityPageChange={handleActivityPageChange}
+                />
               </div>
             </div>
           </div>
