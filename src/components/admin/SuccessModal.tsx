@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
@@ -17,13 +17,16 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
   generatedPassword
 }) => {
   const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedPassword);
+    setCopied(true);
     toast({
       title: "Password Copied",
       description: "Password copied to clipboard",
     });
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
@@ -53,11 +56,15 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
               variant="ghost"
               className="absolute -top-3 -right-3 bg-white shadow hover:bg-emerald-100 rounded-full"
               type="button"
-              aria-label="Copy password"
+              aria-label={copied ? "Password copied" : "Copy password"}
               onClick={handleCopy}
               tabIndex={0}
+              disabled={copied}
             >
-              <Copy className="w-4 h-4 text-emerald-500" />
+              {copied ?
+                <Check className="w-4 h-4 text-green-500 transition-all" /> :
+                <Copy className="w-4 h-4 text-emerald-500 transition-all" />
+              }
             </Button>
           </div>
           <p className="text-sm text-green-700">
@@ -76,3 +83,4 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
 };
 
 export default SuccessModal;
+
