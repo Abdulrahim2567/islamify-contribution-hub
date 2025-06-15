@@ -193,16 +193,6 @@ const MemberDashboard = ({ user, onLogout }) => {
               memberId={user.id}
               memberName={user.name}
             />
-            {/* Diagnostics */}
-            <div className="mt-4 text-xs text-gray-400">
-              <div>Loaded <b>{memberActivities.length}</b> activity records.</div>
-              {memberActivities.length > 0 && (
-                <div>
-                  First: {JSON.stringify(memberActivities[0], null, 2)}
-                </div>
-              )}
-              <div className="hidden">{JSON.stringify(memberActivities)}</div>
-            </div>
           </div>
         </div>
       )}
