@@ -81,6 +81,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   };
 
   const [members, setMembers] = useState<Member[]>([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     // On mount: get members from localStorage, fallback only to DEMO_ADMIN_MEMBER.
@@ -150,7 +151,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [currentView, setCurrentView] = useState('dashboard');
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
   const [newMember, setNewMember] = useState<NewMember>({
     name: '',
@@ -311,21 +311,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Load admin activities, including contribution records ---
-  // const [activities, setActivities] = useState<any[]>(() => {
-  //   try {
-  //     const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-  //     return stored ? JSON.parse(stored) : [];
-  //   } catch {
-  //     return [];
-  //   }
-  // });
-
-  // Every time activities changes, update localStorage
-  // useEffect(() => {
-  //   localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
-  // }, [activities]);
-  
   // --- Calculate real contribution totals via activities ---
   function getRealMemberContributions(memberId: number): number {
     // Only count "contribution" type activities for this member
@@ -355,16 +340,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const inactiveMembers = totalMembers - activeMembers;
   const totalContributions = Object.values(memberContributionMap).reduce((sum, v) => sum + v, 0);
   const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
-
-  // Add contributions tab for admins only
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: DollarSign },
-    { id: 'members', label: 'Members', icon: Users },
-    ...(user.role === "admin"
-      ? [{ id: 'contributions', label: 'Manage Contributions', icon: History }]
-      : []),
-    { id: 'settings', label: 'Settings', icon: Settings }
-  ];
 
   const { theme, accent } = useTheme();
 
@@ -616,7 +591,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
             {/* Content */}
             <div className="p-6">
-              {currentView === 'dashboard' && (
+              {activeTab === 'dashboard' && (
                 <>
                   <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
@@ -672,7 +647,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                 </>
               )}
 
-              {currentView === 'members' && (
+              {activeTab === 'members' && (
                 <>
                   {/* Header Section */}
                   <div className="mb-8 flex justify-between items-center">
@@ -795,13 +770,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                 </>
               )}
 
-              {currentView === 'contributions' && user.role === "admin" && (
+              {activeTab === 'contributions' && user.role === "admin" && (
                 <React.Suspense fallback={<div>Loading...</div>}>
                   <AdminContributionsTable />
                 </React.Suspense>
               )}
 
-              {currentView === 'settings' && (
+              {activeTab === 'settings' && (
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
