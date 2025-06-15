@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
-import { Eye, ToggleRight, ToggleLeft, UserX, Trash2, Mail, Phone, User, CreditCard } from "lucide-react";
+import { Eye, ToggleRight, ToggleLeft, UserX, Trash2, Mail, Phone, User, CreditCard, Edit } from "lucide-react";
 import { Member } from "./types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
+import EditMemberDialog from "./EditMemberDialog";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 // Minimal avatar generator based on initials
@@ -26,6 +28,7 @@ interface MemberCardProps {
   onLoanToggle: (id: number) => void;
   onDelete: (id: number) => void;
   onRoleChange: (id: number, newRole: "member" | "admin") => void;
+  onEdit?: (id: number, data: { name: string; email: string; phone: string }) => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
@@ -35,9 +38,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
   onLoanToggle,
   onDelete,
   onRoleChange,
+  onEdit,
 }) => {
   const maxLoanAmount = member.totalContributions * 3;
   const [showDelete, setShowDelete] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   // Handler to prevent footer buttons from bubbling to card click
   const stopPropagation = (e: React.MouseEvent) => {
@@ -153,6 +158,30 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <Eye size={18} />
             <span className="mt-0.5 leading-none">View</span>
           </button>
+          {/* Edit */}
+          {onEdit && (
+            <>
+              <button
+                onClick={() => setShowEdit(true)}
+                className="flex flex-col items-center justify-center hover:bg-blue-100 text-blue-600 hover:text-blue-900 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
+                title="Edit member"
+                tabIndex={0}
+                type="button"
+              >
+                <Edit size={18} />
+                <span className="mt-0.5 leading-none">Edit</span>
+              </button>
+              <EditMemberDialog
+                open={showEdit}
+                onOpenChange={setShowEdit}
+                member={member}
+                onSave={(id, data) => {
+                  setShowEdit(false);
+                  onEdit(id, data);
+                }}
+              />
+            </>
+          )}
           {/* Toggle Loan */}
           <button
             onClick={() => onLoanToggle(member.id)}
@@ -210,3 +239,4 @@ const MemberCard: React.FC<MemberCardProps> = ({
 };
 
 export default MemberCard;
+
