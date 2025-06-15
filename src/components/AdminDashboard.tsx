@@ -598,6 +598,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   <ol className="space-y-2">
                     {activities.map((act) => (
                       <li key={act.id} className="flex items-start gap-2">
+                        <History className="mt-0.5 w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className={`mt-1 w-2 h-2 rounded-full bg-${act.color}-500`} />
                         <span>
                           <span className="block text-sm text-gray-800">
