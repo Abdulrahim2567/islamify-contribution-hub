@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface SuccessModalProps {
   open: boolean;
@@ -51,21 +52,28 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
             <div className="bg-white p-3 rounded border border-green-200 font-mono text-center text-lg">
               {generatedPassword}
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="absolute -top-3 -right-3 bg-white shadow hover:bg-emerald-100 rounded-full"
-              type="button"
-              aria-label={copied ? "Password copied" : "Copy password"}
-              onClick={handleCopy}
-              tabIndex={0}
-              disabled={copied}
-            >
-              {copied ?
-                <Check className="w-4 h-4 text-green-500 transition-all" /> :
-                <Copy className="w-4 h-4 text-emerald-500 transition-all" />
-              }
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="absolute -top-3 -right-3 bg-white shadow hover:bg-emerald-100 rounded-full"
+                  type="button"
+                  aria-label={copied ? "Password copied" : "Copy password"}
+                  onClick={handleCopy}
+                  tabIndex={0}
+                  disabled={copied}
+                >
+                  {copied ?
+                    <Check className="w-4 h-4 text-green-500 transition-all" /> :
+                    <Copy className="w-4 h-4 text-emerald-500 transition-all" />
+                  }
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {copied ? "Password copied" : "Copy password"}
+              </TooltipContent>
+            </Tooltip>
           </div>
           <p className="text-sm text-green-700">
             Please share this password with the member. They will be required to change it on first login.
