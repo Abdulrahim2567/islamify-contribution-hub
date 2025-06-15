@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DollarSign, X, ArrowRight, ArrowLeft, User, Plus } from "lucide-react";
+import { DollarSign, X, ArrowRight, ArrowLeft, User, Plus, Check } from "lucide-react";
 import { Member } from "./types";
 
 interface AddContributionStepperProps {
@@ -101,10 +101,10 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                 <div
                   className={`
                     rounded-full z-10 flex items-center justify-center font-bold border-2 transition-colors w-10 h-10
-                    ${step === 1 ? "bg-white border-emerald-500 text-emerald-600 shadow" : "bg-white border-gray-200 text-gray-400"}
+                    ${step === 1 ? "bg-white border-emerald-500 text-emerald-600 shadow" : (step === 2 ? "bg-emerald-50 border-emerald-400 text-emerald-500 shadow" : "bg-white border-gray-200 text-gray-400")}
                   `}
                 >
-                  1
+                  {step === 2 ? <Check size={20} /> : 1}
                 </div>
                 {/* Connector Line */}
                 <div className="flex-1 h-1 mx-2 relative">
