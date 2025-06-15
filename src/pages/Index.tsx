@@ -49,8 +49,14 @@ const Index = () => {
 
   // Helper: write users to both state and localStorage
   const updateUsers = (newUsers: any[]) => {
-    setUsers(newUsers);
     persistUsers(newUsers.filter(u => !MOCK_USERS.some(m => m.email === u.email) || u.id > MOCK_USERS.length));
+    // Always re-fetch from persisted store (authoritative) to update current roles/status
+    const latestUsers = getPersistedUsers();
+    const mergedUsers = [
+      ...MOCK_USERS.filter(m => !latestUsers.some(u => u.email === m.email)),
+      ...latestUsers,
+    ];
+    setUsers(mergedUsers);
   };
 
   const handleLogout = () => {
@@ -182,3 +188,4 @@ const Index = () => {
 };
 
 export default Index;
+
