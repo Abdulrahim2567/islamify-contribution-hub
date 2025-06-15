@@ -1,7 +1,7 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Eye, UserX, Trash2 } from "lucide-react";
 import { Member } from "./types";
+import DeleteMemberDialog from "./DeleteMemberDialog";
 
 interface MemberCardProps {
   member: Member;
@@ -19,6 +19,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   onDelete,
 }) => {
   const maxLoanAmount = member.totalContributions * 3;
+  const [showDelete, setShowDelete] = useState(false);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
@@ -93,12 +94,23 @@ const MemberCard: React.FC<MemberCardProps> = ({
           <UserX size={16} />
         </button>
         {member.role !== 'admin' && (
-          <button
-            onClick={() => onDelete(member.id)}
-            className="text-red-600 hover:text-red-900 p-1"
-          >
-            <Trash2 size={16} />
-          </button>
+          <>
+            <button
+              onClick={() => setShowDelete(true)}
+              className="text-red-600 hover:text-red-900 p-1"
+            >
+              <Trash2 size={16} />
+            </button>
+            <DeleteMemberDialog
+              open={showDelete}
+              onOpenChange={setShowDelete}
+              memberName={member.name}
+              onConfirm={() => {
+                setShowDelete(false);
+                onDelete(member.id);
+              }}
+            />
+          </>
         )}
       </div>
     </div>

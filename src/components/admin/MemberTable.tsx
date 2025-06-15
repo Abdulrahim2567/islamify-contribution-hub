@@ -1,7 +1,7 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Eye, UserX, Trash2 } from "lucide-react";
 import { Member } from "./types";
+import DeleteMemberDialog from "./DeleteMemberDialog";
 
 interface MemberTableProps {
   members: Member[];
@@ -20,6 +20,8 @@ const MemberTable: React.FC<MemberTableProps> = ({
   onDelete,
   searchTerm,
 }) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -113,12 +115,23 @@ const MemberTable: React.FC<MemberTableProps> = ({
                       <UserX size={16} />
                     </button>
                     {member.role !== 'admin' && (
-                      <button
-                        onClick={() => onDelete(member.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setDeleteId(member.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <DeleteMemberDialog
+                          open={deleteId === member.id}
+                          onOpenChange={(open: boolean) => setDeleteId(open ? member.id : null)}
+                          memberName={member.name}
+                          onConfirm={() => {
+                            setDeleteId(null);
+                            onDelete(member.id);
+                          }}
+                        />
+                      </>
                     )}
                   </td>
                 </tr>
