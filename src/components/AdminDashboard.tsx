@@ -90,6 +90,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     registrationFee: 5000,
     maxLoanMultiplier: 3,
   });
+  const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -396,13 +397,22 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setViewMode('table')}
+                    onClick={() => {
+                      // Only animate if switching from another mode to "table"
+                      setViewMode('table');
+                      setCardsShouldAnimate(false);
+                    }}
                     className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     <List size={20} />
                   </button>
                   <button
-                    onClick={() => setViewMode('card')}
+                    onClick={() => {
+                      setViewMode('card');
+                      setCardsShouldAnimate(true);
+                      // Reset animation after 700ms (time for anims to finish)
+                      setTimeout(() => setCardsShouldAnimate(false), 700);
+                    }}
                     className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     <Grid size={20} />
@@ -453,17 +463,32 @@ const AdminDashboard = ({ user, onLogout }) => {
             {/* Members Display */}
             {viewMode === 'card' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredMembers.map((member) => (
-                  <MemberCard
+                {filteredMembers.map((member, idx) => (
+                  <div
                     key={member.id}
-                    member={member}
-                    onView={setSelectedMember}
-                    onStatusToggle={toggleMemberStatus}
-                    onLoanToggle={toggleLoanEligibility}
-                    onDelete={deleteMember}
-                    onRoleChange={handleChangeRole}
-                    onEdit={handleEditMember}
-                  />
+                    className={
+                      cardsShouldAnimate
+                        ? "animate-fade-in animate-scale-in"
+                        : ""
+                    }
+                    style={{
+                      // Stagger the animation a bit, for a nice effect
+                      animationDelay: cardsShouldAnimate
+                        ? (idx * 70) + "ms"
+                        : undefined,
+                      animationFillMode: cardsShouldAnimate ? "both" : undefined,
+                    }}
+                  >
+                    <MemberCard
+                      member={member}
+                      onView={setSelectedMember}
+                      onStatusToggle={toggleMemberStatus}
+                      onLoanToggle={toggleLoanEligibility}
+                      onDelete={deleteMember}
+                      onRoleChange={handleChangeRole}
+                      onEdit={handleEditMember}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (
