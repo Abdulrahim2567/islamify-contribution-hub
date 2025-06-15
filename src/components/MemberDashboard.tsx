@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { readMembers } from "../utils/membersStorage";
+import MemberContributionHistory from "./member/MemberContributionHistory";
 
 // Mock data for member contributions
 const MOCK_CONTRIBUTIONS = [
@@ -127,49 +128,10 @@ const MemberDashboard = ({ user, onLogout }) => {
             </Card>
           </div>
 
-          {/* Quick Actions - removed the Make Contribution dialog/button */}
-          {/* Removed Card for Quick Actions (Make Contribution) */}
-
-          {/* Contribution History */}
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <CardTitle>Contribution History</CardTitle>
-              <CardDescription>Your recent contributions to the association</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {contributions.map((contribution) => (
-                  <div
-                    key={contribution.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <TrendingUp className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{contribution.type}</p>
-                          <p className="text-sm text-gray-600">{contribution.date}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600">+{contribution.amount.toLocaleString()} XAF</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {contributions.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No contributions yet</p>
-                  <p className="text-sm">Start contributing to build your savings!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Modern Contribution History (now using activities data) */}
+          <div className="mt-8">
+            <MemberContributionHistory memberId={user.id} memberName={user.name} />
+          </div>
         </div>
       )}
       {tab === "members" && (
