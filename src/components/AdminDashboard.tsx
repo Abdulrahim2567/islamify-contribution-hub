@@ -70,10 +70,23 @@ type NewMember = {
 };
 
 const USERS_LOCALSTORAGE_KEY = 'islamify_users';
+const ACTIVITY_LOCALSTORAGE_KEY = 'islamify_admin_activities';
 
 // Helper to update users in localStorage (also called by Index)
 function persistUsers(users) {
   localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
+}
+
+function readActivities() {
+  try {
+    const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+function writeActivities(activities: any[]) {
+  localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
 }
 
 const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
@@ -131,6 +144,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     maxLoanMultiplier: 3,
   });
   const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
+  const [activities, setActivities] = useState<any[]>([]);
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -185,6 +199,15 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     setShowRegisterModal(false);
     setShowSuccessModal(true);
     setNewMember({ name: '', email: '', phone: '', role: 'member' });
+
+    // Activity log
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "add_member",
+      text: `Added new member "${member.name}" (${member.email}) as ${member.role}`,
+      color: "emerald"
+    });
   };
 
   const toggleMemberStatus = (id) => {
@@ -193,6 +216,14 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
         member.id === id ? { ...member, isActive: !member.isActive } : member
       )
     );
+    const member = members.find(m => m.id === id);
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "toggle_status",
+      text: `Changed status of "${member?.name}" to ${member?.isActive ? "Inactive" : "Active"}`,
+      color: "orange"
+    });
     toast({
       title: "Member Status Updated",
       description: "Member status has been changed successfully",
@@ -205,6 +236,14 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
         member.id === id ? { ...member, loanEligible: !member.loanEligible } : member
       )
     );
+    const member = members.find(m => m.id === id);
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "loan_eligibility",
+      text: `Changed loan eligibility for "${member?.name}" to ${member?.loanEligible ? "Disabled" : "Enabled"}`,
+      color: "indigo"
+    });
     toast({
       title: "Loan Eligibility Updated",
       description: "Member loan eligibility has been changed successfully",
@@ -215,6 +254,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     const member = members.find(m => m.id === id);
     if (window.confirm(`Are you sure you want to delete ${member?.name}? This action cannot be undone.`)) {
       persistAndSetMembers(members => members.filter(member => member.id !== id));
+      persistAndSetActivities({
+        id: Date.now() + Math.random(),
+        timestamp: getNowString(),
+        type: "delete_member",
+        text: `Deleted member "${member?.name}"`,
+        color: "red"
+      });
       toast({
         title: "Member Deleted",
         description: "Member has been removed from the system",
@@ -264,6 +310,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   const handleAddContribution = ({ amount, description }: { amount: number; description?: string }) => {
     if (!targetMemberId) return;
+    const member = members.find(m => m.id === targetMemberId);
     persistAndSetMembers(members =>
       members.map(m =>
         m.id === targetMemberId
@@ -271,6 +318,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           : m
       )
     );
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "add_contribution",
+      text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
+      color: "cyan"
+    });
     setShowContributionModal(false);
     setTargetMemberId(null);
     toast({
@@ -292,6 +346,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     date: string;
     description?: string;
   }) => {
+    const member = members.find(m => m.id === memberId);
     persistAndSetMembers((members) =>
       members.map((m) =>
         m.id === memberId
@@ -299,6 +354,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           : m
       )
     );
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "add_contribution",
+      text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
+      color: "cyan"
+    });
     setShowAddContributionStepper(false);
     setTargetMemberId(null);
     toast({
@@ -333,6 +395,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       persistUsers(updatedUsers);
       // Update parent state if needed (triggers re-render for login, etc)
       if (onNewUser) onNewUser(updatedUsers);
+      persistAndSetActivities({
+        id: Date.now() + Math.random(),
+        timestamp: getNowString(),
+        type: "change_role",
+        text: `Changed role for "${member.name}" to "${newRole}"`,
+        color: "amber"
+      });
     }
 
     toast({
@@ -350,10 +419,22 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           : m
       )
     );
+    persistAndSetActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "edit_member",
+      text: `Edited details for "${data.name}" (${data.email})`,
+      color: "blue"
+    });
     toast({
       title: "Member Updated",
       description: "Member details updated successfully",
     });
+  };
+
+  const getNowString = () => {
+    const d = new Date();
+    return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
   };
 
   return (
@@ -470,7 +551,23 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                 <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
               </div>
               <div className="p-6">
-                <p className="text-gray-500 text-center py-8">No recent activity</p>
+                {activities.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No recent activity</p>
+                ) : (
+                  <ol className="space-y-2">
+                    {activities.map((act) => (
+                      <li key={act.id} className="flex items-start gap-2">
+                        <span className={`mt-1 w-2 h-2 rounded-full bg-${act.color}-500`} />
+                        <span>
+                          <span className="block text-sm text-gray-800">
+                            {act.text}
+                          </span>
+                          <span className="block text-xs text-gray-400">{act.timestamp}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             </div>
           </>
