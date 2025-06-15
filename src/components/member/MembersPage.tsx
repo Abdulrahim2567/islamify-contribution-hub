@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -12,6 +11,7 @@ interface MembersPageProps {
 const MembersPage = ({ members, currentUser }: MembersPageProps) => {
   const [viewMode, setViewMode] = useState<"card" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   // Filter out yourself
   const filtered = members.filter(
@@ -20,8 +20,10 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
       m.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // These "actions" are disabled for regular members
   const noop = () => {};
+
+  // View handler for card and table views
+  const handleView = (member: Member) => setSelectedMember(member);
 
   return (
     <div className="max-w-5xl mx-auto px-2 py-7">
@@ -73,24 +75,37 @@ const MembersPage = ({ members, currentUser }: MembersPageProps) => {
             >
               <MemberCard
                 member={member}
-                onView={noop}
+                onView={handleView}
                 onStatusToggle={noop}
                 onLoanToggle={noop}
                 onDelete={noop}
                 onRoleChange={noop}
-                readOnly={true} // disables action buttons
-                // Do not pass onEdit, disables Edit dialog
+                readOnly={true}
               />
             </div>
           ))}
+          {/* Member detail modal */}
+          {selectedMember && (
+            <MemberDetailModal
+              member={selectedMember}
+              onClose={() => setSelectedMember(null)}
+            />
+          )}
         </div>
       ) : (
         <div>
           <MembersTableReadOnly
             members={filtered}
-            onView={noop}
+            onView={handleView}
             searchTerm={searchTerm}
           />
+          {/* Member detail modal for table view */}
+          {selectedMember && (
+            <MemberDetailModal
+              member={selectedMember}
+              onClose={() => setSelectedMember(null)}
+            />
+          )}
         </div>
       )}
     </div>

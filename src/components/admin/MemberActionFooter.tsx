@@ -42,58 +42,59 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
           <Eye size={18} />
           <span className="mt-0.5 leading-none">View</span>
         </button>
-        {/* Toggle Loan */}
+        {/* Show loan/status/delete only if not readOnly */}
         {!readOnly && (
-          <button
-            onClick={() => onLoanToggle(member.id)}
-            className={`flex flex-col items-center justify-center hover:bg-indigo-100 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
-              ${member.loanEligible ? "text-indigo-600" : "text-gray-400"}
-            `}
-            title={member.loanEligible ? "Disable Loan" : "Enable Loan"}
-            tabIndex={0}
-            type="button"
-          >
-            {member.loanEligible ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-            <span className="mt-0.5 leading-none">{member.loanEligible ? "Loan Enabled" : "Loan Disabled"}</span>
-          </button>
-        )}
-        {/* Toggle status */}
-        {!readOnly && (
-          <button
-            onClick={() => onStatusToggle(member.id)}
-            className={`flex flex-col items-center justify-center rounded-lg hover:bg-orange-100 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
-              ${member.isActive ? "text-orange-600" : "text-green-600"}
-            `}
-            title={member.isActive ? "Deactivate" : "Reactivate"}
-            tabIndex={0}
-            type="button"
-          >
-            <UserX size={18} />
-            <span className="mt-0.5 leading-none">{member.isActive ? "Deactivate" : "Reactivate"}</span>
-          </button>
-        )}
-        {/* Delete (only for non-admins) */}
-        {!readOnly && member.role !== "admin" && (
           <>
+            {/* Toggle Loan */}
             <button
-              onClick={() => setShowDelete(true)}
-              className="flex flex-col items-center justify-center rounded-lg hover:bg-red-100 text-red-600 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
-              title="Delete member"
+              onClick={() => onLoanToggle(member.id)}
+              className={`flex flex-col items-center justify-center hover:bg-indigo-100 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
+                ${member.loanEligible ? "text-indigo-600" : "text-gray-400"}
+              `}
+              title={member.loanEligible ? "Disable Loan" : "Enable Loan"}
               tabIndex={0}
               type="button"
             >
-              <Trash2 size={18} />
-              <span className="mt-0.5 leading-none">Delete</span>
+              {member.loanEligible ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+              <span className="mt-0.5 leading-none">{member.loanEligible ? "Loan Enabled" : "Loan Disabled"}</span>
             </button>
-            <DeleteMemberDialog
-              open={showDelete}
-              onOpenChange={setShowDelete}
-              memberName={member.name}
-              onConfirm={() => {
-                setShowDelete(false);
-                onDelete(member.id);
-              }}
-            />
+            {/* Toggle status */}
+            <button
+              onClick={() => onStatusToggle(member.id)}
+              className={`flex flex-col items-center justify-center rounded-lg hover:bg-orange-100 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
+                ${member.isActive ? "text-orange-600" : "text-green-600"}
+              `}
+              title={member.isActive ? "Deactivate" : "Reactivate"}
+              tabIndex={0}
+              type="button"
+            >
+              <UserX size={18} />
+              <span className="mt-0.5 leading-none">{member.isActive ? "Deactivate" : "Reactivate"}</span>
+            </button>
+            {/* Delete (only for non-admins) */}
+            {member.role !== "admin" && (
+              <>
+                <button
+                  onClick={() => setShowDelete(true)}
+                  className="flex flex-col items-center justify-center rounded-lg hover:bg-red-100 text-red-600 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
+                  title="Delete member"
+                  tabIndex={0}
+                  type="button"
+                >
+                  <Trash2 size={18} />
+                  <span className="mt-0.5 leading-none">Delete</span>
+                </button>
+                <DeleteMemberDialog
+                  open={showDelete}
+                  onOpenChange={setShowDelete}
+                  memberName={member.name}
+                  onConfirm={() => {
+                    setShowDelete(false);
+                    onDelete(member.id);
+                  }}
+                />
+              </>
+            )}
           </>
         )}
       </div>
@@ -102,4 +103,3 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 };
 
 export default MemberActionFooter;
-
