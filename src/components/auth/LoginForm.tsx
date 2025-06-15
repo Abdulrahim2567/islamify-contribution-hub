@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -86,7 +85,7 @@ const LoginForm = ({
                 Email
               </Label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-500">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center input-icon text-emerald-500">
                   <Mail className="w-5 h-5" />
                 </span>
                 <Input
@@ -111,7 +110,7 @@ const LoginForm = ({
                 Password
               </Label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center input-icon text-blue-500">
                   <Lock className="w-5 h-5" />
                 </span>
                 <Input
