@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -193,7 +192,6 @@ const MemberDashboard = ({ user, onLogout }) => {
             <MemberContributionHistory
               memberId={user.id}
               memberName={user.name}
-              activities={memberActivities} // <-- Pass filtered activities directly for reliability!
             />
             {/* Diagnostics */}
             <div className="mt-4 text-xs text-gray-400">
@@ -218,4 +216,3 @@ const MemberDashboard = ({ user, onLogout }) => {
 };
 
 export default MemberDashboard;
-
