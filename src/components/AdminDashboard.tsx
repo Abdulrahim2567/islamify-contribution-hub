@@ -550,7 +550,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredMembers.map((member) => {
                         const maxLoanAmount = member.totalContributions * 3;
-
+                        
                         return (
                           <tr key={member.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -576,14 +576,19 @@ const AdminDashboard = ({ user, onLogout }) => {
                               {maxLoanAmount.toLocaleString()} XAF
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <Switch
-                                checked={member.isActive}
-                                onCheckedChange={() => toggleMemberStatus(member.id)}
-                                className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-400"
-                              />
-                              <span className={`ml-2 text-xs ${member.isActive ? "text-green-700" : "text-gray-400"}`}>
-                                {member.isActive ? "Enabled" : "Disabled"}
-                              </span>
+                              <button
+                                onClick={() => toggleMemberStatus(member.id)}
+                                className="flex items-center space-x-1"
+                              >
+                                {member.isActive ? (
+                                  <ToggleRight className="w-5 h-5 text-green-600" />
+                                ) : (
+                                  <ToggleLeft className="w-5 h-5 text-gray-400" />
+                                )}
+                                <span className={`text-xs ${member.isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                                  {member.isActive ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </button>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <button
@@ -634,10 +639,66 @@ const AdminDashboard = ({ user, onLogout }) => {
         )}
 
         {currentView === 'settings' && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
-            <AccentColorToggle />
-            <p className="text-gray-500">Settings panel coming soon...</p>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
+              <p className="text-gray-600 dark:text-gray-300">Manage association configuration</p>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // Add your settings update logic here (e.g. call onUpdateSettings)
+                  // If using state, add it here, else keep as a placeholder.
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Association Name
+                  </label>
+                  <input
+                    type="text"
+                    // value and onChange logic here; omitted as settings are not fully defined in the current file
+                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Registration Fee (XAF)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
+                    required
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Maximum Loan Multiplier
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
+                    required
+                    min="1"
+                    max="10"
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Members can borrow up to this many times their savings amount
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
+                >
+                  <Save size={20} />
+                  <span>Save Settings</span>
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </div>
