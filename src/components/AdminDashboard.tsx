@@ -68,7 +68,14 @@ type NewMember = {
   role: "member" | "admin";
 };
 
-const AdminDashboard = ({ user, onLogout }) => {
+const USERS_LOCALSTORAGE_KEY = 'islamify_users';
+
+// Helper to update users in localStorage (also called by Index)
+function persistUsers(users) {
+  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
+}
+
+const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const [members, setMembers] = useState<Member[]>(MOCK_MEMBERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -106,21 +113,42 @@ const AdminDashboard = ({ user, onLogout }) => {
   const handleRegisterMember = (e) => {
     e.preventDefault();
     const password = generatePassword();
-    const member: Member = {
-      id: members.length + 1,
+    const id = Date.now(); // Use timestamp for uniqueness
+    const member = {
+      id,
       name: newMember.name,
       email: newMember.email,
       phone: newMember.phone,
-      role: newMember.role, // Now always of type "member" | "admin"
+      role: newMember.role,
       registrationFee: 5000,
       totalContributions: 0,
       isActive: true,
       loanEligible: false,
       joinDate: new Date().toISOString().split('T')[0]
     };
-    
     setMembers([...members, member]);
     setGeneratedPassword(password);
+
+    // Update localStorage users for login
+    let persistedUsers = [];
+    try {
+      const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
+      if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
+    } catch {}
+    // User for login should match Index.tsx login format
+    const loginUser = {
+      id,
+      email: newMember.email,
+      password,
+      role: newMember.role,
+      name: newMember.name,
+      needsPasswordChange: true // must change password on first login
+    };
+    const updatedUsers = [...persistedUsers, loginUser];
+    persistUsers(updatedUsers);
+    // Optionally notify Index of user update (for state sync in SPA)
+    if (onNewUser) onNewUser([...users, loginUser]);
+
     setShowRegisterModal(false);
     setShowSuccessModal(true);
     setNewMember({ name: '', email: '', phone: '', role: 'member' });

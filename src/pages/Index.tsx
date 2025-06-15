@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,24 @@ const MOCK_USERS = [
   { id: 2, email: "member@islamify.org", password: "member123", role: "member", name: "John Doe", needsPasswordChange: false }
 ];
 
+const USERS_LOCALSTORAGE_KEY = 'islamify_users';
+
+function getPersistedUsers() {
+  try {
+    const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
+    if (fromStorage) {
+      return JSON.parse(fromStorage) || [];
+    }
+  } catch {}
+  return [];
+}
+
+function persistUsers(users) {
+  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
+}
+
 const Index = () => {
+  const [users, setUsers] = useState(MOCK_USERS);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -23,9 +40,26 @@ const Index = () => {
   const [newPassword, setNewPassword] = useState("");
   const { toast } = useToast();
 
+  // On mount/load: merge users from localStorage with MOCK_USERS, avoid duplicate IDs/emails.
+  useEffect(() => {
+    const localUsers = getPersistedUsers();
+    // Remove duplicate emails favoring localUsers (so updated info persists)
+    const mergedUsers = [
+      ...MOCK_USERS.filter(m => !localUsers.some(u => u.email === m.email)),
+      ...localUsers,
+    ];
+    setUsers(mergedUsers);
+  }, []);
+
+  // Helper: write users to both state and localStorage
+  const updateUsers = (newUsers) => {
+    setUsers(newUsers);
+    persistUsers(newUsers.filter(u => !MOCK_USERS.some(m => m.email === u.email) || u.id > MOCK_USERS.length));
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
-    const user = MOCK_USERS.find(u => 
+    const user = users.find(u =>
       u.email === loginForm.email && u.password === loginForm.password
     );
 
@@ -65,8 +99,11 @@ const Index = () => {
       return;
     }
 
-    // Update user password
-    const updatedUser = { ...currentUser, needsPasswordChange: false };
+    // Update local user password and needsPasswordChange
+    const updatedUser = { ...currentUser, password: newPassword, needsPasswordChange: false };
+    const updatedUsers = users.map(u => u.email === updatedUser.email ? updatedUser : u);
+    updateUsers(updatedUsers);
+
     setCurrentUser(updatedUser);
     setIsLoggedIn(true);
     setShowPasswordChange(false);
@@ -87,6 +124,20 @@ const Index = () => {
       description: "You have been logged out successfully",
     });
   };
+
+  // Listen for storage change (optional: support multi-tab, not required)
+  // useEffect(() => {
+  //   const listener = () => {
+  //     const localUsers = getPersistedUsers();
+  //     const mergedUsers = [
+  //       ...MOCK_USERS.filter(m => !localUsers.some(u => u.email === m.email)),
+  //       ...localUsers,
+  //     ];
+  //     setUsers(mergedUsers);
+  //   };
+  //   window.addEventListener("storage", listener);
+  //   return () => window.removeEventListener("storage", listener);
+  // }, []);
 
   if (showPasswordChange) {
     return (
@@ -121,7 +172,7 @@ const Index = () => {
 
   if (isLoggedIn && currentUser) {
     return currentUser.role === 'admin' ? (
-      <AdminDashboard user={currentUser} onLogout={handleLogout} />
+      <AdminDashboard user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users} />
     ) : (
       <MemberDashboard user={currentUser} onLogout={handleLogout} />
     );
@@ -244,3 +295,6 @@ const Index = () => {
 };
 
 export default Index;
+
+// NOTE: This file is now over 250 lines. You should consider refactoring it into smaller files for maintainability.
+
