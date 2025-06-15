@@ -186,14 +186,65 @@ const AdminContributionsTable: React.FC = () => {
     localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(updatedList));
   };
 
+  // -----> FIX: On edit, update recent_activities, members, and admin activities
   const handleSaveEdit = (updated: ContributionRecord) => {
     const idx = contributions.findIndex(
       x => x.date === editing?.date && x.memberId === editing?.memberId
     );
-    if (idx !== -1) {
+    if (idx !== -1 && editing) {
       const list = [...contributions];
+      const oldRecord = list[idx];
+
+      // Update contribution list (member activities)
       list[idx] = updated;
       saveContributions(list);
+
+      // --- Update the member's totalContributions in islamify_members ---
+      try {
+        const MEMBERS_KEY = "islamify_members";
+        const membersRaw = localStorage.getItem(MEMBERS_KEY);
+        let members = membersRaw ? JSON.parse(membersRaw) : [];
+        // Only update the matching member
+        const mIdx = members.findIndex((m: any) => m.id === editing.memberId);
+        if (mIdx !== -1) {
+          // Reduce old amount, add new amount for this specific record edit
+          members[mIdx].totalContributions =
+            (members[mIdx].totalContributions || 0)
+            - (oldRecord.amount || 0)
+            + (updated.amount || 0);
+          localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
+        }
+      } catch (err) {
+        // Ignore member update errors
+        console.log("Failed to update member totalContributions on edit", err);
+      }
+
+      // --- Add an admin activity for this edit ---
+      try {
+        const ADMIN_ACTIVITY_KEY = "islamify_admin_activities";
+        const adminActivitiesRaw = localStorage.getItem(ADMIN_ACTIVITY_KEY);
+        const adminActivities = adminActivitiesRaw ? JSON.parse(adminActivitiesRaw) : [];
+        // Example admin info (if you want to add more info, adjust as needed)
+        const adminInfo = {
+          adminName: updated.performedBy || "Admin",
+          adminEmail: undefined,
+          adminRole: "admin",
+        };
+        const nowTime = new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+        adminActivities.unshift({
+          id: Date.now() + Math.random(),
+          timestamp: nowTime,
+          type: "edit_contribution",
+          text: `Edited contribution for "${updated.memberName}", new amount: ${updated.amount.toLocaleString()} XAF.`,
+          color: "blue",
+          ...adminInfo,
+        });
+        localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(adminActivities));
+      } catch (err) {
+        // Ignore logging errors
+        console.log("Failed to log admin edit_contribution activity", err);
+      }
+
       toast({
         title: "Contribution Updated",
         description: `Contribution for ${updated.memberName} updated.`,
@@ -203,7 +254,6 @@ const AdminContributionsTable: React.FC = () => {
     setEditing(null);
   };
 
-  // Delete handler uses dialog now!
   const handleDelete = (record: ContributionRecord) => {
     setToDelete(record);
     setDeleteOpen(true);
