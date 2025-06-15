@@ -1,5 +1,5 @@
 
-import { Calendar, Home, Users, DollarSign, Settings, LogOut } from "lucide-react";
+import { Calendar, Home, Users, Coins, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -33,7 +33,7 @@ const navigationItems = [
   {
     title: "Contributions",
     value: "contributions",
-    icon: DollarSign,
+    icon: Coins,
   },
   {
     title: "Settings",
