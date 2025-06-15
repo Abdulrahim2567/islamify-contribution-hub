@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -65,7 +64,24 @@ const AdminContributionsTable: React.FC = () => {
     localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(updatedList));
   };
 
-  // -----> FIX: On edit, update recent_activities, members, and admin activities
+  // Function to update all contributions for a member across the app
+  const updateAllContributionsForMember = (memberId: number, updatedFields: Partial<ContributionRecord>) => {
+    const RECENT_ACTIVITIES_KEY = "islamify_recent_activities";
+    const stored = localStorage.getItem(RECENT_ACTIVITIES_KEY);
+    let activities: ContributionRecord[] = stored ? JSON.parse(stored) : [];
+    let modified = false;
+    activities = activities.map((rec) => {
+      if (rec.type === "contribution" && rec.memberId === memberId) {
+        modified = true;
+        return { ...rec, ...updatedFields };
+      }
+      return rec;
+    });
+    if (modified) {
+      localStorage.setItem(RECENT_ACTIVITIES_KEY, JSON.stringify(activities));
+    }
+  };
+
   const handleSaveEdit = (updated: ContributionRecord) => {
     const idx = contributions.findIndex(
       x => x.date === editing?.date && x.memberId === editing?.memberId
@@ -73,15 +89,21 @@ const AdminContributionsTable: React.FC = () => {
     if (idx !== -1 && editing) {
       const list = [...contributions];
       const oldRecord = list[idx];
-      // Debug out the current and updated amounts
-      console.log("[edit] Found contribution idx:", idx, "old:", oldRecord, "updated:", updated);
-
-      // Update contribution list (member activities)
+      // Update the main list record
       list[idx] = updated;
-      saveContributions(list);
-      console.log("[edit] Contributions after update:", list);
 
-      // --- Update the member's totalContributions in islamify_members ---
+      // --- Update ALL contributions amount/description for this member across the app ---
+      // First, update the in-memory list too
+      for (let i = 0; i < list.length; ++i) {
+        if (list[i].type === "contribution" && list[i].memberId === updated.memberId) {
+          list[i].amount = updated.amount;
+          list[i].description = updated.description;
+        }
+      }
+      saveContributions(list);
+      console.log("[edit] All contributions for member", updated.memberName, "updated to amount:", updated.amount, "description:", updated.description);
+
+      // --- Update the member's totalContributions in islamify_members, for consistency ---
       try {
         const MEMBERS_KEY = "islamify_members";
         const membersRaw = localStorage.getItem(MEMBERS_KEY);
@@ -89,21 +111,20 @@ const AdminContributionsTable: React.FC = () => {
         // Only update the matching member
         const mIdx = members.findIndex((m: any) => m.id === editing.memberId);
         if (mIdx !== -1) {
-          // Reduce old amount, add new amount for this specific record edit
-          const before = members[mIdx].totalContributions || 0;
-          const after = before - (oldRecord.amount || 0) + (updated.amount || 0);
-          members[mIdx].totalContributions = after;
+          // Recalculate totalContributions for all their contributions
+          const RECENT_ACTIVITIES_KEY = "islamify_recent_activities";
+          const recentsRaw = localStorage.getItem(RECENT_ACTIVITIES_KEY);
+          let recents = recentsRaw ? JSON.parse(recentsRaw) : [];
+          const memberAllContribs = recents.filter((a: any) => a.type === "contribution" && a.memberId === editing.memberId);
+          // If updating ALL to new amount, recalculate as new amount * num contributions:
+          const newTotal = updated.amount * memberAllContribs.length;
+          members[mIdx].totalContributions = newTotal;
           localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
           console.log(
-            "[edit] Updated member totalContributions:",
+            "[edit] Updated member totalContributions (ALL contributions updated):",
             members[mIdx].name,
-            "before:", before,
-            "oldDelta:", oldRecord.amount,
-            "newDelta:", updated.amount,
-            "after:", after
+            "to", newTotal
           );
-        } else {
-          console.log("[edit] Could not find member to update in islamify_members for id:", editing.memberId);
         }
       } catch (err) {
         // Ignore member update errors
@@ -115,7 +136,6 @@ const AdminContributionsTable: React.FC = () => {
         const ADMIN_ACTIVITY_KEY = "islamify_admin_activities";
         const adminActivitiesRaw = localStorage.getItem(ADMIN_ACTIVITY_KEY);
         const adminActivities = adminActivitiesRaw ? JSON.parse(adminActivitiesRaw) : [];
-        // Example admin info (if you want to add more info, adjust as needed)
         const adminInfo = {
           adminName: updated.performedBy || "Admin",
           adminEmail: undefined,
@@ -126,7 +146,7 @@ const AdminContributionsTable: React.FC = () => {
           id: Date.now() + Math.random(),
           timestamp: nowTime,
           type: "edit_contribution",
-          text: `Edited contribution for "${updated.memberName}", new amount: ${updated.amount.toLocaleString()} XAF.`,
+          text: `Edited ALL contributions for "${updated.memberName}", new amount: ${updated.amount.toLocaleString()} XAF.`,
           color: "blue",
           ...adminInfo,
         };
@@ -138,35 +158,15 @@ const AdminContributionsTable: React.FC = () => {
         console.log("Failed to log admin edit_contribution activity", err);
       }
 
-      // --- Optionally, ensure islamify_recent_activities is also consistent with updates ---
-      try {
-        const RECENT_ACTIVITIES_KEY = "islamify_recent_activities";
-        const recentsRaw = localStorage.getItem(RECENT_ACTIVITIES_KEY);
-        let recents = recentsRaw ? JSON.parse(recentsRaw) : [];
-        // Update the matching contribution in recent activities
-        // Find by date, memberId, and optionally description
-        const findIdx = recents.findIndex(
-          (a: any) =>
-            a.type === "contribution" &&
-            a.memberId === updated.memberId &&
-            a.date === editing?.date
-        );
-        if (findIdx !== -1) {
-          console.log("[edit] Updating islamify_recent_activities at", findIdx, "old:", recents[findIdx]);
-          recents[findIdx] = { ...recents[findIdx], ...updated };
-          localStorage.setItem(RECENT_ACTIVITIES_KEY, JSON.stringify(recents));
-          console.log("[edit] islamify_recent_activities after update:", recents[findIdx]);
-        } else {
-          console.log("[edit] No matching activity found in islamify_recent_activities, maybe new record?");
-        }
-      } catch (err) {
-        // Ignore logging errors
-        console.log("Failed to update islamify_recent_activities on edit", err);
-      }
+      // --- Update ALL matching contributions in recent_activities ---
+      updateAllContributionsForMember(updated.memberId, {
+        amount: updated.amount,
+        description: updated.description,
+      });
 
       toast({
-        title: "Contribution Updated",
-        description: `Contribution for ${updated.memberName} updated.`,
+        title: "Contributions Updated",
+        description: `All contributions for ${updated.memberName} updated.`,
       });
     } else {
       console.log("[edit] Could not find editing record when saving, idx:", idx, "editing:", editing);
