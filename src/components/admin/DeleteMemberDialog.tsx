@@ -43,7 +43,7 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
             No, don&apos;t delete
           </AlertDialogCancel>
           <AlertDialogAction
-            className="w-full py-3 text-base rounded-lg bg-red-600 text-white hover:bg-red-700 flex-1"
+            className="w-full py-3 text-base rounded-lg bg-red-600 text-white hover:bg-red-700"
             onClick={onConfirm}
           >
             Yes, delete
