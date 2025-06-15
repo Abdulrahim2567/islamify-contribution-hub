@@ -1,0 +1,13 @@
+
+/* Base (resets and Tailwind layers) */
+@tailwind base;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
