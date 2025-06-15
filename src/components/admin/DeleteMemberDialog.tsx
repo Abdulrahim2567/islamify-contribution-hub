@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   AlertDialog,
@@ -31,8 +30,15 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
     <AlertDialogPortal>
       {/* Overlay: clicking this will close the modal due to Radix API */}
       <AlertDialogOverlay />
-      {/* Modal width reduced and padding adjusted */}
-      <AlertDialogContent className="animate-fade-in max-w-sm p-4 sm:p-5 relative">
+      {/* Modal width reduced and padding adjusted; keep it perfectly centered */}
+      <AlertDialogContent
+        className={
+          "max-w-sm p-4 sm:p-5 relative " +
+          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 " +
+          "bg-background shadow-lg animate-fade-in"
+        }
+        style={{ position: "fixed" }} // Ensures centering works
+      >
         {/* Close Icon (top-right absolute) */}
         <button
           type="button"
@@ -46,7 +52,8 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
           <AlertDialogTitle>Delete member</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogDescription className="mb-4">
-          Are you sure you want to delete <span className="font-semibold text-red-600">{memberName}</span>? This action cannot be undone.
+          Are you sure you want to delete{" "}
+          <span className="font-semibold text-red-600">{memberName}</span>? This action cannot be undone.
         </AlertDialogDescription>
         <AlertDialogFooter className="flex flex-col gap-2">
           <AlertDialogCancel className="w-full py-3 text-base rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-none border-none hover:bg-gray-200 dark:hover:bg-gray-700 m-0">
