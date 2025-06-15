@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { DollarSign, X, ArrowRight, ArrowLeft, User, Plus, Check } from "lucide-react";
 import { Member } from "./types";
+import { readMembers } from "../../utils/membersStorage";
 
 interface AddContributionStepperProps {
   open: boolean;
@@ -20,17 +22,25 @@ const PAGE_SIZE = 6;
 const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   open,
   onOpenChange,
-  members,
+  members: propMembers, // still for fallback compatibility
   onSubmit,
 }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [page, setPage] = useState(0);
   const [formData, setFormData] = useState({ amount: "", description: "" });
+  const [localMembers, setLocalMembers] = useState<Member[]>([]);
+
+  // Always get the freshest members from localStorage when modal opens
+  useEffect(() => {
+    if (open) {
+      const freshMembers = readMembers();
+      setLocalMembers(freshMembers && freshMembers.length > 0 ? freshMembers : propMembers);
+    }
+  }, [open, propMembers]);
 
   // Only non-admins selectable for contributions
-  // If you want to allow contributions to admins, remove the .filter
-  const nonAdminMembers = members.filter((m) => m.role !== "admin");
+  const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
   const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 
   const pageMembers = nonAdminMembers.slice(
@@ -91,7 +101,6 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
         >
           <X size={24} />
         </button>
-
         {/* Stepper Progress Indicator - Always Visible */}
         <div className="flex flex-col items-center pt-8 mb-6">
           <div className="w-full flex flex-col items-center">
@@ -305,3 +314,4 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 };
 
 export default AddContributionStepper;
+
