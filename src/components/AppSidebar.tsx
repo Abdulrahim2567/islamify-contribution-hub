@@ -54,8 +54,8 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton 
                     asChild
-                    isActive={activeTab === item.value}
                     onClick={() => onTabChange(item.value)}
+                    className={activeTab === item.value ? "bg-emerald-600 text-white hover:bg-emerald-700" : ""}
                   >
                     <button className="w-full">
                       <item.icon />

@@ -576,10 +576,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   <SidebarTrigger />
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900">
-                      {activeTab === "dashboard" && "Dashboard"}
-                      {activeTab === "members" && "Members"}
-                      {activeTab === "contributions" && "Manage Contributions"}
-                      {activeTab === "settings" && "Settings"}
+                      Islamify
                     </h1>
                     <p className="text-sm text-gray-600">
                       Welcome back, {user.name || user.email}
