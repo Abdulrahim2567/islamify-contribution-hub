@@ -29,7 +29,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
   const [page, setPage] = useState(0);
   const [formData, setFormData] = useState({ amount: "", description: "" });
 
-  // Filter out admins
+  // Only non-admins selectable.
   const nonAdminMembers = members.filter((m) => m.role !== "admin");
   const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 
@@ -50,6 +50,16 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
     setStep(1);
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setStep(1);
+      setSelectedMember(null);
+      setFormData({ amount: "", description: "" });
+      setPage(0);
+    }, 250);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMember) return;
@@ -67,25 +77,11 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
     onOpenChange(false);
   };
 
-  // Animation classes for steps
-  const animationClass = "transition-all duration-300 ease-in-out will-change-transform";
-
-  // Close & reset logic
-  const handleClose = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      setStep(1);
-      setSelectedMember(null);
-      setFormData({ amount: "", description: "" });
-      setPage(0);
-    }, 300);
-  };
-
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-0 relative overflow-hidden animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-0 relative overflow-hidden">
         {/* Close Button */}
         <button
           onClick={handleClose}
@@ -96,56 +92,68 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
           <X size={24} />
         </button>
 
-        {/* Step progress indicator */}
-        <div className="flex flex-col items-center pt-8 mb-5">
-          <div className="w-full flex items-center justify-center mb-3">
-            <div className="flex items-center relative gap-2 w-48">
-              {/* Step 1 */}
-              <div className={`rounded-full z-10 flex items-center justify-center font-bold border-2 ${
-                  step === 1
-                    ? "bg-white border-emerald-500 text-emerald-600 shadow"
-                    : "bg-white border-gray-200 text-gray-400"
-                } transition-colors w-10 h-10`}>
-                1
-              </div>
-              {/* Connecting line */}
-              <div className="absolute left-10 top-1/2 -translate-y-1/2 w-24 h-1">
-                <div className="w-full h-1 rounded transition-all bg-gray-200">
-                  <div
-                    className={`h-1 rounded transition-all duration-300 ${step === 2 ? "bg-emerald-500 w-full" : "bg-emerald-200 w-1/3"}`}
-                    style={{
-                      width: step === 2 ? "100%" : "33%",
-                      transition: "width 0.3s, background-color 0.3s",
-                    }}
-                  ></div>
+        {/* Stepper Progress Indicator */}
+        <div className="flex flex-col items-center pt-8 mb-6">
+          <div className="w-full flex flex-col items-center">
+            {/* Stepper Indicator */}
+            <div className="relative w-full max-w-xs flex items-center justify-between mb-3" style={{ minWidth: 240 }}>
+              {/* Step Circles */}
+              <div className="relative flex items-center w-full">
+                {/* Step 1 */}
+                <div
+                  className={`
+                    rounded-full z-10 flex items-center justify-center font-bold border-2 transition-colors w-10 h-10
+                    ${step === 1 ? "bg-white border-emerald-500 text-emerald-600 shadow" : "bg-white border-gray-200 text-gray-400"}
+                  `}
+                >
+                  1
+                </div>
+                {/* Connector Line */}
+                <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1">
+                  <div className="w-full h-1 rounded bg-gray-200 relative overflow-hidden">
+                    <div
+                      className={`h-1 rounded transition-all duration-300`}
+                      style={{
+                        background: step === 2 ? "#10b981" : "#a7f3d0",
+                        width: step === 2 ? "100%" : "4px",
+                        transition: "width 0.3s, background-color 0.3s",
+                      }}
+                    />
+                  </div>
+                </div>
+                {/* Step 2 - all the way right */}
+                <div
+                  className={`
+                    rounded-full z-10 flex items-center justify-center font-bold border-2 transition-colors w-10 h-10
+                    ${step === 2 ? "bg-white border-emerald-500 text-emerald-600 shadow" : "bg-white border-gray-200 text-gray-400"}
+                  `}
+                  style={{ marginLeft: "auto" }}
+                >
+                  2
                 </div>
               </div>
-              {/* Step 2 */}
-              <div className={`rounded-full z-10 flex items-center justify-center font-bold border-2 ${
-                  step === 2
-                    ? "bg-white border-emerald-500 text-emerald-600 shadow"
-                    : "bg-white border-gray-200 text-gray-400"
-                } transition-colors w-10 h-10`}>
-                2
-              </div>
             </div>
-          </div>
-          <div className="flex w-48 justify-between text-xs font-medium select-none">
-            <span className={`${step === 1 ? "text-emerald-600" : "text-gray-400"}`}>Select Member</span>
-            <span className={`${step === 2 ? "text-emerald-600" : "text-gray-400"}`}>Contribution</span>
+            <div className="flex w-full justify-between px-1 max-w-xs text-xs font-medium select-none">
+              <span className={`transition-colors ${step === 1 ? "text-emerald-600" : "text-gray-400"}`}>
+                Select Member
+              </span>
+              <span className={`transition-colors ${step === 2 ? "text-emerald-600" : "text-gray-400"}`}>
+                Contribution
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Step 1: Select member */}
+        {/* Step 1: Select Member */}
         <div
-          className={`${animationClass} ${
-            step === 1
-              ? "opacity-100 translate-x-0 relative"
-              : "opacity-0 -translate-x-full absolute pointer-events-none"
-          } w-full px-6 pb-6`}
-          style={{ minHeight: 376 }}
+          className={`
+            transition-all duration-300 ease-in-out will-change-transform w-full px-6 pb-6
+            ${step === 1 ? "opacity-100 translate-x-0 relative z-10" : "opacity-0 -translate-x-full absolute pointer-events-none z-0"}
+          `}
+          style={{ minHeight: 384 }}
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Select Member</h2>
+          {/* Minimal cards, 2 columns if space */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             {pageMembers.map((member) => (
               <button
@@ -202,27 +210,40 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
             </button>
           </div>
         </div>
-        {/* Step 2: Contribution form */}
+
+        {/* Step 2: Contribution Form */}
         <div
-          className={`${animationClass} ${
-            step === 2
-              ? "opacity-100 translate-x-0 absolute top-0 left-0 w-full h-full bg-white px-6 pb-6"
-              : "opacity-0 translate-x-full absolute pointer-events-none"
-          }`}
-          style={{ minHeight: 376 }}
+          className={`
+            transition-all duration-300 ease-in-out will-change-transform w-full
+            ${step === 2 ? "opacity-100 translate-x-0 absolute inset-0 z-10" : "opacity-0 translate-x-full absolute pointer-events-none z-0"}
+          `}
+          style={{ minHeight: 430, background: "white" }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
-            Add Contribution
-          </h2>
+          {/* Top Bar */}
+          <div className="flex items-center justify-between mb-6 px-6 pt-8">
+            <h2 className="text-xl font-bold text-gray-900">Add Contribution</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600"
+              type="button"
+              aria-label="Close"
+            >
+              <X size={24} />
+            </button>
+          </div>
           {selectedMember && (
-            <div className="flex flex-col items-center mb-4">
+            <div className="flex flex-col items-center mb-2">
               <span className="bg-emerald-100 rounded-full w-12 h-12 flex items-center justify-center mb-1">
                 <User className="text-emerald-500" size={25} />
               </span>
               <span className="font-bold text-gray-900">{selectedMember.name}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 px-6 pb-6"
+            style={{ maxWidth: 400, margin: "0 auto" }}
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Amount (XAF)
@@ -245,6 +266,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                 />
               </div>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description (optional)
@@ -262,13 +284,13 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                 rows={3}
               />
             </div>
-            <div className="flex space-x-4 pt-2">
+
+            <div className="flex space-x-4">
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
-                <ArrowLeft size={18} />
                 Back
               </button>
               <button
@@ -286,3 +308,4 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 };
 
 export default AddContributionStepper;
+
