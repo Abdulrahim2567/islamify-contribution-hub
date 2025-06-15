@@ -64,6 +64,33 @@ const MemberCard: React.FC<MemberCardProps> = ({
     >
       {/* Top section: Avatar, name, role (as SELECT), status */}
       <div className="relative pt-6 pb-4 px-4 flex flex-col items-center bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600 dark:from-emerald-900 dark:to-emerald-700">
+        {/* Edit Button in top left */}
+        {onEdit && (
+          <>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setShowEdit(true);
+              }}
+              className="absolute left-3 top-3 z-20 bg-white/90 rounded-full p-1.5 hover:bg-blue-100 hover:text-blue-700 text-blue-600 shadow transition"
+              type="button"
+              title="Edit member"
+              tabIndex={0}
+            >
+              <Edit size={16} />
+              <span className="sr-only">Edit</span>
+            </button>
+            <EditMemberDialog
+              open={showEdit}
+              onOpenChange={setShowEdit}
+              member={member}
+              onSave={(id, data) => {
+                setShowEdit(false);
+                onEdit(id, data);
+              }}
+            />
+          </>
+        )}
         {/* Avatar */}
         <div className="z-10">
           <Avatar name={member.name} />
@@ -158,30 +185,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <Eye size={18} />
             <span className="mt-0.5 leading-none">View</span>
           </button>
-          {/* Edit */}
-          {onEdit && (
-            <>
-              <button
-                onClick={() => setShowEdit(true)}
-                className="flex flex-col items-center justify-center hover:bg-blue-100 text-blue-600 hover:text-blue-900 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
-                title="Edit member"
-                tabIndex={0}
-                type="button"
-              >
-                <Edit size={18} />
-                <span className="mt-0.5 leading-none">Edit</span>
-              </button>
-              <EditMemberDialog
-                open={showEdit}
-                onOpenChange={setShowEdit}
-                member={member}
-                onSave={(id, data) => {
-                  setShowEdit(false);
-                  onEdit(id, data);
-                }}
-              />
-            </>
-          )}
+          {/* Edit removed from footer */}
+
           {/* Toggle Loan */}
           <button
             onClick={() => onLoanToggle(member.id)}
