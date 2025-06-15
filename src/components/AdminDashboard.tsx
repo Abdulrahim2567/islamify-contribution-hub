@@ -574,13 +574,18 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <SidebarTrigger />
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      Islamify
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                      Welcome back, {user.name || user.email}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                        Islamify
+                      </h1>
+                      <p className="text-sm text-gray-600">
+                        Welcome back, {user.name || user.email}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
