@@ -7,6 +7,11 @@ import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
 import { AdminDashboardWithSidebar, MemberDashboardWithSidebar } from "@/components/DashboardWithSidebar";
+import { useNavigate } from "react-router-dom";
+import DashboardPage from "@/pages/Dashboard";
+import MembersPage from "@/pages/Members";
+import ContributionsPage from "@/pages/Contributions";
+import SettingsPage from "@/pages/Settings";
 
 // Default admin user: always present as fallback if localstorage empty
 const DEMO_ADMIN = { id: 1, email: "admin@islamify.org", password: "admin123", role: "admin", name: "Admin User" };
@@ -38,6 +43,7 @@ const Index = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // On mount/load: get all users from localStorage (plus demo admin if needed)
   useEffect(() => {
@@ -55,6 +61,7 @@ const Index = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setShowPasswordChange(false);
+    navigate("/");
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully",
@@ -64,6 +71,7 @@ const Index = () => {
   const handleLogin = (user: any) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
+    navigate("/dashboard");
   };
 
   const requirePasswordChange = (user: any) => {
@@ -81,22 +89,20 @@ const Index = () => {
           setCurrentUser(updatedUser);
           setIsLoggedIn(true);
           setShowPasswordChange(false);
+          navigate("/dashboard");
         }}
         onCancel={() => {
           setShowPasswordChange(false);
           setIsLoggedIn(false);
+          navigate("/");
         }}
       />
     );
   }
 
   if (isLoggedIn && currentUser) {
-    // Switch: show dashboard with sidebar wrappers
-    return currentUser.role === "admin" ? (
-      <AdminDashboardWithSidebar user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users}/>
-    ) : (
-      <MemberDashboardWithSidebar user={currentUser} onLogout={handleLogout} />
-    );
+    // Route components will be rendered via Router (App.tsx)
+    return null;
   }
 
   return (
