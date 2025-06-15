@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, TrendingUp, Wallet, CreditCard, Plus } from "lucide-react";
+import { LogOut, TrendingUp, Wallet, CreditCard } from "lucide-react";
 import MembersPage from "./member/MembersPage";
 import { Member } from "./admin/types";
 import { Input } from "@/components/ui/input";
@@ -13,32 +14,55 @@ import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
 
-// Mock data for member contributions
-const MOCK_CONTRIBUTIONS = [
-  { id: 1, date: "2024-06-01", amount: 5000, type: "Monthly Contribution" },
-  { id: 2, date: "2024-05-01", amount: 5000, type: "Monthly Contribution" },
-  { id: 3, date: "2024-04-01", amount: 5000, type: "Monthly Contribution" },
-  { id: 4, date: "2024-03-01", amount: 5000, type: "Monthly Contribution" },
-  { id: 5, date: "2024-02-01", amount: 5000, type: "Monthly Contribution" },
-];
+const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 
 const MemberDashboard = ({ user, onLogout }) => {
-  const [contributions] = useState(MOCK_CONTRIBUTIONS);
+  // Remove MOCK_CONTRIBUTIONS
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "members">("dashboard");
   const [members, setMembers] = useState([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [memberContributions, setMemberContributions] = useState<{id: string, amount: number, date: string, type: string, description?: string}[]>([]);
 
   useEffect(() => {
     setMembers(readMembers());
   }, []);
 
-  // Find myself in members array for up-to-date eligibility/fields
+  // Find myself for up-to-date eligibility/fields
   const thisMember = members.find((m) => m.id === user.id);
 
-  const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
-  const maxLoanAmount = (thisMember?.totalContributions || 0) * 3;
+  // Fetch member's real contributions from localStorage activities
+  useEffect(() => {
+    try {
+      const storedActivities = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+      if (storedActivities) {
+        const activities = JSON.parse(storedActivities);
+        // Only contributions for this member
+        const contribs = activities.filter(
+          (a) =>
+            a.type === "contribution" &&
+            typeof a.memberId === "number" &&
+            a.memberId === user.id
+        ).map((a, idx) => ({
+          id: a.date || idx, // fallback id
+          amount: a.amount,
+          date: a.date,
+          type: "Monthly Contribution",
+          description: a.description
+        }));
+        setMemberContributions(contribs);
+      } else {
+        setMemberContributions([]);
+      }
+    } catch {
+      setMemberContributions([]);
+    }
+  }, [user.id, tab]);
+
+  // Compute stats from real contributions
+  const totalContributions = memberContributions.reduce((sum, c) => sum + (c.amount || 0), 0);
   const registrationFee = 5000;
+  const maxLoanAmount = (thisMember?.totalContributions || 0) * 3;
   const canApplyForLoan = !!thisMember?.loanEligible;
 
   return (
@@ -162,7 +186,7 @@ const MemberDashboard = ({ user, onLogout }) => {
             />
           )}
 
-          {/* Modern Contribution History (activities data) */}
+          {/* Contribution History */}
           <div className="mt-8">
             <MemberContributionHistory memberId={user.id} memberName={user.name} />
           </div>
