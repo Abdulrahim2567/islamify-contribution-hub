@@ -38,7 +38,8 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
         <AlertDialogDescription className="mb-4">
           Are you sure you want to delete <span className="font-semibold text-red-600">{memberName}</span>? This action cannot be undone.
         </AlertDialogDescription>
-        <AlertDialogFooter className="flex flex-col gap-2">
+        {/* Override the default to always stack vertically */}
+        <AlertDialogFooter className="flex flex-col gap-2 !flex-col !sm:flex-col">
           <AlertDialogCancel className="w-full py-3 text-base rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-none border-none hover:bg-gray-200 dark:hover:bg-gray-700">
             No, don&apos;t delete
           </AlertDialogCancel>
