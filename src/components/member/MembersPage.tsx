@@ -24,7 +24,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  // Confirm: Filter out demo admin (always hide "admin@islamify.com")
+  // Filter out demo admin
   const filtered = members.filter(
     (m) =>
       m.email !== "admin@islamify.com" &&
@@ -32,8 +32,11 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
         m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // View handler (sets selected member for modal)
-  const handleView = (member: Member) => setSelectedMember(member);
+  // Make sure handleView sets selectedMember and logs
+  const handleView = (member: Member) => {
+    console.log("[MembersPage] Viewing member:", member);
+    setSelectedMember(member);
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-2 py-7">
@@ -117,13 +120,13 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
   );
 };
 
+// Accepts onView prop for row clicks
 interface MTROProps {
   members: Member[];
   onView: (member: Member) => void;
   searchTerm: string;
 }
 
-// Table: each row is clickable (handled same as before, for "View" action)
 const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
@@ -141,7 +144,10 @@ const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
             <tr
               key={member.id}
               className="hover:bg-gray-50 cursor-pointer"
-              onClick={() => onView(member)}
+              onClick={() => {
+                console.log("[MembersTableReadOnly] OnView:", member);
+                onView(member);
+              }}
               tabIndex={0}
               role="button"
             >
