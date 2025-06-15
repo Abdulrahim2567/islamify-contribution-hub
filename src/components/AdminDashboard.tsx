@@ -217,13 +217,16 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     setShowSuccessModal(true);
     setNewMember({ name: '', email: '', phone: '', role: 'member' });
 
-    // Activity log
+    // Activity log with admin name/email
     persistAndSetActivities({
       id: Date.now() + Math.random(),
       timestamp: getNowString(),
       type: "add_member",
       text: `Added new member "${member.name}" (${member.email}) as ${member.role}`,
-      color: "emerald"
+      color: "emerald",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
   };
 
@@ -239,7 +242,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       timestamp: getNowString(),
       type: "toggle_status",
       text: `Changed status of "${member?.name}" to ${member?.isActive ? "Inactive" : "Active"}`,
-      color: "orange"
+      color: "orange",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
     toast({
       title: "Member Status Updated",
@@ -259,7 +265,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       timestamp: getNowString(),
       type: "loan_eligibility",
       text: `Changed loan eligibility for "${member?.name}" to ${member?.loanEligible ? "Disabled" : "Enabled"}`,
-      color: "indigo"
+      color: "indigo",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
     toast({
       title: "Loan Eligibility Updated",
@@ -276,7 +285,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
         timestamp: getNowString(),
         type: "delete_member",
         text: `Deleted member "${member?.name}"`,
-        color: "red"
+        color: "red",
+        adminName: user.name,
+        adminEmail: user.email,
+        adminRole: user.role,
       });
       toast({
         title: "Member Deleted",
@@ -340,7 +352,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       timestamp: getNowString(),
       type: "add_contribution",
       text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
-      color: "cyan"
+      color: "cyan",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
     setShowContributionModal(false);
     setTargetMemberId(null);
@@ -376,7 +391,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       timestamp: getNowString(),
       type: "add_contribution",
       text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
-      color: "cyan"
+      color: "cyan",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
     setShowAddContributionStepper(false);
     setTargetMemberId(null);
@@ -417,7 +435,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
         timestamp: getNowString(),
         type: "change_role",
         text: `Changed role for "${member.name}" to "${newRole}"`,
-        color: "amber"
+        color: "amber",
+        adminName: user.name,
+        adminEmail: user.email,
+        adminRole: user.role,
       });
     }
 
@@ -441,7 +462,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       timestamp: getNowString(),
       type: "edit_member",
       text: `Edited details for "${data.name}" (${data.email})`,
-      color: "blue"
+      color: "blue",
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
     });
     toast({
       title: "Member Updated",
@@ -577,7 +601,8 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                         <span className={`mt-1 w-2 h-2 rounded-full bg-${act.color}-500`} />
                         <span>
                           <span className="block text-sm text-gray-800">
-                            {act.text}
+                            <span className="font-semibold text-emerald-700">{act.adminName || "Admin"}</span>{' '}
+                            <span className="text-gray-600">({act.adminEmail || ""})</span> — {act.text}
                           </span>
                           <span className="block text-xs text-gray-400">{act.timestamp}</span>
                         </span>
