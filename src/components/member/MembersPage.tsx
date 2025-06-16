@@ -11,8 +11,6 @@ interface MembersPageProps {
   currentUser: Member;
 }
 
-const noop = () => {};
-
 const MembersPage = ({ currentUser }: MembersPageProps) => {
   const [members, setMembers] = useState<Member[]>([]);
 
@@ -34,9 +32,12 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 
   // Make sure handleView sets selectedMember and logs
   const handleView = (member: Member) => {
-    console.log("[MembersPage] Viewing member:", member);
+    console.log("[MembersPage] handleView called with:", member);
     setSelectedMember(member);
   };
+
+  // No-op functions for read-only mode
+  const noop = () => {};
 
   return (
     <div className="max-w-5xl mx-auto px-2 py-7">
@@ -113,7 +114,10 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
       {selectedMember && (
         <MemberDetailModal
           member={selectedMember}
-          onClose={() => setSelectedMember(null)}
+          onClose={() => {
+            console.log("[MembersPage] Closing modal");
+            setSelectedMember(null);
+          }}
         />
       )}
     </div>
@@ -145,7 +149,7 @@ const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
               key={member.id}
               className="hover:bg-gray-50 cursor-pointer"
               onClick={() => {
-                console.log("[MembersTableReadOnly] OnView:", member);
+                console.log("[MembersTableReadOnly] Row clicked, calling onView with:", member);
                 onView(member);
               }}
               tabIndex={0}
