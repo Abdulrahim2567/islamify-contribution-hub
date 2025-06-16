@@ -7,6 +7,7 @@ import { CreditCard, CheckCircle, XCircle, Clock, User, DollarSign, Calendar } f
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "../../utils/calculations";
 import { readMembers } from "../../utils/membersStorage";
+import { sendNotification } from "../../utils/notifications";
 
 interface LoanRequest {
   id: string;
@@ -135,11 +136,14 @@ const LoanManagement = () => {
     });
 
     // Send notification to member
-    sendNotificationToMember(
+    sendNotification(
       loan.memberId,
-      "Loan Approved! 🎉",
-      `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
-      'success'
+      {
+        title: "Loan Approved! 🎉",
+        message: `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
+        type: 'success',
+        category: 'loan'
+      }
     );
 
     toast({
@@ -188,11 +192,14 @@ const LoanManagement = () => {
     });
 
     // Send notification to member
-    sendNotificationToMember(
+    sendNotification(
       loan.memberId,
-      "Loan Application Update",
-      `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
-      'warning'
+      {
+        title: "Loan Application Update",
+        message: `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
+        type: 'warning',
+        category: 'loan'
+      }
     );
 
     toast({

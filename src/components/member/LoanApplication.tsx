@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { CreditCard, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/calculations';
 import { useToast } from '@/hooks/use-toast';
+import { sendNotification } from '../../utils/notifications';
 
 interface LoanApplicationProps {
   memberId: string;
@@ -81,6 +81,14 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
     } catch (error) {
       console.error('Error saving member activity:', error);
     }
+
+    // Send notification to admin (assuming admin has ID 1)
+    sendNotification(1, {
+      title: "New Loan Application 📋",
+      message: `${memberName} has applied for a loan of ${formatCurrency(amount)}. Review the application in the Loans section.`,
+      type: 'info',
+      category: 'loan'
+    });
 
     onSubmit({ amount, purpose: formData.reason });
     setFormData({ amount: '', reason: '' });
