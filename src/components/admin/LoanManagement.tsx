@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +70,26 @@ const LoanManagement = () => {
     }
   };
 
+  const sendNotificationToMember = (memberId: number, title: string, message: string, type: 'success' | 'info' | 'warning' | 'error') => {
+    // Store notification for member to see when they log in
+    try {
+      const NOTIFICATIONS_KEY = `islamify_notifications_${memberId}`;
+      const existingNotifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+      const notification = {
+        id: Date.now().toString(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      const updatedNotifications = [notification, ...existingNotifications];
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));
+    } catch (error) {
+      console.error('Error saving notification:', error);
+    }
+  };
+
   const getNowString = () => {
     const d = new Date();
     return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -114,6 +133,14 @@ const LoanManagement = () => {
       performedBy: "Admin",
       description: `Loan application approved`,
     });
+
+    // Send notification to member
+    sendNotificationToMember(
+      loan.memberId,
+      "Loan Approved! 🎉",
+      `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
+      'success'
+    );
 
     toast({
       title: "Loan Approved",
@@ -159,6 +186,14 @@ const LoanManagement = () => {
       performedBy: "Admin",
       description: `Loan application rejected`,
     });
+
+    // Send notification to member
+    sendNotificationToMember(
+      loan.memberId,
+      "Loan Application Update",
+      `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
+      'warning'
+    );
 
     toast({
       title: "Loan Rejected",
