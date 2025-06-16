@@ -131,6 +131,7 @@ const MemberDashboard = ({ user, onLogout }) => {
             {showLoanModal && (
               <LoanApplication
                 memberId={user.id.toString()}
+                memberName={user.name}
                 maxAmount={maxLoanAmount}
                 onSubmit={data => {
                   setShowLoanModal(false);
