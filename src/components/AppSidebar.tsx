@@ -1,5 +1,4 @@
-
-import { Calendar, Home, Users, Coins, Settings, LogOut } from "lucide-react";
+import { Calendar, Home, Users, Coins, Settings, LogOut, CreditCard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +33,11 @@ const navigationItems = [
     title: "Contributions",
     value: "contributions",
     icon: Coins,
+  },
+  {
+    title: "Loans",
+    value: "loans",
+    icon: CreditCard,
   },
   {
     title: "Settings",

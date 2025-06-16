@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { CreditCard, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/calculations';
+import { toast } from 'react-toastify';
 
 interface LoanApplicationProps {
   memberId: string;
@@ -17,6 +17,8 @@ interface LoanApplicationProps {
   onCancel: () => void;
 }
 
+const LOANS_STORAGE_KEY = 'islamify_loan_requests';
+
 const LoanApplication: React.FC<LoanApplicationProps> = ({
   memberId,
   maxAmount,
@@ -30,21 +32,39 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = parseFloat(formData.amount);
-
-    if (amount > maxAmount) {
-      alert(`Loan amount cannot exceed ${formatCurrency(maxAmount)}`);
+    
+    if (amount <= 0 || amount > maxAmount) {
+      toast({
+        title: "Invalid Amount",
+        description: `Please enter an amount between 1 and ${formatCurrency(maxAmount)}`,
+        variant: "destructive",
+      });
       return;
     }
 
-    onSubmit({
-      memberId,
+    // Create loan request object
+    const loanRequest = {
+      id: Date.now().toString(),
+      memberId: parseInt(memberId),
+      memberName: "Member", // This should be passed as a prop in a real implementation
       amount,
-      maxAmount,
-      applicationDate: new Date().toISOString(),
-      status: 'pending',
-      reason: formData.reason,
-    });
+      purpose: formData.reason,
+      requestDate: new Date().toISOString(),
+      status: 'pending' as const
+    };
+
+    // Save to localStorage
+    try {
+      const existingRequests = JSON.parse(localStorage.getItem(LOANS_STORAGE_KEY) || '[]');
+      const updatedRequests = [loanRequest, ...existingRequests];
+      localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(updatedRequests));
+    } catch (error) {
+      console.error('Error saving loan request:', error);
+    }
+
+    onSubmit({ amount, purpose: formData.reason });
+    setAmount(0);
+    setPurpose('');
   };
 
   return (

@@ -25,6 +25,7 @@ import AdminRecentActivity from "./admin/AdminRecentActivity";
 import AdminSettingsForm from "./admin/AdminSettingsForm";
 import AdminContributionsTable from "./admin/AdminContributionsTable";
 import LoanApplication from "./member/LoanApplication";
+import LoanManagement from "./admin/LoanManagement";
 import {
   Pagination,
   PaginationContent,
@@ -776,6 +777,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                 <React.Suspense fallback={<div>Loading...</div>}>
                   <AdminContributionsTable />
                 </React.Suspense>
+              )}
+
+              {activeTab === 'loans' && (
+                <LoanManagement />
               )}
 
               {activeTab === 'settings' && (
