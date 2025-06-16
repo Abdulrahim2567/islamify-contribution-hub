@@ -1,4 +1,3 @@
-
 import { Calendar, Home, Users, Coins, Settings, LogOut, CreditCard } from "lucide-react";
 import {
   Sidebar,
@@ -11,59 +10,43 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { NotificationBadge } from "./ui/notification-badge";
 
 interface AppSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   user: any;
-  navigationItems?: Array<{
-    title: string;
-    value: string;
-    icon: string;
-    badge?: number;
-  }>;
 }
 
-const defaultNavigationItems = [
+const navigationItems = [
   {
     title: "Dashboard",
     value: "dashboard",
-    icon: "Home",
+    icon: Home,
   },
   {
     title: "Members",
     value: "members", 
-    icon: "Users",
+    icon: Users,
   },
   {
     title: "Contributions",
     value: "contributions",
-    icon: "Coins",
+    icon: Coins,
   },
   {
     title: "Loans",
     value: "loans",
-    icon: "CreditCard",
+    icon: CreditCard,
   },
   {
     title: "Settings",
     value: "settings",
-    icon: "Settings",
+    icon: Settings,
   },
 ];
 
-const iconMap = {
-  Home,
-  Users,
-  Coins,
-  CreditCard,
-  Settings,
-  Calendar,
-};
-
-export function AppSidebar({ activeTab, onTabChange, onLogout, user, navigationItems = defaultNavigationItems }: AppSidebarProps) {
+export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSidebarProps) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -71,36 +54,28 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user, navigationI
           <SidebarGroupLabel>Islamify Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => {
-                const IconComponent = iconMap[item.icon] || Home;
-                return (
-                  <SidebarMenuItem key={item.value}>
-                    <SidebarMenuButton 
-                      asChild
-                      onClick={() => onTabChange(item.value)}
-                      className={`
-                        transition-all duration-300 ease-in-out transform
-                        ${activeTab === item.value 
-                          ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 scale-105 animate-fade-in" 
-                          : "hover:scale-102 hover:bg-gray-50"
-                        }
-                      `}
-                    >
-                      <button className="w-full flex items-center justify-between">
-                        <div className="flex items-center">
-                          <IconComponent className={`transition-colors duration-200 ${
-                            activeTab === item.value ? 'text-emerald-600' : ''
-                          }`} />
-                          <span className="transition-colors duration-200">{item.title}</span>
-                        </div>
-                        {item.badge && item.badge > 0 && (
-                          <NotificationBadge count={item.badge} />
-                        )}
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.value}>
+                  <SidebarMenuButton 
+                    asChild
+                    onClick={() => onTabChange(item.value)}
+                    className={`
+                      transition-all duration-300 ease-in-out transform
+                      ${activeTab === item.value 
+                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 scale-105 animate-fade-in" 
+                        : "hover:scale-102 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    <button className="w-full">
+                      <item.icon className={`transition-colors duration-200 ${
+                        activeTab === item.value ? 'text-emerald-600' : ''
+                      }`} />
+                      <span className="transition-colors duration-200">{item.title}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +9,8 @@ import MembersPage from "./member/MembersPage";
 import { useToast } from "@/hooks/use-toast";
 import { readMembers } from "../utils/membersStorage";
 import MemberContributionHistory from "./member/MemberContributionHistory";
-import MemberContributions from "./member/MemberContributions";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
-import { getUnreadNotificationCount, markNotificationsAsRead } from "../utils/notifications";
-import { NotificationBadge } from "./ui/notification-badge";
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 const LOANS_STORAGE_KEY = 'islamify_loan_requests';
@@ -23,30 +21,13 @@ const MemberDashboard = ({ user, onLogout }) => {
   const [members, setMembers] = useState([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [memberLoans, setMemberLoans] = useState([]);
+
+  // Store all activities for this member (contributions history)
   const [memberActivities, setMemberActivities] = useState([]);
-  const [loanNotificationCount, setLoanNotificationCount] = useState(0);
-  const [contributionNotificationCount, setContributionNotificationCount] = useState(0);
 
   useEffect(() => {
     setMembers(readMembers());
   }, []);
-
-  // Load notification counts
-  useEffect(() => {
-    setLoanNotificationCount(getUnreadNotificationCount(user.id, 'loan'));
-    setContributionNotificationCount(getUnreadNotificationCount(user.id, 'contribution'));
-  }, [user.id, activeTab]);
-
-  // Mark notifications as read when switching tabs
-  useEffect(() => {
-    if (activeTab === 'loans') {
-      markNotificationsAsRead(user.id, 'loan');
-      setLoanNotificationCount(0);
-    } else if (activeTab === 'contributions') {
-      markNotificationsAsRead(user.id, 'contribution');
-      setContributionNotificationCount(0);
-    }
-  }, [activeTab, user.id]);
 
   // Load member's loans
   useEffect(() => {
@@ -129,37 +110,6 @@ const MemberDashboard = ({ user, onLogout }) => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  // Update navigation items to include notification badges
-  const navigationItems = [
-    {
-      title: "Dashboard",
-      value: "dashboard",
-      icon: "Home",
-    },
-    {
-      title: "Members", 
-      value: "members",
-      icon: "Users",
-    },
-    {
-      title: "Contributions",
-      value: "contributions",
-      icon: "Coins",
-      badge: contributionNotificationCount
-    },
-    {
-      title: "Loans",
-      value: "loans",
-      icon: "CreditCard",
-      badge: loanNotificationCount
-    },
-    {
-      title: "Settings",
-      value: "settings",
-      icon: "Settings",
-    },
-  ];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -321,8 +271,6 @@ const MemberDashboard = ({ user, onLogout }) => {
             )}
           </div>
         );
-      case "contributions":
-        return <MemberContributions memberId={user.id} memberName={user.name} />;
       case "members":
         return <MembersPage currentUser={user} />;
       default:
@@ -338,7 +286,6 @@ const MemberDashboard = ({ user, onLogout }) => {
           onTabChange={setActiveTab}
           onLogout={onLogout}
           user={user}
-          navigationItems={navigationItems}
         />
         <SidebarInset>
           <div className="min-h-screen">
