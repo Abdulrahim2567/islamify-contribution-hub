@@ -23,6 +23,8 @@ interface LoanRequest {
 }
 
 const LOANS_STORAGE_KEY = 'islamify_loan_requests';
+const ADMIN_ACTIVITY_KEY = 'islamify_admin_activities';
+const MEMBER_ACTIVITY_KEY = 'islamify_recent_activities';
 
 const LoanManagement = () => {
   const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([]);
@@ -49,7 +51,35 @@ const LoanManagement = () => {
     setLoanRequests(requests);
   };
 
+  const addToAdminActivities = (activity: any) => {
+    try {
+      const existingActivities = JSON.parse(localStorage.getItem(ADMIN_ACTIVITY_KEY) || '[]');
+      const updatedActivities = [activity, ...existingActivities];
+      localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(updatedActivities));
+    } catch (error) {
+      console.error('Error saving admin activity:', error);
+    }
+  };
+
+  const addToMemberActivities = (activity: any) => {
+    try {
+      const existingActivities = JSON.parse(localStorage.getItem(MEMBER_ACTIVITY_KEY) || '[]');
+      const updatedActivities = [activity, ...existingActivities];
+      localStorage.setItem(MEMBER_ACTIVITY_KEY, JSON.stringify(updatedActivities));
+    } catch (error) {
+      console.error('Error saving member activity:', error);
+    }
+  };
+
+  const getNowString = () => {
+    const d = new Date();
+    return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  };
+
   const handleApprove = (loanId: string) => {
+    const loan = loanRequests.find(l => l.id === loanId);
+    if (!loan) return;
+
     const updatedRequests = loanRequests.map(loan =>
       loan.id === loanId
         ? {
@@ -62,14 +92,39 @@ const LoanManagement = () => {
     );
     saveLoanRequests(updatedRequests);
     
-    const loan = loanRequests.find(l => l.id === loanId);
+    // Add to admin activities
+    addToAdminActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "loan_approved",
+      text: `Approved loan of ${formatCurrency(loan.amount)} for "${loan.memberName}"`,
+      color: "green",
+      adminName: "Admin",
+      adminEmail: "admin@islamify.org",
+      adminRole: "admin",
+    });
+
+    // Add to member activities
+    addToMemberActivities({
+      type: "loan_approved",
+      amount: loan.amount,
+      memberId: loan.memberId,
+      memberName: loan.memberName,
+      date: new Date().toISOString(),
+      performedBy: "Admin",
+      description: `Loan application approved`,
+    });
+
     toast({
       title: "Loan Approved",
-      description: `Loan of ${formatCurrency(loan?.amount || 0)} for ${loan?.memberName} has been approved.`,
+      description: `Loan of ${formatCurrency(loan.amount)} for ${loan.memberName} has been approved.`,
     });
   };
 
   const handleReject = (loanId: string) => {
+    const loan = loanRequests.find(l => l.id === loanId);
+    if (!loan) return;
+
     const updatedRequests = loanRequests.map(loan =>
       loan.id === loanId
         ? {
@@ -82,10 +137,32 @@ const LoanManagement = () => {
     );
     saveLoanRequests(updatedRequests);
     
-    const loan = loanRequests.find(l => l.id === loanId);
+    // Add to admin activities
+    addToAdminActivities({
+      id: Date.now() + Math.random(),
+      timestamp: getNowString(),
+      type: "loan_rejected",
+      text: `Rejected loan request from "${loan.memberName}" for ${formatCurrency(loan.amount)}`,
+      color: "red",
+      adminName: "Admin",
+      adminEmail: "admin@islamify.org",
+      adminRole: "admin",
+    });
+
+    // Add to member activities
+    addToMemberActivities({
+      type: "loan_rejected",
+      amount: loan.amount,
+      memberId: loan.memberId,
+      memberName: loan.memberName,
+      date: new Date().toISOString(),
+      performedBy: "Admin",
+      description: `Loan application rejected`,
+    });
+
     toast({
       title: "Loan Rejected",
-      description: `Loan request from ${loan?.memberName} has been rejected.`,
+      description: `Loan request from ${loan.memberName} has been rejected.`,
       variant: "destructive",
     });
   };

@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface LoanApplicationProps {
   memberId: string;
+  memberName: string;
   maxAmount: number;
   onSubmit: (data: {
     amount: number;
@@ -18,6 +19,7 @@ const LOANS_STORAGE_KEY = 'islamify_loan_requests';
 
 const LoanApplication: React.FC<LoanApplicationProps> = ({
   memberId,
+  memberName,
   maxAmount,
   onSubmit,
   onCancel,
@@ -46,7 +48,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
     const loanRequest = {
       id: Date.now().toString(),
       memberId: parseInt(memberId),
-      memberName: "Member", // This should be passed as a prop in a real implementation
+      memberName,
       amount,
       purpose: formData.reason,
       requestDate: new Date().toISOString(),
@@ -60,6 +62,24 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
       localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(updatedRequests));
     } catch (error) {
       console.error('Error saving loan request:', error);
+    }
+
+    // Add to member activities
+    try {
+      const memberActivities = JSON.parse(localStorage.getItem('islamify_recent_activities') || '[]');
+      const memberActivity = {
+        type: "loan_request",
+        amount,
+        memberId: parseInt(memberId),
+        memberName,
+        date: new Date().toISOString(),
+        performedBy: memberName,
+        description: formData.reason,
+      };
+      const updatedMemberActivities = [memberActivity, ...memberActivities];
+      localStorage.setItem('islamify_recent_activities', JSON.stringify(updatedMemberActivities));
+    } catch (error) {
+      console.error('Error saving member activity:', error);
     }
 
     onSubmit({ amount, purpose: formData.reason });

@@ -624,11 +624,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   {showLoanModal && (
                     <LoanApplication
                       memberId={String(adminMemberId)}
+                      memberName={thisAdminMember?.name || user.name || user.email}
                       maxAmount={adminMaxLoanAmount}
                       onSubmit={data => {
                         setShowLoanModal(false);
-                        // Store the application in localStorage or activities (not specified, just notify for now)
-                        // Optionally, you can handle storage as an enhancement.
                         // Show a toast notification
                         toast({
                           title: "Loan Application Submitted",
