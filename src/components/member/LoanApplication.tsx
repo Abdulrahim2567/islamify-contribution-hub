@@ -1,18 +1,15 @@
+
 import React, { useState } from 'react';
 import { CreditCard, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/calculations';
-import { toast } from 'react-toastify';
+import { useToast } from '@/hooks/use-toast';
 
 interface LoanApplicationProps {
   memberId: string;
   maxAmount: number;
   onSubmit: (data: {
-    memberId: string;
     amount: number;
-    maxAmount: number;
-    applicationDate: string;
-    status: 'pending';
-    reason: string;
+    purpose: string;
   }) => void;
   onCancel: () => void;
 }
@@ -25,10 +22,13 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     amount: '',
     reason: '',
   });
+
+  const amount = parseFloat(formData.amount) || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +63,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
     }
 
     onSubmit({ amount, purpose: formData.reason });
-    setAmount(0);
-    setPurpose('');
+    setFormData({ amount: '', reason: '' });
   };
 
   return (
