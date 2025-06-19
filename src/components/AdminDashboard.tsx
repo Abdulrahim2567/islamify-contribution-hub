@@ -185,6 +185,29 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
     return password;
   };
 
+  const filteredMembers = members.filter(member =>
+    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic for members
+  const totalMembersPages = Math.ceil(filteredMembers.length / membersPerPage);
+  const paginatedMembers = filteredMembers.slice(
+    (membersPage - 1) * membersPerPage,
+    membersPage * membersPerPage
+  );
+
+  // Handle page change
+  const handleMembersPageChange = (page: number) => {
+    if (page < 1 || page > totalMembersPages) return;
+    setMembersPage(page);
+  };
+
+  // Reset page when search changes
+  useEffect(() => {
+    setMembersPage(1);
+  }, [searchTerm, membersPerPage]);
+
   const handleRegisterMember = (e) => {
     e.preventDefault();
     const password = generatePassword();
@@ -320,11 +343,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       });
     }
   };
-
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   // --- Calculate real contribution totals via activities ---
   function getRealMemberContributions(memberId: number): number {
