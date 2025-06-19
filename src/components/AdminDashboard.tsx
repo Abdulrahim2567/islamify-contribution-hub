@@ -1,640 +1,344 @@
 import React, { useState, useEffect } from 'react';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { Users, TrendingUp, DollarSign, CreditCard, Plus, Search, Grid, List } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Member, Activity } from "./admin/types";
-import { readMembers, writeMembers } from "../utils/membersStorage";
-import { useTheme } from "@/components/ui/ThemeProvider";
-import { formatCurrency } from "@/utils/calculations";
-import RegisterMemberDialog from "./admin/RegisterMemberDialog";
-import AdminStatsCards from "./admin/AdminStatsCards";
-import MemberTable from "./admin/MemberTable";
-import MemberCard from "./admin/MemberCard";
-import ContributionsTable from "./admin/ContributionsTable";
-import AdminSettingsForm from "./admin/AdminSettingsForm";
-import LoanManagement from "./admin/LoanManagement";
-import AddContributionStepper from "./admin/AddContributionStepper";
-import MemberDetailModal from "./admin/MemberDetailModal";
-import AdminNavbar from "./admin/AdminNavbar";
-import AdminRecentActivity from "./admin/AdminRecentActivity";
-import LoanApplication from "./member/LoanApplication";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Member, Activity } from './admin/types';
+import AdminNavbar from './admin/AdminNavbar';
+import AdminStatsCards from './admin/AdminStatsCards';
+import AdminRecentActivity from './admin/AdminRecentActivity';
+import MembersTable from './admin/MembersTable';
+import ContributionsTable from './admin/ContributionsTable';
+import LoansTable from './admin/LoansTable';
+import SettingsPanel from './admin/SettingsPanel';
+import RegisterMemberDialog from './admin/RegisterMemberDialog';
+import EditMemberDialog from './admin/EditMemberDialog';
+import ContributionForm from './admin/ContributionForm';
+import EditContributionForm from './admin/EditContributionForm';
+import LoanForm from './admin/LoanForm';
+import EditLoanForm from './admin/EditLoanForm';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { AccentColorToggle } from '@/components/AccentColorToggle';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
+  createMember,
+  readMembers,
+  updateMember,
+  deleteMember,
+} from "@/utils/membersStorage";
+import {
+  createContribution,
+  readContributions,
+  updateContribution,
+  deleteContribution,
+} from "@/utils/contributionsStorage";
+import {
+  createLoan,
+  readLoans,
+  updateLoan,
+  deleteLoan,
+} from "@/utils/loansStorage";
+import AddContributionStepper from './AddContributionStepper';
 
-// Add this type for the new member state
-type NewMember = {
-  name: string;
-  email: string;
-  phone: string;
-  role: "member" | "admin";
-};
-
-const USERS_LOCALSTORAGE_KEY = 'islamify_users';
-const ACTIVITY_LOCALSTORAGE_KEY = 'islamify_admin_activities';
-
-// Helper to update users in localStorage (also called by Index)
-function persistUsers(users) {
-  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
+interface AdminDashboardProps {
+  user: any;
+  onLogout: () => void;
 }
 
-function readActivities() {
-  try {
-    const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-function writeActivities(activities: any[]) {
-  localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
+interface ContributionRecord {
+  type: "contribution";
+  amount: number;
+  memberId: number;
+  memberName: string;
+  date: string;
+  performedBy: string;
+  description?: string;
 }
 
-const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
-  // Always load members from localStorage. If empty, create/save DEMO_ADMIN as sole member.
-  const DEMO_ADMIN_MEMBER: Member = {
-    id: 1,
-    name: "Admin User",
-    email: "admin@islamify.org",
-    phone: "",
-    registrationFee: 0,
-    totalContributions: 0,
-    isActive: true,
-    loanEligible: false,
-    joinDate: (new Date()).toISOString().split("T")[0],
-    role: "admin",
-  };
+interface LoanRecord {
+  type: "loan";
+  amount: number;
+  memberId: number;
+  memberName: string;
+  date: string;
+  dueDate: string;
+  interestRate: number;
+  status: "pending" | "approved" | "rejected" | "paid";
+  performedBy: string;
+  description?: string;
+}
 
-  const [members, setMembers] = useState<Member[]>([]);
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
-
-  useEffect(() => {
-    // On mount: get members from localStorage, fallback only to DEMO_ADMIN_MEMBER.
-    const loaded = readMembers();
-    if (loaded.length > 0) {
-      setMembers(loaded);
-    } else {
-      setMembers([DEMO_ADMIN_MEMBER]);
-      writeMembers([DEMO_ADMIN_MEMBER]);
-    }
-  }, []);
-
-  useEffect(() => {
-    const syncMembers = () => {
-      const loaded = readMembers();
-      setMembers(loaded.length > 0 ? loaded : [DEMO_ADMIN_MEMBER]);
-    };
-    window.addEventListener('storage', syncMembers);
-    return () => window.removeEventListener('storage', syncMembers);
-  }, []);
-
-  // Helper to persist and update (never fallback to mock)
-  const persistAndSetMembers = (updateFn) => {
-    setMembers(prev => {
-      const updated = typeof updateFn === "function" ? updateFn(prev) : updateFn;
-      // Ensure DEMO_ADMIN_MEMBER is always present
-      const hasDemoAdmin = updated.some(u => u.email === DEMO_ADMIN_MEMBER.email);
-      const finalMembers = hasDemoAdmin ? updated : [DEMO_ADMIN_MEMBER, ...updated];
-      writeMembers(finalMembers); // save to localStorage
-      return finalMembers;
-    });
-  };
-
-  // Retrieve from localStorage only on mount
-  const [activities, setActivities] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Every time activities changes, update localStorage
-  useEffect(() => {
-    localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
-  }, [activities]);
-
-  // Helper to always persist after updates (activities)
-  const persistAndSetActivities = (activityOrUpdateFn) => {
-    setActivities(prev => {
-      let updated;
-      if (typeof activityOrUpdateFn === "function") {
-        updated = activityOrUpdateFn(prev);
-      } else {
-        // Accept single activity or array
-        updated = Array.isArray(activityOrUpdateFn)
-          ? activityOrUpdateFn
-          : [activityOrUpdateFn, ...prev];
-      }
-      // No need to set localStorage here, useEffect handles it
-      return updated;
-    });
-  };
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
-  const [newMember, setNewMember] = useState<NewMember>({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'member'
-  });
-  const [generatedPassword, setGeneratedPassword] = useState('');
-  const [showContributionModal, setShowContributionModal] = useState(false);
-  const [targetMemberId, setTargetMemberId] = useState<number|null>(null);
-  const [settings, setSettings] = useState({
-    associationName: "Islamify",
-    registrationFee: 5000,
-    maxLoanMultiplier: 3,
-  });
-  const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
-  const [activityPage, setActivityPage] = useState(1);
-  const perPage = 10;
-  const [showLoanModal, setShowLoanModal] = useState(false);
-  const [membersPage, setMembersPage] = useState(1);
-  const [membersPerPage, setMembersPerPage] = useState(12);
-  const { toast } = useToast();
+  const [members, setMembers] = useState<Member[]>([]);
+  const [contributions, setContributions] = useState<ContributionRecord[]>([]);
+  const [loans, setLoans] = useState<LoanRecord[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [showEditMemberDialog, setShowEditMemberDialog] = useState(false);
+  const [showContributionDialog, setShowContributionDialog] = useState(false);
+  const [editingContribution, setEditingContribution] = useState<ContributionRecord | null>(null);
+  const [showEditContributionDialog, setShowEditContributionDialog] = useState(false);
+  const [showLoanDialog, setShowLoanDialog] = useState(false);
+  const [editingLoan, setEditingLoan] = useState<LoanRecord | null>(null);
+  const [showEditLoanDialog, setShowEditLoanDialog] = useState(false);
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
-  const generatePassword = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
-
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Pagination logic for members
-  const totalMembersPages = Math.ceil(filteredMembers.length / membersPerPage);
-  const paginatedMembers = filteredMembers.slice(
-    (membersPage - 1) * membersPerPage,
-    membersPage * membersPerPage
-  );
-
-  // Handle page change
-  const handleMembersPageChange = (page: number) => {
-    if (page < 1 || page > totalMembersPages) return;
-    setMembersPage(page);
-  };
-
-  // Reset page when search changes
-  useEffect(() => {
-    setMembersPage(1);
-  }, [searchTerm, membersPerPage]);
-
-  const handleRegisterMember = (e) => {
-    e.preventDefault();
-    const password = generatePassword();
-    const id = Date.now(); // Use timestamp for uniqueness
-    const member = {
-      id,
-      name: newMember.name,
-      email: newMember.email,
-      phone: newMember.phone,
-      role: newMember.role,
-      registrationFee: 5000,
-      totalContributions: 0,
-      isActive: true,
-      loanEligible: false,
-      joinDate: new Date().toISOString().split('T')[0]
-    };
-    persistAndSetMembers([...members, member]);
-    
-    // Set the generated password BEFORE showing the success modal
-    setGeneratedPassword(password);
-
-    // Update localStorage users for login
-    let persistedUsers = [];
-    try {
-      const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
-      if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
-    } catch {}
-    // User for login should match Index.tsx login format
-    const loginUser = {
-      id,
-      email: newMember.email,
-      password,
-      role: newMember.role,
-      name: newMember.name,
-      needsPasswordChange: true // must change password on first login
-    };
-    const updatedUsers = [...persistedUsers, loginUser];
-    persistUsers(updatedUsers);
-    // Optionally notify Index of user update (for state sync in SPA)
-    if (onNewUser) onNewUser([...users, loginUser]);
-
-    // Close register modal first
-    setShowRegisterModal(false);
-    
-    // Reset form
-    setNewMember({ name: '', email: '', phone: '', role: 'member' });
-    
-    // Show success modal with generated password
-    setShowSuccessModal(true);
-
-    // Activity log with admin name/email
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "add_member",
-      text: `Added new member "${member.name}" (${member.email}) as ${member.role}`,
-      color: "emerald",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-
-    toast({
-      title: "Member Registered",
-      description: `${member.name} has been successfully registered`,
-    });
-  };
-
-  const toggleMemberStatus = (id) => {
-    persistAndSetMembers(members =>
-      members.map(member => 
-        member.id === id ? { ...member, isActive: !member.isActive } : member
-      )
-    );
-    const member = members.find(m => m.id === id);
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "toggle_status",
-      text: `Changed status of "${member?.name}" to ${member?.isActive ? "Inactive" : "Active"}`,
-      color: "orange",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-    toast({
-      title: "Member Status Updated",
-      description: "Member status has been changed successfully",
-    });
-  };
-
-  const toggleLoanEligibility = (id) => {
-    persistAndSetMembers(members =>
-      members.map(member => 
-        member.id === id ? { ...member, loanEligible: !member.loanEligible } : member
-      )
-    );
-    const member = members.find(m => m.id === id);
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "loan_eligibility",
-      text: `Changed loan eligibility for "${member?.name}" to ${member?.loanEligible ? "Disabled" : "Enabled"}`,
-      color: "indigo",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-    toast({
-      title: "Loan Eligibility Updated",
-      description: "Member loan eligibility has been changed successfully",
-    });
-  };
-
-  const deleteMember = (id) => {
-    const member = members.find(m => m.id === id);
-    if (window.confirm(`Are you sure you want to delete ${member?.name}? This action cannot be undone.`)) {
-      persistAndSetMembers(members => members.filter(member => member.id !== id));
-      persistAndSetActivities({
-        id: Date.now() + Math.random(),
-        timestamp: getNowString(),
-        type: "delete_member",
-        text: `Deleted member "${member?.name}"`,
-        color: "red",
-        adminName: user.name,
-        adminEmail: user.email,
-        adminRole: user.role,
-      });
-      toast({
-        title: "Member Deleted",
-        description: "Member has been removed from the system",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // --- Calculate real contribution totals via activities ---
-  function getRealMemberContributions(memberId: number): number {
-    // Only count "contribution" type activities for this member
-    return activities
-      .filter(
-        (act) =>
-          act.type === "add_contribution" &&
-          typeof act.text === "string" &&
-          (act.text.includes(`"${members.find(m=>m.id===memberId)?.name}"`))
-      )
-      .reduce((sum, act) => {
-        // Extract contribution from text: "Added contribution of 5,000 XAF for "John Doe"..."
-        const match = /contribution of ([\d,]+) XAF/.exec(act.text);
-        const amt = match ? parseInt(match[1].replace(/,/g, "")) : 0;
-        return sum + (isNaN(amt) ? 0 : amt);
-      }, 0);
-  }
-
-  // For all members: create a map, defaulting to 0 if none
-  const memberContributionMap = members.reduce((map, m) => {
-    map[m.id] = getRealMemberContributions(m.id);
-    return map;
-  }, {} as Record<number, number>);
-
-  const totalMembers = members.length;
-  const activeMembers = members.filter(m => m.isActive).length;
-  const inactiveMembers = totalMembers - activeMembers;
-  const totalContributions = Object.values(memberContributionMap).reduce((sum, v) => sum + v, 0);
-  const totalRegistrationFees = members.reduce((sum, m) => sum + m.registrationFee, 0);
-
-  const { theme, accent } = useTheme();
-
-  // Helper for accent classes
-  const accentGradient =
-    accent === "blue"
-      ? "from-blue-500 to-blue-700"
-      : accent === "indigo"
-      ? "from-indigo-500 to-indigo-700"
-      : accent === "violet"
-      ? "from-violet-500 to-violet-700"
-      : "from-emerald-500 to-emerald-700";
-
-  // Handle admin adding contribution to a member
-  const handleOpenAddContribution = () => {
-    setShowContributionModal(false);
-    setTargetMemberId(null);
-  };
-  const openContributionModalFor = (memberId: number) => {
-    setTargetMemberId(memberId);
-    setShowContributionModal(true);
-  };
-
-  const handleAddContribution = ({ amount, description }: { amount: number; description?: string }) => {
-    if (!targetMemberId) return;
-    const member = members.find(m => m.id === targetMemberId);
-    persistAndSetMembers(members =>
-      members.map(m =>
-        m.id === targetMemberId
-          ? { ...m, totalContributions: m.totalContributions + amount }
-          : m
-      )
-    );
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "add_contribution",
-      text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
-      color: "cyan",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-    setShowContributionModal(false);
-    setTargetMemberId(null);
-    toast({
-      title: "Contribution Added",
-      description: `Added ${amount.toLocaleString()} XAF contribution.`,
-    });
-  };
-
-  const handleAddContributionStepper = ({
-    memberId,
-    amount,
-    type,
-    date,
-    description,
-  }: {
-    memberId: number;
-    amount: number;
-    type: "contribution";
-    date: string;
-    description?: string;
-  }) => {
-    const member = members.find(m => m.id === memberId);
-    persistAndSetMembers((members) =>
-      members.map((m) =>
-        m.id === memberId
-          ? { ...m, totalContributions: m.totalContributions + amount }
-          : m
-      )
-    );
-    // Log in admin activities
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "add_contribution",
-      text: `Added contribution of ${amount.toLocaleString()} XAF for "${member?.name}"${description ? ` (${description})` : ""}`,
-      color: "cyan",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-
-    // ------------ IMPORTANT PART: update islamify_recent_activities for member dashboards ------------
-
-    // Prepare activity object for member dashboard
-    const memberActivity = {
-      type: "contribution",
-      amount,
-      memberId,
-      memberName: member?.name || "",
-      date,
-      performedBy: user.name,
-      description: description || "",
-    };
-
-    // Read recent activities (as member dashboard expects)
-    const MEMBER_ACTIVITY_KEY = "islamify_recent_activities";
-    let recentActivities: any[] = [];
-    try {
-      const stored = localStorage.getItem(MEMBER_ACTIVITY_KEY);
-      if (stored) {
-        recentActivities = JSON.parse(stored);
-      }
-    } catch {}
-    // Prepend new activity, keep to a max size if desired
-    recentActivities = [memberActivity, ...recentActivities];
-    localStorage.setItem(MEMBER_ACTIVITY_KEY, JSON.stringify(recentActivities));
-
-    // ------------ END IMPORTANT PART ------------
-
-    setShowAddContributionStepper(false);
-    setTargetMemberId(null);
-    toast({
-      title: "Contribution Added",
-      description: `Added ${amount.toLocaleString()} XAF contribution.`,
-    });
-  };
-
-  // NEW: Change role handler
-  const handleChangeRole = (id: number, newRole: "member" | "admin") => {
-    persistAndSetMembers(members =>
-      members.map(m =>
-        m.id === id ? { ...m, role: newRole } : m
-      )
-    );
-
-    // Update user object in localStorage USERS_LOCALSTORAGE_KEY
-    let persistedUsers = [];
-    try {
-      const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
-      if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
-    } catch {}
-    // Find the member for the user
-    const member = members.find(m => m.id === id);
-    if (member) {
-      // Find the index of the user matching the member's email.
-      const updatedUsers = persistedUsers.map(u =>
-        (u.email === member.email || u.id === id)
-          ? { ...u, role: newRole }
-          : u
-      );
-      persistUsers(updatedUsers);
-      // Update parent state if needed (triggers re-render for login, etc)
-      if (onNewUser) onNewUser(updatedUsers);
-      persistAndSetActivities({
-        id: Date.now() + Math.random(),
-        timestamp: getNowString(),
-        type: "change_role",
-        text: `Changed role for "${member.name}" to "${newRole}"`,
-        color: "amber",
-        adminName: user.name,
-        adminEmail: user.email,
-        adminRole: user.role,
-      });
-    }
-
-    toast({
-      title: "Role Updated",
-      description: `Member role changed to ${newRole}`,
-    });
-  };
-
-  // Edit member handler
-  const handleEditMember = (id: number, data: { name: string; email: string; phone: string }) => {
-    persistAndSetMembers(members =>
-      members.map(m =>
-        m.id === id
-          ? { ...m, ...data }
-          : m
-      )
-    );
-    persistAndSetActivities({
-      id: Date.now() + Math.random(),
-      timestamp: getNowString(),
-      type: "edit_member",
-      text: `Edited details for "${data.name}" (${data.email})`,
-      color: "blue",
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: user.role,
-    });
-    toast({
-      title: "Member Updated",
-      description: "Member details updated successfully",
-    });
-  };
-
-  const getNowString = () => {
-    const d = new Date();
-    return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  };
-
-  // PAGINATION LOGIC FOR ACTIVITIES
-  const paginatedActivities = activities.slice((activityPage - 1) * perPage, activityPage * perPage);
-  const totalPages = Math.ceil(activities.length / perPage);
-
-  // Handler for pagination clicks
-  const handleActivityPageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setActivityPage(page);
-  };
-
-  // For admin, find "self" as a member record, e.g., by email
-  const thisAdminMember = members.find((m) => m.email === user.email || m.id === user.id);
-
-  // For loan, use sum of admin's contributions (like member dashboard logic)
-  const adminMemberId = thisAdminMember?.id ?? user.id;
-  // Fallback: If no member record, default contributions to 0
-  const adminContributions = thisAdminMember
-    ? memberContributionMap[thisAdminMember.id] || 0
-    : 0;
-  const adminMaxLoanAmount = adminContributions * 3;
-
-  // Allow admin to apply for loan if they are found as a member and eligible
-  const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
-
-  // Handle contributions data for ContributionsTable
-  const contributionRecords = activities
-    .filter(act => act.type === "add_contribution")
-    .map((act, index) => {
-      // Extract member name from activity text
-      const memberNameMatch = act.text.match(/"([^"]+)"/);
-      const memberName = memberNameMatch ? memberNameMatch[1] : "Unknown";
-      
-      // Extract amount from activity text
-      const amountMatch = act.text.match(/(\d{1,3}(?:,\d{3})*)/);
-      const amount = amountMatch ? parseInt(amountMatch[1].replace(/,/g, "")) : 0;
-      
-      // Find member by name
-      const member = members.find(m => m.name === memberName);
-      
-      return {
-        type: "contribution" as const,
-        amount,
-        memberId: member?.id || 0,
-        memberName,
-        date: act.timestamp.split(',')[0], // Extract date part
-        performedBy: act.adminName || "Admin",
-        description: act.text.includes('(') ? act.text.match(/\(([^)]+)\)/)?.[1] : undefined
-      };
-    });
-
+  const [membersPage, setMembersPage] = useState(1);
   const [contributionsPage, setContributionsPage] = useState(1);
-  const contributionsPerPage = 10;
-  const totalContributionsPages = Math.ceil(contributionRecords.length / contributionsPerPage);
-  const paginatedContributions = contributionRecords.slice(
-    (contributionsPage - 1) * contributionsPerPage,
-    contributionsPage * contributionsPerPage
-  );
+  const [loansPage, setLoansPage] = useState(1);
+  const membersPageSize = 5;
+  const contributionsPageSize = 5;
+  const loansPageSize = 5;
 
-  const handleEditContribution = (record: any) => {
-    // Handle edit contribution
-    console.log("Edit contribution:", record);
+  useEffect(() => {
+    // Load data from local storage on component mount
+    const storedMembers = readMembers();
+    if (storedMembers) {
+      setMembers(storedMembers);
+    }
+
+    const storedContributions = readContributions();
+    if (storedContributions) {
+      setContributions(storedContributions);
+    }
+
+    const storedLoans = readLoans();
+    if (storedLoans) {
+      setLoans(storedLoans);
+    }
+
+    // Mock activities for demonstration
+    const mockActivities: Activity[] = [
+      { id: 1, timestamp: new Date().toISOString(), type: 'member_joined', text: 'A new member joined the community.', adminName: 'Admin User', adminEmail: 'admin@example.com', adminRole: 'admin' },
+      { id: 2, timestamp: new Date().toISOString(), type: 'contribution_added', text: 'A member made a contribution.', adminName: 'Admin User', adminEmail: 'admin@example.com', adminRole: 'admin' },
+      { id: 3, timestamp: new Date().toISOString(), type: 'loan_approved', text: 'A loan request was approved.', adminName: 'Admin User', adminEmail: 'admin@example.com', adminRole: 'admin' },
+    ];
+    setActivities(mockActivities);
+  }, []);
+
+  // Stats calculation
+  const totalMembers = members.length;
+  const totalContributions = contributions.reduce((sum, contribution) => sum + contribution.amount, 0);
+  const averageContribution = totalMembers > 0 ? totalContributions / totalMembers : 0;
+  const activeMembers = members.filter(member => member.isActive).length;
+
+  // Handlers for members
+  const handleRegisterMember = (memberData: Omit<Member, 'id' | 'totalContributions'>) => {
+    const newMember: Member = {
+      id: Date.now(), // Generate a unique ID
+      ...memberData,
+      totalContributions: 0,
+    };
+    const updatedMembers = [...members, newMember];
+    setMembers(updatedMembers);
+    createMember(newMember); // Save to local storage
+    setShowRegisterDialog(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'member_registered',
+      text: `${newMember.name} was registered.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
   };
 
-  const handleDeleteContribution = (record: any) => {
-    // Handle delete contribution
-    console.log("Delete contribution:", record);
+  const handleEditMember = (member: Member) => {
+    setEditingMember(member);
+    setShowEditMemberDialog(true);
+  };
+
+  const handleUpdateMember = (memberData: Member) => {
+    const updatedMembers = members.map(member =>
+      member.id === memberData.id ? memberData : member
+    );
+    setMembers(updatedMembers);
+    updateMember(memberData); // Update in local storage
+    setShowEditMemberDialog(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'member_updated',
+      text: `${memberData.name}'s profile was updated.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
+  };
+
+  const handleDeleteMember = (member: Member) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${member.name}?`);
+    if (confirmDelete) {
+      const updatedMembers = members.filter(m => m.id !== member.id);
+      setMembers(updatedMembers);
+      deleteMember(member.id); // Delete from local storage
+      setActivities(prev => [...prev, {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'member_deleted',
+        text: `${member.name} was deleted.`,
+        adminName: user.name,
+        adminEmail: user.email,
+        adminRole: 'admin'
+      }]);
+    }
+  };
+
+  // Handlers for contributions
+  const handleAddContribution = (contributionData: Omit<ContributionRecord, 'id' | 'performedBy' | 'memberName'>) => {
+    const member = members.find(m => m.id === contributionData.memberId);
+    if (!member) {
+      alert('Member not found!');
+      return;
+    }
+
+    const newContribution: ContributionRecord = {
+      id: Date.now(), // Generate a unique ID
+      ...contributionData,
+      type: "contribution",
+      memberName: member.name,
+      performedBy: user.name,
+    };
+
+    const updatedContributions = [...contributions, newContribution];
+    setContributions(updatedContributions);
+    createContribution(newContribution); // Save to local storage
+
+    // Update member's total contributions
+    const updatedMember = { ...member, totalContributions: member.totalContributions + contributionData.amount };
+    const updatedMembers = members.map(m => m.id === member.id ? updatedMember : m);
+    setMembers(updatedMembers);
+    updateMember(updatedMember); // Save updated member to local storage
+
+    setShowContributionDialog(false);
+    setShowAddContributionStepper(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'contribution_added',
+      text: `${contributionData.amount} XAF contribution added for ${member.name}.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
+  };
+
+  const handleEditContribution = (record: ContributionRecord) => {
+    setEditingContribution(record);
+    setShowEditContributionDialog(true);
+  };
+
+  const handleUpdateContribution = (contributionData: ContributionRecord) => {
+    const updatedContributions = contributions.map(contribution =>
+      contribution.id === contributionData.id ? contributionData : contribution
+    );
+    setContributions(updatedContributions);
+    updateContribution(contributionData); // Update in local storage
+    setShowEditContributionDialog(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'contribution_updated',
+      text: `${contributionData.amount} XAF contribution updated for ${contributionData.memberName}.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
+  };
+
+  const handleDeleteContribution = (contribution: ContributionRecord) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete this contribution of ${contribution.amount} XAF from ${contribution.memberName}?`);
+    if (confirmDelete) {
+      const updatedContributions = contributions.filter(c => c.id !== contribution.id);
+      setContributions(updatedContributions);
+      deleteContribution(contribution.id); // Delete from local storage
+      setActivities(prev => [...prev, {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'contribution_deleted',
+        text: `${contribution.amount} XAF contribution deleted for ${contribution.memberName}.`,
+        adminName: user.name,
+        adminEmail: user.email,
+        adminRole: 'admin'
+      }]);
+    }
+  };
+
+  // Handlers for loans
+  const handleAddLoan = (loanData: Omit<LoanRecord, 'id' | 'performedBy' | 'memberName'>) => {
+    const member = members.find(m => m.id === loanData.memberId);
+    if (!member) {
+      alert('Member not found!');
+      return;
+    }
+
+    const newLoan: LoanRecord = {
+      id: Date.now(), // Generate a unique ID
+      ...loanData,
+      type: "loan",
+      memberName: member.name,
+      performedBy: user.name,
+    };
+
+    const updatedLoans = [...loans, newLoan];
+    setLoans(updatedLoans);
+    createLoan(newLoan); // Save to local storage
+    setShowLoanDialog(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'loan_added',
+      text: `${loanData.amount} XAF loan added for ${member.name}.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
+  };
+
+  const handleEditLoan = (record: LoanRecord) => {
+    setEditingLoan(record);
+    setShowEditLoanDialog(true);
+  };
+
+  const handleUpdateLoan = (loanData: LoanRecord) => {
+    const updatedLoans = loans.map(loan =>
+      loan.id === loanData.id ? loanData : loan
+    );
+    setLoans(updatedLoans);
+    updateLoan(loanData); // Update in local storage
+    setShowEditLoanDialog(false);
+    setActivities(prev => [...prev, {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      type: 'loan_updated',
+      text: `${loanData.amount} XAF loan updated for ${loanData.memberName}.`,
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: 'admin'
+    }]);
+  };
+
+  const handleDeleteLoan = (loan: LoanRecord) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete this loan of ${loan.amount} XAF from ${loan.memberName}?`);
+    if (confirmDelete) {
+      const updatedLoans = loans.filter(l => l.id !== loan.id);
+      setLoans(updatedLoans);
+      deleteLoan(loan.id); // Delete from local storage
+      setActivities(prev => [...prev, {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'loan_deleted',
+        text: `${loan.amount} XAF loan deleted for ${loan.memberName}.`,
+        adminName: user.name,
+        adminEmail: user.email,
+        adminRole: 'admin'
+      }]);
+    }
   };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        {/* Fixed Navbar */}
-        <AdminNavbar user={user} onLogout={onLogout} />
-        
-        {/* Sidebar without user profile */}
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={setActiveTab} 
@@ -643,360 +347,134 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
           hideUserProfile={true}
         />
         
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto pt-16"> {/* Add top padding for fixed navbar */}
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <SidebarTrigger />
-              <h1 className="text-2xl font-bold text-gray-900">
-                {activeTab === "dashboard" && "Dashboard"}
-                {activeTab === "members" && "Members"}
-                {activeTab === "contributions" && "Contributions"}
-                {activeTab === "loans" && "Loans"}
-                {activeTab === "settings" && "Settings"}
-              </h1>
-            </div>
-
-            {activeTab === 'dashboard' && (
-              <>
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-                  <p className="text-gray-600">Manage your association finances</p>
-                </div>
-                
-                <AdminStatsCards
-                  totalMembers={totalMembers}
-                  activeMembers={activeMembers}
-                  inactiveMembers={inactiveMembers}
-                  totalContributions={totalContributions}
-                  totalRegistrationFees={totalRegistrationFees}
-                />
-
-                {adminCanApplyForLoan && (
-                  <div className="flex justify-end mb-6">
-                    <button
-                      className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
-                      onClick={() => setShowLoanModal(true)}
-                    >
-                      <CreditCard className="w-5 h-5" />
-                      Apply For Loan
-                    </button>
+        <div className="flex-1 flex flex-col">
+          {/* Fixed Navbar */}
+          <AdminNavbar user={user} onLogout={onLogout} />
+          
+          {/* Main Content with top padding to account for fixed navbar */}
+          <main className="flex-1 p-6 pt-24 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+            <div className="max-w-7xl mx-auto space-y-8">
+              {activeTab === 'dashboard' && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                      <p className="text-gray-600 mt-1">Welcome back, manage your community</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <AccentColorToggle />
+                      <ThemeToggle />
+                    </div>
                   </div>
-                )}
-                {showLoanModal && (
-                  <LoanApplication
-                    memberId={String(adminMemberId)}
-                    memberName={thisAdminMember?.name || user.name || user.email}
-                    maxAmount={adminMaxLoanAmount}
-                    onSubmit={data => {
-                      setShowLoanModal(false);
-                      toast({
-                        title: "Loan Application Submitted",
-                        description: `Your application for ${formatCurrency(data.amount)} is pending.`,
-                      });
-                    }}
-                    onCancel={() => setShowLoanModal(false)}
+
+                  <AdminStatsCards 
+                    totalMembers={totalMembers}
+                    totalContributions={totalContributions}
+                    averageContribution={averageContribution}
+                    activeMembers={activeMembers}
                   />
-                )}
 
-                <AdminRecentActivity
-                  activities={activities}
-                  paginatedActivities={paginatedActivities}
-                  totalPages={totalPages}
-                  activityPage={activityPage}
-                  onActivityPageChange={handleActivityPageChange}
-                />
-              </>
-            )}
-
-            {activeTab === 'members' && (
-              <>
-                {/* Header Section */}
-                <div className="mb-8 flex justify-between items-center">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Members Management</h1>
-                    <p className="text-gray-600">Manage association members and their contributions</p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => {
-                          setViewMode('table');
-                          setCardsShouldAnimate(false);
-                        }}
-                        className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
-                      >
-                        <List size={20} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setViewMode('card');
-                          setCardsShouldAnimate(true);
-                          setTimeout(() => setCardsShouldAnimate(false), 700);
-                        }}
-                        className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
-                      >
-                        <Grid size={20} />
-                      </button>
-                    </div>
-                    {/* Add Contribution Button (opens stepper) */}
-                    <button
-                      className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
-                      onClick={() => setShowAddContributionStepper(true)}
-                      type="button"
-                      aria-label="Add contribution"
-                    >
-                      <DollarSign size={20} />
-                      Add Contribution
-                    </button>
-                    <RegisterMemberDialog
-                      open={showRegisterModal}
-                      onOpenChange={setShowRegisterModal}
-                      newMember={newMember}
-                      setNewMember={setNewMember}
-                      onSubmit={handleRegisterMember}
-                    />
-                  </div>
-                </div>
-
-                <AddContributionStepper
-                  open={showAddContributionStepper}
-                  onOpenChange={setShowAddContributionStepper}
-                  members={members}
-                  onSubmit={handleAddContributionStepper}
-                />
-
-                {/* Search and Pagination Controls */}
-                <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Search members..."
-                    />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="members-per-page" className="text-sm text-gray-600">
-                        Per page:
-                      </Label>
-                      <Select
-                        value={membersPerPage.toString()}
-                        onValueChange={(value) => setMembersPerPage(Number(value))}
-                      >
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="6">6</SelectItem>
-                          <SelectItem value="12">12</SelectItem>
-                          <SelectItem value="24">24</SelectItem>
-                          <SelectItem value="48">48</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Showing {Math.min((membersPage - 1) * membersPerPage + 1, filteredMembers.length)}-{Math.min(membersPage * membersPerPage, filteredMembers.length)} of {filteredMembers.length} members
-                    </div>
-                  </div>
-                </div>
-
-                {/* Members Display */}
-                {viewMode === 'card' ? (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
-                      {paginatedMembers.map((member, idx) => (
-                        <div
-                          key={member.id}
-                          className={
-                            cardsShouldAnimate
-                              ? "animate-fade-in animate-scale-in"
-                              : ""
-                          }
-                          style={{
-                            animationDelay: cardsShouldAnimate
-                              ? (idx * 70) + "ms"
-                              : undefined,
-                            animationFillMode: cardsShouldAnimate ? "both" : undefined,
-                          }}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <AdminRecentActivity activities={activities} />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowRegisterDialog(true)}
+                          className="w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-green-600 transition-all"
                         >
-                          <MemberCard
-                            member={member}
-                            currentUser={user}
-                            onView={setSelectedMember}
-                            onStatusToggle={toggleMemberStatus}
-                            onLoanToggle={toggleLoanEligibility}
-                            onDelete={deleteMember}
-                            onRoleChange={handleChangeRole}
-                            onEdit={handleEditMember}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Pagination for Cards */}
-                    {totalMembersPages > 1 && (
-                      <div className="mt-8 flex justify-center">
-                        <Pagination>
-                          <PaginationContent>
-                            {membersPage > 1 && (
-                              <PaginationItem>
-                                <PaginationPrevious 
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(membersPage - 1);
-                                    setCardsShouldAnimate(true);
-                                    setTimeout(() => setCardsShouldAnimate(false), 700);
-                                  }}
-                                />
-                              </PaginationItem>
-                            )}
-                            
-                            {Array.from({ length: totalMembersPages }, (_, i) => i + 1).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(page);
-                                    setCardsShouldAnimate(true);
-                                    setTimeout(() => setCardsShouldAnimate(false), 700);
-                                  }}
-                                  isActive={page === membersPage}
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))}
-                            
-                            {membersPage < totalMembersPages && (
-                              <PaginationItem>
-                                <PaginationNext 
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(membersPage + 1);
-                                    setCardsShouldAnimate(true);
-                                    setTimeout(() => setCardsShouldAnimate(false), 700);
-                                  }}
-                                />
-                              </PaginationItem>
-                            )}
-                          </PaginationContent>
-                        </Pagination>
+                          Register New Member
+                        </button>
+                        <button
+                          onClick={() => setShowAddContributionStepper(true)}
+                          className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+                        >
+                          Add Contribution
+                        </button>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="min-h-[400px]">
-                      <MemberTable
-                        members={paginatedMembers.map(m => ({
-                          ...m,
-                          totalContributions: memberContributionMap[m.id] || 0
-                        }))}
-                        onView={setSelectedMember}
-                        onStatusToggle={toggleMemberStatus}
-                        onLoanToggle={toggleLoanEligibility}
-                        onDelete={deleteMember}
-                        searchTerm={searchTerm}
-                        onRoleChange={handleChangeRole}
-                        onEdit={handleEditMember}
-                      />
                     </div>
-                    
-                    {/* Pagination for Table */}
-                    {totalMembersPages > 1 && (
-                      <div className="mt-6 flex justify-center">
-                        <Pagination>
-                          <PaginationContent>
-                            {membersPage > 1 && (
-                              <PaginationItem>
-                                <PaginationPrevious 
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(membersPage - 1);
-                                  }}
-                                />
-                              </PaginationItem>
-                            )}
-                            
-                            {Array.from({ length: totalMembersPages }, (_, i) => i + 1).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(page);
-                                  }}
-                                  isActive={page === membersPage}
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))}
-                            
-                            {membersPage < totalMembersPages && (
-                              <PaginationItem>
-                                <PaginationNext 
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleMembersPageChange(membersPage + 1);
-                                  }}
-                                />
-                              </PaginationItem>
-                            )}
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+                  </div>
+                </>
+              )}
 
-            {activeTab === 'contributions' && user.role === "admin" && (
-              <React.Suspense fallback={<div>Loading...</div>}>
+              {activeTab === 'members' && (
+                <MembersTable
+                  data={members.slice((membersPage - 1) * membersPageSize, membersPage * membersPageSize)}
+                  page={membersPage}
+                  totalPages={Math.ceil(members.length / membersPageSize)}
+                  onEdit={handleEditMember}
+                  onDelete={handleDeleteMember}
+                  onPageChange={setMembersPage}
+                />
+              )}
+
+              {activeTab === 'contributions' && (
                 <ContributionsTable
-                  data={paginatedContributions}
+                  data={contributions.slice((contributionsPage - 1) * contributionsPageSize, contributionsPage * contributionsPageSize)}
                   page={contributionsPage}
-                  totalPages={totalContributionsPages}
+                  totalPages={Math.ceil(contributions.length / contributionsPageSize)}
                   onEdit={handleEditContribution}
                   onDelete={handleDeleteContribution}
                   onPageChange={setContributionsPage}
                 />
-              </React.Suspense>
-            )}
+              )}
 
-            {activeTab === 'loans' && (
-              <LoanManagement />
-            )}
+              {activeTab === 'loans' && (
+                <LoansTable
+                  data={loans.slice((loansPage - 1) * loansPageSize, loansPage * loansPageSize)}
+                  page={loansPage}
+                  totalPages={Math.ceil(loans.length / loansPageSize)}
+                  onEdit={handleEditLoan}
+                  onDelete={handleDeleteLoan}
+                  onPageChange={setLoansPage}
+                />
+              )}
 
-            {activeTab === 'settings' && (
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-                  <p className="text-gray-600 dark:text-gray-300">Manage association configuration</p>
-                </div>
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
-                  <AdminSettingsForm settings={settings} setSettings={setSettings} />
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
+              {activeTab === 'settings' && (
+                <SettingsPanel />
+              )}
+            </div>
+          </main>
+        </div>
 
-        {/* Member Detail Modal - Add this inside SidebarInset but outside the main content */}
-        {selectedMember && (
-          <MemberDetailModal
-            member={selectedMember}
-            onClose={() => setSelectedMember(null)}
+        {/* Dialogs and Modals */}
+        <RegisterMemberDialog
+          open={showRegisterDialog}
+          onOpenChange={setShowRegisterDialog}
+          onSubmit={handleRegisterMember}
+        />
+
+        {editingMember && (
+          <EditMemberDialog
+            open={showEditMemberDialog}
+            onOpenChange={setShowEditMemberDialog}
+            member={editingMember}
+            onSubmit={handleUpdateMember}
+          />
+        )}
+
+        <AddContributionStepper
+          open={showAddContributionStepper}
+          onOpenChange={setShowAddContributionStepper}
+          members={members}
+          onSubmit={handleAddContribution}
+        />
+
+        {editingContribution && (
+          <EditContributionForm
+            open={showEditContributionDialog}
+            onOpenChange={setShowEditContributionDialog}
+            contribution={editingContribution}
+            onSubmit={handleUpdateContribution}
+          />
+        )}
+
+        {editingLoan && (
+          <EditLoanForm
+            open={showEditLoanDialog}
+            onOpenChange={setShowEditLoanDialog}
+            loan={editingLoan}
+            onSubmit={handleUpdateLoan}
           />
         )}
       </div>

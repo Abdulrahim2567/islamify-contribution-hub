@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Users, LogOut, ChevronDown } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface AdminNavbarProps {
   user: any;
@@ -26,8 +27,9 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ user, onLogout }) => {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-blue-100 z-40">
       <div className="flex items-center justify-between px-6 py-4">
-        {/* Logo */}
+        {/* Left side - Sidebar Trigger + Logo */}
         <div className="flex items-center space-x-3">
+          <SidebarTrigger />
           <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
             <Users className="w-6 h-6 text-white" />
           </div>
