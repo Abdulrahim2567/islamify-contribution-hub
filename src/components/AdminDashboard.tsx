@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Member, Activity } from "./admin/types";
 import { readMembers, writeMembers } from "../utils/membersStorage";
+import { useTheme } from "@/components/ui/ThemeProvider";
+import { formatCurrency } from "@/utils/calculations";
 import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import AdminStatsCards from "./admin/AdminStatsCards";
 import MemberTable from "./admin/MemberTable";
@@ -16,6 +18,8 @@ import LoanManagement from "./admin/LoanManagement";
 import AddContributionStepper from "./admin/AddContributionStepper";
 import MemberDetailModal from "./admin/MemberDetailModal";
 import AdminNavbar from "./admin/AdminNavbar";
+import AdminRecentActivity from "./admin/AdminRecentActivity";
+import LoanApplication from "./member/LoanApplication";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import {
@@ -580,6 +584,50 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   // Allow admin to apply for loan if they are found as a member and eligible
   const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
 
+  // Handle contributions data for ContributionsTable
+  const contributionRecords = activities
+    .filter(act => act.type === "add_contribution")
+    .map((act, index) => {
+      // Extract member name from activity text
+      const memberNameMatch = act.text.match(/"([^"]+)"/);
+      const memberName = memberNameMatch ? memberNameMatch[1] : "Unknown";
+      
+      // Extract amount from activity text
+      const amountMatch = act.text.match(/(\d{1,3}(?:,\d{3})*)/);
+      const amount = amountMatch ? parseInt(amountMatch[1].replace(/,/g, "")) : 0;
+      
+      // Find member by name
+      const member = members.find(m => m.name === memberName);
+      
+      return {
+        type: "contribution" as const,
+        amount,
+        memberId: member?.id || 0,
+        memberName,
+        date: act.timestamp.split(',')[0], // Extract date part
+        performedBy: act.adminName || "Admin",
+        description: act.text.includes('(') ? act.text.match(/\(([^)]+)\)/)?.[1] : undefined
+      };
+    });
+
+  const [contributionsPage, setContributionsPage] = useState(1);
+  const contributionsPerPage = 10;
+  const totalContributionsPages = Math.ceil(contributionRecords.length / contributionsPerPage);
+  const paginatedContributions = contributionRecords.slice(
+    (contributionsPage - 1) * contributionsPerPage,
+    contributionsPage * contributionsPerPage
+  );
+
+  const handleEditContribution = (record: any) => {
+    // Handle edit contribution
+    console.log("Edit contribution:", record);
+  };
+
+  const handleDeleteContribution = (record: any) => {
+    // Handle delete contribution
+    console.log("Delete contribution:", record);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -615,7 +663,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
                   <p className="text-gray-600">Manage your association finances</p>
                 </div>
-                {/* Stats Cards */}
+                
                 <AdminStatsCards
                   totalMembers={totalMembers}
                   activeMembers={activeMembers}
@@ -624,7 +672,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   totalRegistrationFees={totalRegistrationFees}
                 />
 
-                {/* Allow admin to apply for a loan (just like member dashboard) */}
                 {adminCanApplyForLoan && (
                   <div className="flex justify-end mb-6">
                     <button
@@ -643,7 +690,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                     maxAmount={adminMaxLoanAmount}
                     onSubmit={data => {
                       setShowLoanModal(false);
-                      // Show a toast notification
                       toast({
                         title: "Loan Application Submitted",
                         description: `Your application for ${formatCurrency(data.amount)} is pending.`,
@@ -653,7 +699,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   />
                 )}
 
-                {/* Recent Activity */}
                 <AdminRecentActivity
                   activities={activities}
                   paginatedActivities={paginatedActivities}
@@ -918,7 +963,14 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
             {activeTab === 'contributions' && user.role === "admin" && (
               <React.Suspense fallback={<div>Loading...</div>}>
-                <ContributionsTable />
+                <ContributionsTable
+                  data={paginatedContributions}
+                  page={contributionsPage}
+                  totalPages={totalContributionsPages}
+                  onEdit={handleEditContribution}
+                  onDelete={handleDeleteContribution}
+                  onPageChange={setContributionsPage}
+                />
               </React.Suspense>
             )}
 

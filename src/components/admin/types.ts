@@ -11,3 +11,14 @@ export interface Member {
   joinDate: string;
   role: "member" | "admin";
 }
+
+export interface Activity {
+  id: number;
+  timestamp: string;
+  type: string;
+  text: string;
+  color?: string;
+  adminName?: string;
+  adminEmail?: string;
+  adminRole?: string;
+}
