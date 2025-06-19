@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
@@ -123,7 +122,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
             >
               <SelectTrigger className="w-20">
                 <SelectValue />
-              </Select*Trigger>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="6">6</SelectItem>
                 <SelectItem value="12">12</SelectItem>
