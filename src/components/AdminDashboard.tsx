@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -805,6 +806,14 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               </div>
             )}
           </div>
+
+          {/* Member Detail Modal - Add this inside SidebarInset but outside the main content */}
+          {selectedMember && (
+            <MemberDetailModal
+              member={selectedMember}
+              onClose={() => setSelectedMember(null)}
+            />
+          )}
         </SidebarInset>
 
         {/* Success Modal - moved outside SidebarInset to ensure proper rendering */}
