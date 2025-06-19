@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -172,6 +171,8 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const [activityPage, setActivityPage] = useState(1);
   const perPage = 10;
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [membersPage, setMembersPage] = useState(1);
+  const [membersPerPage, setMembersPerPage] = useState(12);
   const { toast } = useToast();
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
@@ -673,7 +674,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => {
-                          // Only animate if switching from another mode to "table"
                           setViewMode('table');
                           setCardsShouldAnimate(false);
                         }}
@@ -685,7 +685,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                         onClick={() => {
                           setViewMode('card');
                           setCardsShouldAnimate(true);
-                          // Reset animation after 700ms (time for anims to finish)
                           setTimeout(() => setCardsShouldAnimate(false), 700);
                         }}
                         className={`p-2 rounded-lg ${viewMode === 'card' ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
@@ -713,7 +712,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   </div>
                 </div>
 
-                {/* Add Contribution Stepper Modal */}
                 <AddContributionStepper
                   open={showAddContributionStepper}
                   onOpenChange={setShowAddContributionStepper}
@@ -721,9 +719,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   onSubmit={handleAddContributionStepper}
                 />
 
-                {/* Search */}
-                <div className="mb-6">
-                  <div className="relative">
+                {/* Search and Pagination Controls */}
+                <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                  <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
@@ -733,53 +731,185 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                       placeholder="Search members..."
                     />
                   </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="members-per-page" className="text-sm text-gray-600">
+                        Per page:
+                      </Label>
+                      <Select
+                        value={membersPerPage.toString()}
+                        onValueChange={(value) => setMembersPerPage(Number(value))}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="6">6</SelectItem>
+                          <SelectItem value="12">12</SelectItem>
+                          <SelectItem value="24">24</SelectItem>
+                          <SelectItem value="48">48</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Showing {Math.min((membersPage - 1) * membersPerPage + 1, filteredMembers.length)}-{Math.min(membersPage * membersPerPage, filteredMembers.length)} of {filteredMembers.length} members
+                    </div>
+                  </div>
                 </div>
 
                 {/* Members Display */}
                 {viewMode === 'card' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredMembers.map((member, idx) => (
-                      <div
-                        key={member.id}
-                        className={
-                          cardsShouldAnimate
-                            ? "animate-fade-in animate-scale-in"
-                            : ""
-                        }
-                        style={{
-                          animationDelay: cardsShouldAnimate
-                            ? (idx * 70) + "ms"
-                            : undefined,
-                          animationFillMode: cardsShouldAnimate ? "both" : undefined,
-                        }}
-                      >
-                        <MemberCard
-                          member={member}
-                          currentUser={user}
-                          onView={setSelectedMember}
-                          onStatusToggle={toggleMemberStatus}
-                          onLoanToggle={toggleLoanEligibility}
-                          onDelete={deleteMember}
-                          onRoleChange={handleChangeRole}
-                          onEdit={handleEditMember}
-                        />
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
+                      {paginatedMembers.map((member, idx) => (
+                        <div
+                          key={member.id}
+                          className={
+                            cardsShouldAnimate
+                              ? "animate-fade-in animate-scale-in"
+                              : ""
+                          }
+                          style={{
+                            animationDelay: cardsShouldAnimate
+                              ? (idx * 70) + "ms"
+                              : undefined,
+                            animationFillMode: cardsShouldAnimate ? "both" : undefined,
+                          }}
+                        >
+                          <MemberCard
+                            member={member}
+                            currentUser={user}
+                            onView={setSelectedMember}
+                            onStatusToggle={toggleMemberStatus}
+                            onLoanToggle={toggleLoanEligibility}
+                            onDelete={deleteMember}
+                            onRoleChange={handleChangeRole}
+                            onEdit={handleEditMember}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Pagination for Cards */}
+                    {totalMembersPages > 1 && (
+                      <div className="mt-8 flex justify-center">
+                        <Pagination>
+                          <PaginationContent>
+                            {membersPage > 1 && (
+                              <PaginationItem>
+                                <PaginationPrevious 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(membersPage - 1);
+                                    setCardsShouldAnimate(true);
+                                    setTimeout(() => setCardsShouldAnimate(false), 700);
+                                  }}
+                                />
+                              </PaginationItem>
+                            )}
+                            
+                            {Array.from({ length: totalMembersPages }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(page);
+                                    setCardsShouldAnimate(true);
+                                    setTimeout(() => setCardsShouldAnimate(false), 700);
+                                  }}
+                                  isActive={page === membersPage}
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            
+                            {membersPage < totalMembersPages && (
+                              <PaginationItem>
+                                <PaginationNext 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(membersPage + 1);
+                                    setCardsShouldAnimate(true);
+                                    setTimeout(() => setCardsShouldAnimate(false), 700);
+                                  }}
+                                />
+                              </PaginationItem>
+                            )}
+                          </PaginationContent>
+                        </Pagination>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
-                  <MemberTable
-                    members={members.map(m => ({
-                      ...m,
-                      totalContributions: memberContributionMap[m.id] || 0
-                    }))}
-                    onView={setSelectedMember}
-                    onStatusToggle={toggleMemberStatus}
-                    onLoanToggle={toggleLoanEligibility}
-                    onDelete={deleteMember}
-                    searchTerm={searchTerm}
-                    onRoleChange={handleChangeRole}
-                    onEdit={handleEditMember}
-                  />
+                  <>
+                    <div className="min-h-[400px]">
+                      <MemberTable
+                        members={paginatedMembers.map(m => ({
+                          ...m,
+                          totalContributions: memberContributionMap[m.id] || 0
+                        }))}
+                        onView={setSelectedMember}
+                        onStatusToggle={toggleMemberStatus}
+                        onLoanToggle={toggleLoanEligibility}
+                        onDelete={deleteMember}
+                        searchTerm={searchTerm}
+                        onRoleChange={handleChangeRole}
+                        onEdit={handleEditMember}
+                      />
+                    </div>
+                    
+                    {/* Pagination for Table */}
+                    {totalMembersPages > 1 && (
+                      <div className="mt-6 flex justify-center">
+                        <Pagination>
+                          <PaginationContent>
+                            {membersPage > 1 && (
+                              <PaginationItem>
+                                <PaginationPrevious 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(membersPage - 1);
+                                  }}
+                                />
+                              </PaginationItem>
+                            )}
+                            
+                            {Array.from({ length: totalMembersPages }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(page);
+                                  }}
+                                  isActive={page === membersPage}
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            
+                            {membersPage < totalMembersPages && (
+                              <PaginationItem>
+                                <PaginationNext 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleMembersPageChange(membersPage + 1);
+                                  }}
+                                />
+                              </PaginationItem>
+                            )}
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}

@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Eye, Trash2, Edit } from "lucide-react";
 import { Member } from "./types";
@@ -14,7 +15,7 @@ interface MemberTableProps {
   onDelete: (id: number) => void;
   searchTerm: string;
   onRoleChange: (id: number, newRole: "member" | "admin") => void;
-  onEdit?: (id: number, data: { name: string; email: string; phone: string }) => void; // Now optional, backward compatible
+  onEdit?: (id: number, data: { name: string; email: string; phone: string }) => void;
 }
 
 const MemberTable: React.FC<MemberTableProps> = ({
@@ -30,11 +31,6 @@ const MemberTable: React.FC<MemberTableProps> = ({
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editMember, setEditMember] = useState<Member | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleEditSave = (id: number, data: { name: string; email: string; phone: string }) => {
     if (onEdit) onEdit(id, data);
@@ -56,11 +52,18 @@ const MemberTable: React.FC<MemberTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredMembers.map((member) => {
+            {members.map((member, idx) => {
               const maxLoanAmount = member.totalContributions * 3;
 
               return (
-                <tr key={member.id} className="hover:bg-gray-50">
+                <tr 
+                  key={member.id} 
+                  className="hover:bg-gray-50 animate-fade-in"
+                  style={{
+                    animationDelay: `${idx * 50}ms`,
+                    animationFillMode: "both"
+                  }}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{member.name}</div>
@@ -89,7 +92,6 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     {maxLoanAmount.toLocaleString()} XAF
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {/* Status toggle: text Active/Inactive, green/red */}
                     <button
                       onClick={() => onStatusToggle(member.id)}
                       className="flex items-center space-x-1"
