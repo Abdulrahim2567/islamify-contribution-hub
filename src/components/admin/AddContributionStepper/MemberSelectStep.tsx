@@ -7,8 +7,7 @@ const DEMO_ADMIN_EMAIL = "admin@islamify.org";
 const MEMBERS_KEY = "islamify_members";
 
 interface MemberSelectStepProps {
-  // We will not use the passed 'members' prop, instead always read from localStorage
-  members: Member[]; // unused now
+  members: Member[];
   selectedMember: Member | null;
   onSelect: (member: Member) => void;
   onNext: () => void;
@@ -19,15 +18,10 @@ interface MemberSelectStepProps {
 
 const PAGE_SIZE = 6;
 
-/**
- * Utility to always get latest members (excluding demo admin) from localStorage.
- * Do this on every render so dialog reflects the latest changes.
- */
 function getLocalMembers() {
   try {
     const data = localStorage.getItem(MEMBERS_KEY);
     const members: Member[] = data ? JSON.parse(data) : [];
-    // Exclude only demo admin (by email), show everyone else
     return members.filter(m => m.email !== DEMO_ADMIN_EMAIL);
   } catch {
     return [];
@@ -35,7 +29,6 @@ function getLocalMembers() {
 }
 
 const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
-  // do not use members or totalPages prop
   selectedMember,
   onSelect,
   onNext,
@@ -45,33 +38,29 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
   const [localMembers, setLocalMembers] = useState<Member[]>([]);
 
   useEffect(() => {
-    // Always get latest from localStorage on every mount or re-render
     setLocalMembers(getLocalMembers());
-  }, [page]); // re-read if page changes (in case dialog stays open while members change)
+  }, [page]);
 
-  // Freshly calculate paged members and totalPages anytime localMembers/page changes
   const totalPages = Math.ceil(localMembers.length / PAGE_SIZE) || 1;
   const pageMembers = localMembers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
   const hasNoMembers = localMembers.length === 0;
 
   return (
-    <div
-      className={`
-        transition-all duration-300 ease-in-out w-full px-6 pb-6
-        opacity-100 translate-x-0 relative z-10
-      `}
-      style={{ minHeight: 384 }}
-    >
-      <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Select Member</h2>
-      {hasNoMembers ? (
-        <div className="flex flex-col items-center justify-center h-40 text-center text-gray-500">
-          <Users className="mx-auto mb-2" size={36} />
-          <p className="mb-2">No members are available to select.<br />Please register members to add contributions.</p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-6 pt-6 pb-4">
+        <h2 className="text-xl font-semibold text-gray-900 text-center">Select Member</h2>
+      </div>
+
+      {/* Content Area - Scrollable */}
+      <div className="flex-1 px-6 overflow-y-auto" style={{ minHeight: 300, maxHeight: 400 }}>
+        {hasNoMembers ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+            <Users className="mx-auto mb-2" size={36} />
+            <p className="mb-2">No members are available to select.<br />Please register members to add contributions.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {pageMembers.map((member) => (
               <button
                 key={member.id}
@@ -93,7 +82,14 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
               </button>
             ))}
           </div>
-          <div className="flex justify-center gap-1 mb-3">
+        )}
+      </div>
+
+      {/* Fixed Footer */}
+      <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 mt-auto">
+        {/* Pagination Controls */}
+        {!hasNoMembers && totalPages > 1 && (
+          <div className="flex justify-center gap-1 mb-4">
             <button
               className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
               disabled={page === 0}
@@ -114,21 +110,22 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
               <ArrowRight size={18} />
             </button>
           </div>
-        </>
-      )}
-      <div className="flex justify-end mt-4">
-        <button
-          className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
-          disabled={hasNoMembers || !selectedMember}
-          onClick={onNext}
-          type="button"
-        >
-          Next <ArrowRight size={18} />
-        </button>
+        )}
+
+        {/* Next Button */}
+        <div className="flex justify-end">
+          <button
+            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
+            disabled={hasNoMembers || !selectedMember}
+            onClick={onNext}
+            type="button"
+          >
+            Next <ArrowRight size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default MemberSelectStep;
-

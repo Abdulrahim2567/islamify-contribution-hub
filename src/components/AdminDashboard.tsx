@@ -1,31 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { LogOut, Users, Plus, Search, Eye, UserCheck, DollarSign, UserX, Trash2, ToggleLeft, ToggleRight, Settings, Grid, List, Mail, Phone, User, Shield, CreditCard, TrendingUp, X, Save, History } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Users, TrendingUp, DollarSign, CreditCard, Plus, Search, Grid, List } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { AccentColorToggle } from "@/components/ui/AccentColorToggle";
-import { useTheme } from "@/components/ui/ThemeProvider";
-import MemberCard from "./admin/MemberCard";
-import MemberTable from "./admin/MemberTable";
-import MemberDetailModal from "./admin/MemberDetailModal";
-import RegisterMemberDialog from "./admin/RegisterMemberDialog";
-import SuccessModal from "./admin/SuccessModal";
-import type { Member } from "./admin/types";
-import AddContributionStepper from "./admin/AddContributionStepper";
+import { Member, Activity } from "./admin/types";
 import { readMembers, writeMembers } from "../utils/membersStorage";
+import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import AdminStatsCards from "./admin/AdminStatsCards";
-import AdminRecentActivity from "./admin/AdminRecentActivity";
+import MemberTable from "./admin/MemberTable";
+import MemberCard from "./admin/MemberCard";
+import ContributionsTable from "./admin/ContributionsTable";
 import AdminSettingsForm from "./admin/AdminSettingsForm";
-import AdminContributionsTable from "./admin/AdminContributionsTable";
-import LoanApplication from "./member/LoanApplication";
 import LoanManagement from "./admin/LoanManagement";
+import AddContributionStepper from "./admin/AddContributionStepper";
+import MemberDetailModal from "./admin/MemberDetailModal";
+import AdminNavbar from "./admin/AdminNavbar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Pagination,
   PaginationContent,
@@ -34,9 +26,6 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
-import { formatCurrency } from "../utils/calculations";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
 
 // Add this type for the new member state
 type NewMember = {
@@ -593,38 +582,33 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full">
+        {/* Fixed Navbar */}
+        <AdminNavbar user={user} onLogout={onLogout} />
+        
+        {/* Sidebar without user profile */}
         <AppSidebar 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
           onLogout={onLogout}
           user={user}
+          hideUserProfile={true}
         />
-        <SidebarInset>
-          {/* Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <SidebarTrigger />
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-                      Islamify
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                      Welcome back, {user.name || user.email}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
+        
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto pt-16"> {/* Add top padding for fixed navbar */}
           <div className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <SidebarTrigger />
+              <h1 className="text-2xl font-bold text-gray-900">
+                {activeTab === "dashboard" && "Dashboard"}
+                {activeTab === "members" && "Members"}
+                {activeTab === "contributions" && "Contributions"}
+                {activeTab === "loans" && "Loans"}
+                {activeTab === "settings" && "Settings"}
+              </h1>
+            </div>
+
             {activeTab === 'dashboard' && (
               <>
                 <div className="mb-8">
@@ -934,7 +918,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
             {activeTab === 'contributions' && user.role === "admin" && (
               <React.Suspense fallback={<div>Loading...</div>}>
-                <AdminContributionsTable />
+                <ContributionsTable />
               </React.Suspense>
             )}
 
@@ -954,22 +938,15 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
               </div>
             )}
           </div>
+        </main>
 
-          {/* Member Detail Modal - Add this inside SidebarInset but outside the main content */}
-          {selectedMember && (
-            <MemberDetailModal
-              member={selectedMember}
-              onClose={() => setSelectedMember(null)}
-            />
-          )}
-        </SidebarInset>
-
-        {/* Success Modal - moved outside SidebarInset to ensure proper rendering */}
-        <SuccessModal
-          open={showSuccessModal}
-          onOpenChange={setShowSuccessModal}
-          generatedPassword={generatedPassword}
-        />
+        {/* Member Detail Modal - Add this inside SidebarInset but outside the main content */}
+        {selectedMember && (
+          <MemberDetailModal
+            member={selectedMember}
+            onClose={() => setSelectedMember(null)}
+          />
+        )}
       </div>
     </SidebarProvider>
   );
