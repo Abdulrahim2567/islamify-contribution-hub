@@ -86,7 +86,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   // Handlers for members
   const handleRegisterMember = (memberData: Omit<Member, 'id' | 'totalContributions'>) => {
     const newMember: Member = {
-      id: Date.now().toString(), // Generate a unique ID
+      id: Date.now(), // Generate a unique number ID
       ...memberData,
       totalContributions: 0,
     };
@@ -155,7 +155,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     }
 
     const newContribution: ContributionRecord = {
-      id: Date.now().toString(), // Generate a unique ID
+      id: Date.now(), // Generate a unique number ID
       ...contributionData,
       memberName: member.name,
       performedBy: user.name,
