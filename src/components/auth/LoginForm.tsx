@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -58,7 +57,7 @@ const LoginForm = ({
 
   return (
     <div className="flex items-center justify-center min-h-[440px] px-2">
-      <Card className="w-full max-w-md shadow-lg animate-scale-in rounded-3xl">
+      <Card className="w-full max-w-md shadow-lg animate-scale-in">
         <CardHeader className="flex flex-col items-center pb-2">
           <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
             <LogIn className="w-8 h-8 text-white" />
@@ -71,7 +70,7 @@ const LoginForm = ({
           </CardDescription>
         </CardHeader>
         {/* Info banner */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mx-6 mb-5 mt-2 text-center">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mx-6 mb-5 mt-2 text-center">
           <p className="text-sm text-emerald-800">
             Sign in as an admin or member to get started.<br />
             <span className="text-xs text-emerald-600">
@@ -92,7 +91,7 @@ const LoginForm = ({
                 <Input
                   id="email"
                   type="email"
-                  className="pl-10 rounded-full"
+                  className="pl-10"
                   value={loginForm.email}
                   onChange={(e) =>
                     setLoginForm((prev) => ({
@@ -117,7 +116,7 @@ const LoginForm = ({
                 <Input
                   id="password"
                   type="password"
-                  className="pl-10 rounded-full"
+                  className="pl-10"
                   value={loginForm.password}
                   onChange={(e) =>
                     setLoginForm((prev) => ({
@@ -132,13 +131,13 @@ const LoginForm = ({
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold transition-colors rounded-full"
+              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold transition-colors"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Sign In
             </Button>
           </form>
-          <div className="mt-5 text-center text-sm text-gray-600 rounded-2xl border border-dashed border-blue-100 bg-blue-50 p-3">
+          <div className="mt-5 text-center text-sm text-gray-600 rounded-lg border border-dashed border-blue-100 bg-blue-50 p-3">
             <p className="font-semibold mb-1">Demo credentials:</p>
             <p>
               <span className="font-medium text-blue-700">Admin:</span>&nbsp;

@@ -17,26 +17,3 @@ export function readMembers(): Member[] {
 export function writeMembers(members: Member[]): void {
   localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
 }
-
-/** Create a new member and add to localStorage. */
-export function createMember(member: Member): void {
-  const members = readMembers();
-  const updatedMembers = [...members, member];
-  writeMembers(updatedMembers);
-}
-
-/** Update an existing member in localStorage. */
-export function updateMember(memberData: Member): void {
-  const members = readMembers();
-  const updatedMembers = members.map(member =>
-    member.id === memberData.id ? memberData : member
-  );
-  writeMembers(updatedMembers);
-}
-
-/** Delete a member from localStorage. */
-export function deleteMember(memberId: number): void {
-  const members = readMembers();
-  const updatedMembers = members.filter(member => member.id !== memberId);
-  writeMembers(updatedMembers);
-}

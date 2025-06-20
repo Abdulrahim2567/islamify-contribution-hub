@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, LogIn } from "lucide-react";
@@ -91,7 +92,7 @@ const Index = () => {
 
   if (isLoggedIn && currentUser) {
     return currentUser.role === "admin" ? (
-      <AdminDashboard user={currentUser} onLogout={handleLogout} />
+      <AdminDashboard user={currentUser} onLogout={handleLogout} onNewUser={updateUsers} users={users} />
     ) : (
       <MemberDashboard user={currentUser} onLogout={handleLogout} />
     );
@@ -173,3 +174,4 @@ const Index = () => {
 };
 
 export default Index;
+

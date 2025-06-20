@@ -1,4 +1,3 @@
-
 import { Calendar, Home, Users, Coins, Settings, LogOut, CreditCard } from "lucide-react";
 import {
   Sidebar,
@@ -17,7 +16,6 @@ interface AppSidebarProps {
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   user: any;
-  hideUserProfile?: boolean;
 }
 
 const navigationItems = [
@@ -48,7 +46,7 @@ const navigationItems = [
   },
 ];
 
-export function AppSidebar({ activeTab, onTabChange, onLogout, user, hideUserProfile = false }: AppSidebarProps) {
+export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSidebarProps) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -83,33 +81,31 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user, hideUserPro
         </SidebarGroup>
       </SidebarContent>
       
-      {!hideUserProfile && (
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <div className="flex items-center gap-2 p-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <div className="flex items-center gap-2 p-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                 </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild onClick={onLogout}>
-                <button className="w-full text-red-600 hover:bg-red-50">
-                  <LogOut />
-                  <span>Logout</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      )}
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild onClick={onLogout}>
+              <button className="w-full text-red-600 hover:bg-red-50">
+                <LogOut />
+                <span>Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
