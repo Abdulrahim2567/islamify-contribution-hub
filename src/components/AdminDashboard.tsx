@@ -1,22 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { Member, Activity } from './admin/types';
+import { Member, Activity, ContributionRecord, LoanRecord } from './admin/types';
 import AdminNavbar from './admin/AdminNavbar';
 import AdminStatsCards from './admin/AdminStatsCards';
 import AdminRecentActivity from './admin/AdminRecentActivity';
-import MembersTable from './admin/MembersTable';
 import ContributionsTable from './admin/ContributionsTable';
-import LoansTable from './admin/LoansTable';
-import SettingsPanel from './admin/SettingsPanel';
 import RegisterMemberDialog from './admin/RegisterMemberDialog';
 import EditMemberDialog from './admin/EditMemberDialog';
-import ContributionForm from './admin/ContributionForm';
-import EditContributionForm from './admin/EditContributionForm';
-import LoanForm from './admin/LoanForm';
-import EditLoanForm from './admin/EditLoanForm';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { AccentColorToggle } from '@/components/AccentColorToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { AccentColorToggle } from '@/components/ui/AccentColorToggle';
 import {
   createMember,
   readMembers,
@@ -35,34 +29,11 @@ import {
   updateLoan,
   deleteLoan,
 } from "@/utils/loansStorage";
-import AddContributionStepper from './AddContributionStepper';
+import AddContributionStepper from './admin/AddContributionStepper';
 
 interface AdminDashboardProps {
   user: any;
   onLogout: () => void;
-}
-
-interface ContributionRecord {
-  type: "contribution";
-  amount: number;
-  memberId: number;
-  memberName: string;
-  date: string;
-  performedBy: string;
-  description?: string;
-}
-
-interface LoanRecord {
-  type: "loan";
-  amount: number;
-  memberId: number;
-  memberName: string;
-  date: string;
-  dueDate: string;
-  interestRate: number;
-  status: "pending" | "approved" | "rejected" | "paid";
-  performedBy: string;
-  description?: string;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
@@ -74,12 +45,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [showEditMemberDialog, setShowEditMemberDialog] = useState(false);
-  const [showContributionDialog, setShowContributionDialog] = useState(false);
   const [editingContribution, setEditingContribution] = useState<ContributionRecord | null>(null);
   const [showEditContributionDialog, setShowEditContributionDialog] = useState(false);
-  const [showLoanDialog, setShowLoanDialog] = useState(false);
-  const [editingLoan, setEditingLoan] = useState<LoanRecord | null>(null);
-  const [showEditLoanDialog, setShowEditLoanDialog] = useState(false);
   const [showAddContributionStepper, setShowAddContributionStepper] = useState(false);
 
   const [membersPage, setMembersPage] = useState(1);
@@ -118,7 +85,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   // Stats calculation
   const totalMembers = members.length;
   const totalContributions = contributions.reduce((sum, contribution) => sum + contribution.amount, 0);
-  const averageContribution = totalMembers > 0 ? totalContributions / totalMembers : 0;
   const activeMembers = members.filter(member => member.isActive).length;
 
   // Handlers for members
@@ -195,7 +161,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     const newContribution: ContributionRecord = {
       id: Date.now(), // Generate a unique ID
       ...contributionData,
-      type: "contribution",
       memberName: member.name,
       performedBy: user.name,
     };
@@ -210,7 +175,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     setMembers(updatedMembers);
     updateMember(updatedMember); // Save updated member to local storage
 
-    setShowContributionDialog(false);
     setShowAddContributionStepper(false);
     setActivities(prev => [...prev, {
       id: Date.now(),
@@ -264,78 +228,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     }
   };
 
-  // Handlers for loans
-  const handleAddLoan = (loanData: Omit<LoanRecord, 'id' | 'performedBy' | 'memberName'>) => {
-    const member = members.find(m => m.id === loanData.memberId);
-    if (!member) {
-      alert('Member not found!');
-      return;
-    }
-
-    const newLoan: LoanRecord = {
-      id: Date.now(), // Generate a unique ID
-      ...loanData,
-      type: "loan",
-      memberName: member.name,
-      performedBy: user.name,
-    };
-
-    const updatedLoans = [...loans, newLoan];
-    setLoans(updatedLoans);
-    createLoan(newLoan); // Save to local storage
-    setShowLoanDialog(false);
-    setActivities(prev => [...prev, {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      type: 'loan_added',
-      text: `${loanData.amount} XAF loan added for ${member.name}.`,
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: 'admin'
-    }]);
-  };
-
-  const handleEditLoan = (record: LoanRecord) => {
-    setEditingLoan(record);
-    setShowEditLoanDialog(true);
-  };
-
-  const handleUpdateLoan = (loanData: LoanRecord) => {
-    const updatedLoans = loans.map(loan =>
-      loan.id === loanData.id ? loanData : loan
-    );
-    setLoans(updatedLoans);
-    updateLoan(loanData); // Update in local storage
-    setShowEditLoanDialog(false);
-    setActivities(prev => [...prev, {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      type: 'loan_updated',
-      text: `${loanData.amount} XAF loan updated for ${loanData.memberName}.`,
-      adminName: user.name,
-      adminEmail: user.email,
-      adminRole: 'admin'
-    }]);
-  };
-
-  const handleDeleteLoan = (loan: LoanRecord) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete this loan of ${loan.amount} XAF from ${loan.memberName}?`);
-    if (confirmDelete) {
-      const updatedLoans = loans.filter(l => l.id !== loan.id);
-      setLoans(updatedLoans);
-      deleteLoan(loan.id); // Delete from local storage
-      setActivities(prev => [...prev, {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        type: 'loan_deleted',
-        text: `${loan.amount} XAF loan deleted for ${loan.memberName}.`,
-        adminName: user.name,
-        adminEmail: user.email,
-        adminRole: 'admin'
-      }]);
-    }
-  };
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -352,7 +244,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
           <AdminNavbar user={user} onLogout={onLogout} />
           
           {/* Main Content with top padding to account for fixed navbar */}
-          <main className="flex-1 p-6 pt-24 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+          <main className="flex-1 p-6 pt-24 pl-8 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
             <div className="max-w-7xl mx-auto space-y-8">
               {activeTab === 'dashboard' && (
                 <>
@@ -370,12 +262,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                   <AdminStatsCards 
                     totalMembers={totalMembers}
                     totalContributions={totalContributions}
-                    averageContribution={averageContribution}
                     activeMembers={activeMembers}
                   />
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <AdminRecentActivity activities={activities} />
+                    <AdminRecentActivity 
+                      paginatedActivities={activities.slice(0, 5)}
+                      totalPages={Math.ceil(activities.length / 5)}
+                      activityPage={1}
+                      onActivityPageChange={() => {}}
+                    />
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                       <div className="space-y-3">
@@ -398,14 +294,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               )}
 
               {activeTab === 'members' && (
-                <MembersTable
-                  data={members.slice((membersPage - 1) * membersPageSize, membersPage * membersPageSize)}
-                  page={membersPage}
-                  totalPages={Math.ceil(members.length / membersPageSize)}
-                  onEdit={handleEditMember}
-                  onDelete={handleDeleteMember}
-                  onPageChange={setMembersPage}
-                />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Members</h2>
+                  <p className="text-gray-600">Member management will be implemented here.</p>
+                </div>
               )}
 
               {activeTab === 'contributions' && (
@@ -420,18 +312,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               )}
 
               {activeTab === 'loans' && (
-                <LoansTable
-                  data={loans.slice((loansPage - 1) * loansPageSize, loansPage * loansPageSize)}
-                  page={loansPage}
-                  totalPages={Math.ceil(loans.length / loansPageSize)}
-                  onEdit={handleEditLoan}
-                  onDelete={handleDeleteLoan}
-                  onPageChange={setLoansPage}
-                />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Loans</h2>
+                  <p className="text-gray-600">Loan management will be implemented here.</p>
+                </div>
               )}
 
               {activeTab === 'settings' && (
-                <SettingsPanel />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Settings</h2>
+                  <p className="text-gray-600">Settings panel will be implemented here.</p>
+                </div>
               )}
             </div>
           </main>
@@ -449,7 +340,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             open={showEditMemberDialog}
             onOpenChange={setShowEditMemberDialog}
             member={editingMember}
-            onSubmit={handleUpdateMember}
+            onSave={(id, data) => {
+              const updatedMember = { ...editingMember, ...data };
+              handleUpdateMember(updatedMember);
+            }}
           />
         )}
 
@@ -461,21 +355,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
         />
 
         {editingContribution && (
-          <EditContributionForm
-            open={showEditContributionDialog}
-            onOpenChange={setShowEditContributionDialog}
-            contribution={editingContribution}
-            onSubmit={handleUpdateContribution}
-          />
-        )}
-
-        {editingLoan && (
-          <EditLoanForm
-            open={showEditLoanDialog}
-            onOpenChange={setShowEditLoanDialog}
-            loan={editingLoan}
-            onSubmit={handleUpdateLoan}
-          />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Edit Contribution</h3>
+              <p className="text-gray-600">Edit contribution form will be implemented here.</p>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowEditContributionDialog(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </SidebarProvider>
