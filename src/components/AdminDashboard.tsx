@@ -12,22 +12,16 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AccentColorToggle } from '@/components/ui/AccentColorToggle';
 import {
-  createMember,
   readMembers,
-  updateMember,
-  deleteMember,
+  writeMembers,
 } from "@/utils/membersStorage";
 import {
-  createContribution,
   readContributions,
-  updateContribution,
-  deleteContribution,
+  writeContributions,
 } from "@/utils/contributionsStorage";
 import {
-  createLoan,
   readLoans,
-  updateLoan,
-  deleteLoan,
+  writeLoans,
 } from "@/utils/loansStorage";
 import AddContributionStepper from './admin/AddContributionStepper';
 
@@ -86,17 +80,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const totalMembers = members.length;
   const totalContributions = contributions.reduce((sum, contribution) => sum + contribution.amount, 0);
   const activeMembers = members.filter(member => member.isActive).length;
+  const inactiveMembers = totalMembers - activeMembers;
+  const totalRegistrationFees = members.length * 5000; // Assuming 5000 XAF per member
 
   // Handlers for members
   const handleRegisterMember = (memberData: Omit<Member, 'id' | 'totalContributions'>) => {
     const newMember: Member = {
-      id: Date.now(), // Generate a unique ID
+      id: Date.now().toString(), // Generate a unique ID
       ...memberData,
       totalContributions: 0,
     };
     const updatedMembers = [...members, newMember];
     setMembers(updatedMembers);
-    createMember(newMember); // Save to local storage
+    writeMembers(updatedMembers); // Save to local storage
     setShowRegisterDialog(false);
     setActivities(prev => [...prev, {
       id: Date.now(),
@@ -119,7 +115,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
       member.id === memberData.id ? memberData : member
     );
     setMembers(updatedMembers);
-    updateMember(memberData); // Update in local storage
+    writeMembers(updatedMembers); // Update in local storage
     setShowEditMemberDialog(false);
     setActivities(prev => [...prev, {
       id: Date.now(),
@@ -137,7 +133,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     if (confirmDelete) {
       const updatedMembers = members.filter(m => m.id !== member.id);
       setMembers(updatedMembers);
-      deleteMember(member.id); // Delete from local storage
+      writeMembers(updatedMembers); // Delete from local storage
       setActivities(prev => [...prev, {
         id: Date.now(),
         timestamp: new Date().toISOString(),
@@ -159,7 +155,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     }
 
     const newContribution: ContributionRecord = {
-      id: Date.now(), // Generate a unique ID
+      id: Date.now().toString(), // Generate a unique ID
       ...contributionData,
       memberName: member.name,
       performedBy: user.name,
@@ -167,13 +163,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
 
     const updatedContributions = [...contributions, newContribution];
     setContributions(updatedContributions);
-    createContribution(newContribution); // Save to local storage
+    writeContributions(updatedContributions); // Save to local storage
 
     // Update member's total contributions
     const updatedMember = { ...member, totalContributions: member.totalContributions + contributionData.amount };
     const updatedMembers = members.map(m => m.id === member.id ? updatedMember : m);
     setMembers(updatedMembers);
-    updateMember(updatedMember); // Save updated member to local storage
+    writeMembers(updatedMembers); // Save updated member to local storage
 
     setShowAddContributionStepper(false);
     setActivities(prev => [...prev, {
@@ -197,7 +193,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
       contribution.id === contributionData.id ? contributionData : contribution
     );
     setContributions(updatedContributions);
-    updateContribution(contributionData); // Update in local storage
+    writeContributions(updatedContributions); // Update in local storage
     setShowEditContributionDialog(false);
     setActivities(prev => [...prev, {
       id: Date.now(),
@@ -215,7 +211,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     if (confirmDelete) {
       const updatedContributions = contributions.filter(c => c.id !== contribution.id);
       setContributions(updatedContributions);
-      deleteContribution(contribution.id); // Delete from local storage
+      writeContributions(updatedContributions); // Delete from local storage
       setActivities(prev => [...prev, {
         id: Date.now(),
         timestamp: new Date().toISOString(),
@@ -263,10 +259,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                     totalMembers={totalMembers}
                     totalContributions={totalContributions}
                     activeMembers={activeMembers}
+                    inactiveMembers={inactiveMembers}
+                    totalRegistrationFees={totalRegistrationFees}
                   />
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <AdminRecentActivity 
+                      activities={activities}
                       paginatedActivities={activities.slice(0, 5)}
                       totalPages={Math.ceil(activities.length / 5)}
                       activityPage={1}
@@ -277,13 +276,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                       <div className="space-y-3">
                         <button
                           onClick={() => setShowRegisterDialog(true)}
-                          className="w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-green-600 transition-all"
+                          className="w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 px-4 rounded-full font-medium hover:from-blue-600 hover:to-green-600 transition-all"
                         >
                           Register New Member
                         </button>
                         <button
                           onClick={() => setShowAddContributionStepper(true)}
-                          className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+                          className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
                         >
                           Add Contribution
                         </button>
@@ -362,7 +361,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={() => setShowEditContributionDialog(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-full border border-gray-300 hover:border-gray-400 transition-all"
                 >
                   Cancel
                 </button>
