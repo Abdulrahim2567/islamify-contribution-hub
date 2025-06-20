@@ -2,7 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Phone, UserPlus, Shield } from "lucide-react";
+import { User, Mail, Phone, UserPlus, Shield, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -23,7 +23,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogTrigger asChild>
-      <button className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105">
+      <button className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-2xl font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105">
         <UserPlus size={20} />
         <span>Add Member</span>
       </button>
@@ -91,7 +91,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
             <button
               type="button"
               onClick={() => setNewMember({...newMember, role: 'member'})}
-              className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-all ${
+              className={`flex items-center justify-center space-x-2 p-3 rounded-2xl border-2 transition-all ${
                 newMember.role === 'member'
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : 'border-gray-200 hover:border-gray-300'
@@ -103,7 +103,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
             <button
               type="button"
               onClick={() => setNewMember({...newMember, role: 'admin'})}
-              className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-all ${
+              className={`flex items-center justify-center space-x-2 p-3 rounded-2xl border-2 transition-all ${
                 newMember.role === 'admin'
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : 'border-gray-200 hover:border-gray-300'
@@ -118,15 +118,17 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="flex-1 rounded-2xl"
             onClick={() => onOpenChange(false)}
           >
+            <X size={16} className="mr-2" />
             Cancel
           </Button>
           <Button
             type="submit"
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600"
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 rounded-2xl"
           >
+            <Plus size={16} className="mr-2" />
             Add Member
           </Button>
         </div>
@@ -136,4 +138,3 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
 );
 
 export default RegisterMemberDialog;
-

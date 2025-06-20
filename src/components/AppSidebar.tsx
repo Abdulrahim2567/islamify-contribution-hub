@@ -58,10 +58,10 @@ const navigationItems = [
 export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSidebarProps) {
   return (
     <Sidebar className="fixed top-0 left-0 h-screen">
-      <SidebarHeader className="border-b border-gray-200 p-4">
+      <SidebarHeader className="border-b border-gray-200 p-4 overflow-visible">
         <div className="flex items-center justify-between w-full">
           <h2 className="text-lg font-semibold text-gray-900">Islamify Management</h2>
-          <div className="ml-auto">
+          <div className="ml-auto relative">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
@@ -71,7 +71,7 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg border border-gray-200 z-50">
                 <div className="px-2 py-1.5 text-sm">
                   <p className="font-medium">{user?.name || 'User'}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
