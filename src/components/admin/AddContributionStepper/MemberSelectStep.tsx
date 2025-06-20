@@ -15,6 +15,7 @@ interface MemberSelectStepProps {
   page: number;
   setPage: (page: number) => void;
   totalPages: number;
+  hideControls?: boolean;
 }
 
 const PAGE_SIZE = 6;
@@ -41,6 +42,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
   onNext,
   page,
   setPage,
+  hideControls = false,
 }) => {
   const [localMembers, setLocalMembers] = useState<Member[]>([]);
 
@@ -93,42 +95,45 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
               </button>
             ))}
           </div>
-          <div className="flex justify-center gap-1 mb-3">
-            <button
-              className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
-              disabled={page === 0}
-              onClick={() => setPage(page - 1)}
-              type="button"
-              aria-label="Previous page"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <span className="px-3 py-1 text-gray-500 text-sm select-none">{`Page ${page + 1} of ${totalPages}`}</span>
-            <button
-              className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage(page + 1)}
-              type="button"
-              aria-label="Next page"
-            >
-              <ArrowRight size={18} />
-            </button>
-          </div>
+          {!hideControls && (
+            <>
+              <div className="flex justify-center gap-1 mb-3">
+                <button
+                  className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
+                  disabled={page === 0}
+                  onClick={() => setPage(page - 1)}
+                  type="button"
+                  aria-label="Previous page"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <span className="px-3 py-1 text-gray-500 text-sm select-none">{`Page ${page + 1} of ${totalPages}`}</span>
+                <button
+                  className="rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 px-2 py-1 disabled:opacity-40"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage(page + 1)}
+                  type="button"
+                  aria-label="Next page"
+                >
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button
+                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
+                  disabled={hasNoMembers || !selectedMember}
+                  onClick={onNext}
+                  type="button"
+                >
+                  Next <ArrowRight size={18} />
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
-      <div className="flex justify-end mt-4">
-        <button
-          className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-60"
-          disabled={hasNoMembers || !selectedMember}
-          onClick={onNext}
-          type="button"
-        >
-          Next <ArrowRight size={18} />
-        </button>
-      </div>
     </div>
   );
 };
 
 export default MemberSelectStep;
-

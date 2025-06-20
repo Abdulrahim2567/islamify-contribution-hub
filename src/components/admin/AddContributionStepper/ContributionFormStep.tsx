@@ -9,6 +9,7 @@ interface ContributionFormStepProps {
   onFormDataChange: (formData: { amount: string; description: string }) => void;
   onBack: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  hideControls?: boolean;
 }
 
 const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
@@ -17,6 +18,7 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
   onFormDataChange,
   onBack,
   onSubmit,
+  hideControls = false,
 }) => {
   return (
     <div
@@ -79,23 +81,25 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
             rows={3}
           />
         </div>
-        <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-          >
-            <ArrowLeft size={20} />
-            Back
-          </button>
-          <button
-            type="submit"
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
-          >
-            Add Contribution
-            <Plus size={20} />
-          </button>
-        </div>
+        {!hideControls && (
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft size={20} />
+              Back
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
+            >
+              Add Contribution
+              <Plus size={20} />
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
