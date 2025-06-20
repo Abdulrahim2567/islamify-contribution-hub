@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { X, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Check, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Plus } from "lucide-react";
 import { Member } from "./types";
 import { readMembers } from "../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
@@ -215,35 +215,14 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
         <div className="border-t border-gray-100 p-4 bg-gray-50">
           {step === 1 && (
             <div className="flex flex-col space-y-4">
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2">
-                  <button
-                    onClick={() => setPage(Math.max(0, page - 1))}
-                    disabled={page === 0}
-                    className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    {page + 1} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-                    disabled={page === totalPages - 1}
-                    className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              )}
               {/* Next Button */}
               <button
                 onClick={handleNext}
                 disabled={!selectedMember}
-                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Next
+                <ArrowRight size={16} />
               </button>
             </div>
           )}
@@ -253,16 +232,18 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-full font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-full font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
               >
+                <ArrowLeft size={16} />
                 Back
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
               >
                 Add Contribution
+                <Plus size={16} />
               </button>
             </div>
           )}

@@ -18,7 +18,7 @@
     box-shadow: none !important;
     border-width: 2.5px;
     border-style: solid;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     border-image: linear-gradient(90deg, #10b981 0%, #2563eb 100%);
     border-image-slice: 1;
     border-color: transparent !important;
@@ -26,10 +26,26 @@
     position: relative;
     z-index: 1;
   }
+
+  /* Add border radius to all input fields and textareas */
+  input,
+  textarea,
+  .input,
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  .shadcn-ui-input {
+    border-radius: 0.75rem !important;
+  }
 }
 
 /* Also allow shadcn/ui input fields to look consistent */
 .input,
 .shadcn-ui-input {
-  /* Add shared input styles here if needed */
+  border-radius: 0.75rem;
 }

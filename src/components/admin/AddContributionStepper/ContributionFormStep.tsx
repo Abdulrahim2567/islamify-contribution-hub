@@ -57,7 +57,7 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
                   amount: e.target.value,
                 })
               }
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               placeholder="Enter amount"
               required
               min="1"
@@ -76,7 +76,7 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
                 description: e.target.value,
               })
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             placeholder="Add a note..."
             rows={3}
           />
@@ -86,14 +86,14 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-full font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <ArrowLeft size={20} />
               Back
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
             >
               Add Contribution
               <Plus size={20} />

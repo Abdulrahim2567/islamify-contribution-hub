@@ -61,26 +61,28 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
       <SidebarHeader className="border-b border-gray-200 p-4">
         <div className="flex items-center justify-between w-full">
           <h2 className="text-lg font-semibold text-gray-900">Islamify Management</h2>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                </div>
-                <div className="flex-1 text-left hidden md:block">
-                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+          <div className="ml-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5 text-sm">
+                  <p className="font-medium">{user?.name || 'User'}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onLogout} className="text-red-600 hover:bg-red-50">
-                <LogOut className="w-4 h-4 mr-2" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={onLogout} className="text-red-600 hover:bg-red-50">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </SidebarHeader>
       
