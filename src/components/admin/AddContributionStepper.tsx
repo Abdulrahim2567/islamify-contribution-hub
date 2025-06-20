@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Member } from "./types";
 import { readMembers } from "../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
@@ -111,7 +112,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-0 relative overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col relative overflow-hidden" style={{ height: '600px' }}>
         {/* Close Button */}
         <button
           onClick={handleClose}
@@ -121,8 +122,9 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
         >
           <X size={24} />
         </button>
-        {/* Stepper Progress Indicator - Always Visible */}
-        <div className="flex flex-col items-center pt-8 mb-6">
+
+        {/* Header with Stepper Progress Indicator */}
+        <div className="flex flex-col items-center pt-8 pb-4 px-6 border-b border-gray-100">
           <div className="w-full flex flex-col items-center">
             {/* Stepper Indicator */}
             <div className="relative w-full flex items-center justify-between mb-3" style={{ maxWidth: 270, minWidth: 250 }}>
@@ -172,29 +174,99 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
           </div>
         </div>
 
-        {/* Step 1: Member select */}
-        {step === 1 && (
-          <MemberSelectStep
-            members={nonAdminMembers}
-            selectedMember={selectedMember}
-            onSelect={handleSelectMember}
-            onNext={handleNext}
-            page={page}
-            setPage={setPage}
-            totalPages={totalPages}
-          />
-        )}
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {/* Step 1: Member select */}
+          {step === 1 && (
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6">
+                <MemberSelectStep
+                  members={nonAdminMembers}
+                  selectedMember={selectedMember}
+                  onSelect={handleSelectMember}
+                  onNext={() => {}} // Empty function since we handle in footer
+                  page={page}
+                  setPage={setPage}
+                  totalPages={totalPages}
+                  hideControls={true}
+                />
+              </div>
+            </div>
+          )}
 
-        {/* Step 2: Contribution Form */}
-        {step === 2 && selectedMember && (
-          <ContributionFormStep
-            selectedMember={selectedMember}
-            formData={formData}
-            onFormDataChange={handleFormDataChange}
-            onBack={handleBack}
-            onSubmit={handleSubmit}
-          />
-        )}
+          {/* Step 2: Contribution Form */}
+          {step === 2 && selectedMember && (
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6">
+                <ContributionFormStep
+                  selectedMember={selectedMember}
+                  formData={formData}
+                  onFormDataChange={handleFormDataChange}
+                  onBack={() => {}} // Empty function since we handle in footer
+                  onSubmit={handleSubmit}
+                  hideControls={true}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer with Controls */}
+        <div className="border-t border-gray-100 p-4 bg-gray-50">
+          {step === 1 && (
+            <div className="flex flex-col space-y-4">
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => setPage(Math.max(0, page - 1))}
+                    disabled={page === 0}
+                    className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {page + 1} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                    disabled={page === totalPages - 1}
+                    className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+              {/* Next Button */}
+              <button
+                onClick={handleNext}
+                disabled={!selectedMember}
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-full font-medium hover:bg-gray-200 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+              >
+                Add Contribution
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
