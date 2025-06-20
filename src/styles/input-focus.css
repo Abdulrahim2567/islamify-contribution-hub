@@ -18,7 +18,7 @@
     box-shadow: none !important;
     border-width: 2.5px;
     border-style: solid;
-    border-radius: 1rem !important;
+    border-radius: 1.5rem !important;
     border-image: linear-gradient(90deg, #10b981 0%, #2563eb 100%);
     border-image-slice: 1;
     border-color: transparent !important;
@@ -40,29 +40,29 @@
   input[type="url"],
   select,
   .shadcn-ui-input {
-    border-radius: 1rem !important;
+    border-radius: 1.5rem !important;
   }
 
   /* Ensure all buttons have consistent rounded corners */
   button,
   .button,
   [role="button"] {
-    border-radius: 1rem !important;
+    border-radius: 1.5rem !important;
   }
 
   /* Specific styling for gradient buttons */
   .bg-gradient-to-r {
-    border-radius: 1rem !important;
+    border-radius: 1.5rem !important;
   }
 }
 
 /* Also allow shadcn/ui input fields to look consistent */
 .input,
 .shadcn-ui-input {
-  border-radius: 1rem;
+  border-radius: 1.5rem;
 }
 
 /* Ensure button consistency */
 .button {
-  border-radius: 1rem;
+  border-radius: 1.5rem;
 }

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Edit, User } from "lucide-react";
+import { Edit, User, Shield } from "lucide-react";
 import { Member } from "./types";
 import EditMemberDialog from "./EditMemberDialog";
 import MemberAvatar from "./MemberAvatar";
@@ -102,7 +102,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
                 onRoleChange={onRoleChange}
               />
             ) : (
-              <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[100px] flex justify-center mx-auto">
+              <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[100px] flex items-center justify-center gap-1 mx-auto">
+                {member.role === "admin" ? <Shield size={12} /> : <User size={12} />}
                 {member.role}
               </div>
             )}
@@ -124,4 +125,3 @@ const MemberCard: React.FC<MemberCardProps> = ({
 };
 
 export default MemberCard;
-

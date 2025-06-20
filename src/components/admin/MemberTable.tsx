@@ -1,7 +1,6 @@
 
-
 import React, { useState } from "react";
-import { ToggleLeft, ToggleRight, Eye, Trash2, Edit } from "lucide-react";
+import { ToggleLeft, ToggleRight, Eye, Trash2, Edit, User, Shield } from "lucide-react";
 import { Member } from "./types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
 import EditMemberDialog from "./EditMemberDialog";
@@ -77,11 +76,24 @@ const MemberTable: React.FC<MemberTableProps> = ({
                       onValueChange={(newRole) => onRoleChange(member.id, newRole as "member" | "admin")}
                     >
                       <SelectTrigger className={`px-2 py-1 w-[110px] bg-blue-50 text-blue-800 rounded-full font-semibold text-xs hover:bg-blue-100`}>
-                        <SelectValue />
+                        <div className="flex items-center gap-1">
+                          {member.role === "admin" ? <Shield size={12} /> : <User size={12} />}
+                          <SelectValue />
+                        </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="member">Member</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="member">
+                          <div className="flex items-center gap-2">
+                            <User size={14} />
+                            Member
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield size={14} />
+                            Admin
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </td>

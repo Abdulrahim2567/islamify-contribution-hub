@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Search, Grid, List, Users } from "lucide-react";
+import { Search, Grid, List, Users, User, Shield } from "lucide-react";
 import MemberCard from "../admin/MemberCard";
 import { Member } from "../admin/types";
 import MemberDetailModal from "../admin/MemberDetailModal";
@@ -337,7 +337,12 @@ const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
                   <div className="text-sm text-gray-500">{member.email}</div>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-700 font-semibold">{member.role}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center gap-1 text-xs text-gray-700 font-semibold">
+                  {member.role === "admin" ? <Shield size={12} /> : <User size={12} />}
+                  {member.role}
+                </div>
+              </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{member.phone}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{member.joinDate}</td>
             </tr>
