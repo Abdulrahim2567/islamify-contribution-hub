@@ -26,7 +26,7 @@ const ContributionFormStep: React.FC<ContributionFormStepProps> = ({
         transition-all duration-300 ease-in-out w-full px-6 pb-6
         opacity-100 translate-x-0 relative z-10
       `}
-      style={{ minHeight: 430 }}
+      style={{ maxHeight: 310 }}
     >
       <div className="mb-6 flex items-center justify-center pt-2">
         <h2 className="text-xl font-bold text-gray-900 text-center w-full">Add Contribution</h2>

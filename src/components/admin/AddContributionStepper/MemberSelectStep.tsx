@@ -52,7 +52,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
   }, [page]); // re-read if page changes (in case dialog stays open while members change)
 
   // Freshly calculate paged members and totalPages anytime localMembers/page changes
-  const totalPages = Math.ceil(localMembers.length / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(localMembers.length / PAGE_SIZE) || 2;
   const pageMembers = localMembers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const hasNoMembers = localMembers.length === 0;
@@ -63,7 +63,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
         transition-all duration-300 ease-in-out w-full px-6 pb-6
         opacity-100 translate-x-0 relative z-10
       `}
-      style={{ minHeight: 384 }}
+      style={{ minHeight: 300 }}
     >
       <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Select Member</h2>
       {hasNoMembers ? (
@@ -77,7 +77,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
             {pageMembers.map((member) => (
               <button
                 key={member.id}
-                className={`flex flex-col items-center gap-2 border rounded-xl bg-white shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 ${
+                className={`flex flex-col items-center gap-2 border rounded-xl bg-white shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 max-w-[140px] ${
                   selectedMember?.id === member.id
                     ? "border-emerald-500 ring-2 ring-emerald-200"
                     : "border-gray-200"
