@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Member, Activity, ContributionRecord, LoanRecord } from './admin/types';
 import AdminNavbar from './admin/AdminNavbar';
@@ -49,6 +48,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const membersPageSize = 5;
   const contributionsPageSize = 5;
   const loansPageSize = 5;
+
+  const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: "member" | "admin" }>({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'member'
+  });
+
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const memberData: Omit<Member, 'id' | 'totalContributions'> = {
+      ...newMember,
+      registrationFee: 5000,
+      isActive: true,
+      loanEligible: true,
+      joinDate: new Date().toISOString(),
+    };
+    handleRegisterMember(memberData);
+    setNewMember({ name: '', email: '', phone: '', role: 'member' });
+  };
 
   useEffect(() => {
     // Load data from local storage on component mount
@@ -331,7 +350,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
         <RegisterMemberDialog
           open={showRegisterDialog}
           onOpenChange={setShowRegisterDialog}
-          onSubmit={handleRegisterMember}
+          newMember={newMember}
+          setNewMember={setNewMember}
+          onSubmit={handleRegisterSubmit}
         />
 
         {editingMember && (
