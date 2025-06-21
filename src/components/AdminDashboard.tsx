@@ -37,6 +37,7 @@ import {
 import { formatCurrency } from "../utils/calculations";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { set } from 'date-fns';
 
 // Add this type for the new member state
 type NewMember = {
@@ -612,7 +613,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-                      Islamify
+                      {settings.associationName}
                     </h1>
                     <p className="text-sm text-gray-600">
                       Welcome back, {user.name || user.email}
