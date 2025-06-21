@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, UserPlus, Shield, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatCurrency } from "@/utils/calculations";
 
 interface RegisterMemberDialogProps {
   open: boolean;
+  registrationFee: number;
   onOpenChange: (open: boolean) => void;
   newMember: { name: string; email: string; phone: string; role: "member" | "admin" };
   setNewMember: (val: { name: string; email: string; phone: string; role: "member" | "admin" }) => void;
@@ -16,6 +18,7 @@ interface RegisterMemberDialogProps {
 
 const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
   open,
+  registrationFee,
   onOpenChange,
   newMember,
   setNewMember,
@@ -38,7 +41,7 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
       </div>
       <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
         <p className="text-sm text-emerald-800">
-          <strong>Registration Fee:</strong> 5,000 XAF
+          <strong>Registration Fee:</strong> {formatCurrency(registrationFee)}
         </p>
         <p className="text-xs text-emerald-600 mt-1">
           A default password will be generated and must be changed on first login.

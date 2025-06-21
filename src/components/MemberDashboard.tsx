@@ -212,6 +212,7 @@ const MemberDashboard = ({ user, onLogout }) => {
                 memberId={user.id.toString()}
                 memberName={user.name}
                 maxAmount={maxLoanAmount}
+                maxLoanMultiplier={settings.maxLoanMultiplier}
                 onSubmit={data => {
                   setShowLoanModal(false);
                   toast({

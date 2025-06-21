@@ -478,7 +478,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
       if (stored) {
         recentActivities = JSON.parse(stored);
       }
-    } catch {}
+    } catch { /* empty */ }
     // Prepend new activity, keep to a max size if desired
     recentActivities = [memberActivity, ...recentActivities];
     localStorage.setItem(MEMBER_ACTIVITY_KEY, JSON.stringify(recentActivities));
@@ -586,7 +586,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
   const adminContributions = thisAdminMember
     ? memberContributionMap[thisAdminMember.id] || 0
     : 0;
-  const adminMaxLoanAmount = adminContributions * 3;
+  const adminMaxLoanAmount = adminContributions * settings.maxLoanMultiplier;
 
   // Allow admin to apply for loan if they are found as a member and eligible
   const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
@@ -657,6 +657,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                     memberId={String(adminMemberId)}
                     memberName={thisAdminMember?.name || user.name || user.email}
                     maxAmount={adminMaxLoanAmount}
+                    maxLoanMultiplier={settings.maxLoanMultiplier}
                     onSubmit={data => {
                       setShowLoanModal(false);
                       // Show a toast notification
@@ -722,6 +723,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
                     </button>
                     <RegisterMemberDialog
                       open={showRegisterModal}
+                      registrationFee={settings.registrationFee}
                       onOpenChange={setShowRegisterModal}
                       newMember={newMember}
                       setNewMember={setNewMember}
