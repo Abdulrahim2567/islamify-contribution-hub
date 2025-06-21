@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { readMembers } from "../utils/membersStorage";
 import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
+import { getSettings, AppSettings } from "../utils/settingsStorage";
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 const LOANS_STORAGE_KEY = 'islamify_loan_requests';
@@ -20,12 +22,25 @@ const MemberDashboard = ({ user, onLogout }) => {
   const [members, setMembers] = useState([]);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [memberLoans, setMemberLoans] = useState([]);
+  const [settings, setSettings] = useState<AppSettings>(getSettings());
 
   // Store all activities for this member (contributions history)
   const [memberActivities, setMemberActivities] = useState([]);
 
   useEffect(() => {
     setMembers(readMembers());
+  }, []);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleSettingsChange = (event: CustomEvent) => {
+      setSettings(event.detail);
+    };
+
+    window.addEventListener('settingsChanged', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('settingsChanged', handleSettingsChange as EventListener);
+    };
   }, []);
 
   // Load member's loans
@@ -76,9 +91,9 @@ const MemberDashboard = ({ user, onLogout }) => {
   // Always use sum from activities for display, to match what admin wrote
   const totalContributions = memberActivities.reduce((sum, a) => sum + (a.amount || 0), 0);
 
-  const registrationFee = 5000;
-  // For loan, also use activity sum instead of thisMember?.totalContributions
-  const maxLoanAmount = totalContributions * 3;
+  // Use settings for registration fee and loan multiplier
+  const registrationFee = settings.registrationFee;
+  const maxLoanAmount = totalContributions * settings.maxLoanMultiplier;
   const canApplyForLoan = !!thisMember?.loanEligible;
 
   // Check if member has pending loan application
@@ -146,7 +161,7 @@ const MemberDashboard = ({ user, onLogout }) => {
                     <div>
                       <p className="text-sm font-medium text-gray-600">Max Loan Amount</p>
                       <p className="text-3xl font-bold text-green-600">{maxLoanAmount.toLocaleString()} XAF</p>
-                      <p className="text-xs text-gray-500 mt-1">3× your contributions</p>
+                      <p className="text-xs text-gray-500 mt-1">{settings.maxLoanMultiplier}× your contributions</p>
                     </div>
                     <CreditCard className="w-8 h-8 text-green-600" />
                   </div>
@@ -317,7 +332,7 @@ const MemberDashboard = ({ user, onLogout }) => {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-gray-800">
-                      {user.role === 'admin' ? 'Islamify Admin (Member View)' : 'Islamify Member'}
+                      {user.role === 'admin' ? `${settings.associationName} Admin (Member View)` : `${settings.associationName} Member`}
                     </h1>
                     <p className="text-gray-600">Welcome back, {user.name}</p>
                   </div>

@@ -1,32 +1,39 @@
 
 import { Save } from "lucide-react";
 import React from "react";
+import { useToast } from "@/hooks/use-toast";
+import { saveSettings, AppSettings } from "../../utils/settingsStorage";
 
 interface AdminSettingsFormProps {
-  settings: {
-    associationName: string;
-    registrationFee: number;
-    maxLoanMultiplier: number;
-  };
-  setSettings: React.Dispatch<React.SetStateAction<{
-    associationName: string;
-    registrationFee: number;
-    maxLoanMultiplier: number;
-  }>>;
+  settings: AppSettings;
+  setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }
 
 const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
   settings,
   setSettings,
 }) => {
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      saveSettings(settings);
+      toast({
+        title: "Settings Saved",
+        description: "Your settings have been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        // Settings update logic placeholder
-      }}
-      className="space-y-6"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           Association Name
@@ -81,4 +88,3 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 };
 
 export default AdminSettingsForm;
-
