@@ -201,30 +201,30 @@ const AdminContributionsTable: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden my-10 max-w-4xl mx-auto">
-      <div className="px-8 py-7">
-        <div className="flex items-center gap-4 mb-7">
-          <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow">
-            <Coins className="w-7 h-7 text-white" />
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+            <Coins className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Manage Contributions</h2>
-            <span className="text-sm text-gray-500">Edit or delete individual member contributions below.</span>
+            <h1 className="text-3xl font-bold text-gray-900">Manage Contributions</h1>
+            <p className="text-gray-600">Edit or delete individual member contributions</p>
           </div>
         </div>
-
-        <ContributionsTable
-          data={paginatedContributions}
-          page={page}
-          totalPages={totalPages}
-          onEdit={(rec) => {
-            setEditing(rec);
-            setEditOpen(true);
-          }}
-          onDelete={handleDelete}
-          onPageChange={setPage}
-        />
       </div>
+
+      <ContributionsTable
+        data={paginatedContributions}
+        page={page}
+        totalPages={totalPages}
+        onEdit={(rec) => {
+          setEditing(rec);
+          setEditOpen(true);
+        }}
+        onDelete={handleDelete}
+        onPageChange={setPage}
+      />
 
       <EditContributionDialog
         open={editOpen}

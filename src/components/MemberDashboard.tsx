@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +53,7 @@ const MemberDashboard = ({ user, onLogout }) => {
         const allActivities = JSON.parse(storedActivities);
         // DEBUG: Log all activities found for inspection
         console.log("All islamify_recent_activities:", allActivities);
-        // Only contributions for this member
+        // Only contributions for this member (works for both regular members and admins)
         const filtered = allActivities
           .filter(
             (a) =>
@@ -84,6 +83,8 @@ const MemberDashboard = ({ user, onLogout }) => {
 
   // Check if member has pending loan application
   const hasPendingLoan = memberLoans.some(loan => loan.status === 'pending');
+
+  // ... keep existing code (getStatusIcon and getStatusColor functions)
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -116,6 +117,15 @@ const MemberDashboard = ({ user, onLogout }) => {
       case "dashboard":
         return (
           <div className="container mx-auto px-4 py-8">
+            {/* Admin Notice */}
+            {user.role === 'admin' && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 font-medium">
+                  👑 Admin View: You're viewing your personal member data. Your admin privileges are maintained.
+                </p>
+              </div>
+            )}
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card className="animate-fade-in">
@@ -217,6 +227,15 @@ const MemberDashboard = ({ user, onLogout }) => {
       case "loans":
         return (
           <div className="container mx-auto px-4 py-8">
+            {/* Admin Notice */}
+            {user.role === 'admin' && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 font-medium">
+                  👑 Admin View: These are your personal loan applications as a member.
+                </p>
+              </div>
+            )}
+
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">My Loan Applications</h1>
               <p className="text-gray-600">Track your loan application status</p>
@@ -297,7 +316,9 @@ const MemberDashboard = ({ user, onLogout }) => {
                     <Wallet className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Islamify Member</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">
+                      {user.role === 'admin' ? 'Islamify Admin (Member View)' : 'Islamify Member'}
+                    </h1>
                     <p className="text-gray-600">Welcome back, {user.name}</p>
                   </div>
                 </div>
