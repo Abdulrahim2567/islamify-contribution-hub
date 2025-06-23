@@ -20,6 +20,7 @@ import {
 import { Member } from "@/types/types";
 import { getSettings } from "@/utils/settingsStorage";
 import { add } from "date-fns";
+import { getNowString } from "@/utils/calculations";
 
 // Default admin user: always present as fallback if localstorage empty
 const DEMO_ADMIN: Member = {
@@ -34,7 +35,8 @@ const DEMO_ADMIN: Member = {
 	totalContributions: 0,
 	isActive: true,
 	loanEligible: false,
-	joinDate: new Date().toISOString().split("T")[0],
+	canApplyForLoan: false,
+	joinDate: getNowString(),
 };
 
 function getPersistedUsers() {

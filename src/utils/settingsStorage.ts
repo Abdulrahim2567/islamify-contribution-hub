@@ -4,12 +4,14 @@ export interface AppSettings {
   associationName: string;
   registrationFee: number;
   maxLoanMultiplier: number;
+  loanEligibilityThreshold: number; // Optional, can be added later
 }
 
 export const defaultSettings: AppSettings = {
   associationName: 'Islamify',
   registrationFee: 5000,
   maxLoanMultiplier: 3,
+  loanEligibilityThreshold: 300000, // Default threshold for loan eligibility
 };
 
 export const getSettings = (): AppSettings => {
@@ -22,6 +24,7 @@ export const getSettings = (): AppSettings => {
         associationName: parsed.associationName || defaultSettings.associationName,
         registrationFee: typeof parsed.registrationFee === 'number' ? parsed.registrationFee : defaultSettings.registrationFee,
         maxLoanMultiplier: typeof parsed.maxLoanMultiplier === 'number' ? parsed.maxLoanMultiplier : defaultSettings.maxLoanMultiplier,
+        loanEligibilityThreshold: typeof parsed.loanEligibilityThreshold === 'number' ? parsed.loanEligibilityThreshold : defaultSettings.loanEligibilityThreshold,
       };
     }
   } catch (error) {

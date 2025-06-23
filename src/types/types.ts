@@ -10,6 +10,7 @@ export interface Member {
   totalContributions: number;
   isActive: boolean;
   loanEligible: boolean;
+  canApplyForLoan: boolean; // Indicates if the member can apply for a loan
   joinDate: string;
   role: "member" | "admin";
 }
@@ -24,6 +25,7 @@ export interface AdminActivityLog {
   adminEmail: string;
   adminRole: "member" | "admin";
   memberId?: number; // Optional for actions not related to a specific member
+  isRead?:boolean
 }
 
 
@@ -60,6 +62,7 @@ export interface ContributionRecordActivity extends Contribution {
 }
 
 export interface MemberLoanActivity {
+  id:number;
   type: "loan_request" | "loan_approval" | "loan_rejection";
   amount: number;
   memberId: number;
@@ -84,7 +87,6 @@ export interface LoanRecord extends Loan {
 
 export interface LoanRequest {
   id: string; // Unique identifier for the loan request
-  date: string; // Date of the request
   dueDate?: string; // Optional due date for the loan
   paymentInterval?: string; // Optional payment interval
   paymentIntervalAmount?: number; // Optional amount per payment interval

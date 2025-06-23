@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Coins } from "lucide-react";
+import { Coins, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DeleteContributionDialog from "./DeleteContributionDialog";
 import EditContributionDialog from "./EditContributionDialog";
 import ContributionsTable from "./ContributionsTable";
-import { AdminActivityLog, Contribution } from "@/types/types";
-import { readMembersFromStorage } from "@/utils/membersStorage";
-import { deleteContribution, getContributions, updateMemberContribution } from "@/utils/contributionStorage";
+import { AdminActivityLog, Contribution, Member } from "@/types/types";
+import { getMemberById, readMembersFromStorage, updateMemberInfo } from "@/utils/membersStorage";
+import { deleteContribution, getContributions, getTotalMemberContributions, updateMemberContribution } from "@/utils/contributionStorage";
 import {
 	saveAdminRecentActivity,
 	saveMemberEditContributionActivity,
 } from "@/utils/recentActivities";
+import { formatCurrency, getNowString } from "@/utils/calculations";
+import { get } from "http";
+import { AppSettings, getSettings } from "@/utils/settingsStorage";
 
 // Type for islamify_recent_activities
 interface ContributionRecord extends Contribution {
@@ -35,6 +38,14 @@ const AdminContributionsTable: React.FC = () => {
 	// Pagination state
 	const PER_PAGE = 10;
 	const [page, setPage] = useState(1);
+
+	//load app settings from localStorage
+		const [appSettings, setAppSettings] = useState<AppSettings>();
+		useEffect(()=>{
+			const storedSettings = getSettings();
+			setAppSettings(storedSettings);
+		}, []);
+
 
 	useEffect(() => {
 		const stored = getContributions();
@@ -112,10 +123,21 @@ const AdminContributionsTable: React.FC = () => {
 				updatedContribution
 			);
 
+			const member:Member = getMemberById(updatedContribution.memberId)
+			const totalMemberContributions:number = getTotalMemberContributions(member.id)
+			member.totalContributions = totalMemberContributions
+
+			if (member.totalContributions >=  appSettings.loanEligibilityThreshold)
+				member.canApplyForLoan = true
+			else
+				member.canApplyForLoan = false
+
+			updateMemberInfo(member.id, member);
+
 			// --- Add an admin activity for this edit ---
 			const adminActivity: AdminActivityLog = {
 				id: Date.now() + Math.random(),
-				timestamp: new Date().toISOString(),
+				timestamp: getNowString(),
 				type: "edit_contribution",
 				text: `Edited contribution for "${
 					updatedContribution.memberName
@@ -157,7 +179,7 @@ const AdminContributionsTable: React.FC = () => {
 			// --- Update ALL matching contributions in recent_activities ---
 			const editContributionActivity: AdminActivityLog = {
 				id: Date.now() + Math.random(),
-				timestamp: new Date().toISOString(),
+				timestamp: getNowString(),
 				type: "edit_contribution",
 				text:
 					editContributionText ||
@@ -191,7 +213,7 @@ const AdminContributionsTable: React.FC = () => {
 		setToDelete(record);
 		setDeleteOpen(true);
 	};
-
+	//when you delete contribution
 	const confirmDelete = () => {
 		if (!toDelete) return;
 		const filtered = contributions.filter(
@@ -201,12 +223,27 @@ const AdminContributionsTable: React.FC = () => {
 		saveContributions(filtered);
     //remove from local storage
     deleteContribution(toDelete.id);
+
+	//update member canApplyForLoan status
+	const membersFromStorage = readMembersFromStorage();
+	const memberFound = membersFromStorage.find((m) => m.id === toDelete.memberId);
+	if (memberFound) {
+		const updatedMember = {
+			...memberFound,
+			totalContributions: memberFound.totalContributions - toDelete.amount, //if totolContributions < 0  set memberTotalContribution to 0
+			canApplyForLoan: memberFound.totalContributions - toDelete.amount >= appSettings.loanEligibilityThreshold, // Assuming 1,000,000 XAF is the threshold
+		};
+		if (updatedMember.totalContributions < 0) {
+			updatedMember.totalContributions = 0;
+		}		
+		updateMemberInfo(memberFound.id, updatedMember);
+	}
     // --- Add an admin activity for this delete ---
     const adminActivity: AdminActivityLog = {
 		id: Date.now() + Math.random(),
-		timestamp: new Date().toISOString(),
+		timestamp: getNowString(),
 		type: "delete_contribution",
-		text: `Deleted contribution for "${toDelete.memberName}", amount: ${toDelete.amount.toLocaleString()} XAF.`,
+		text: `Deleted contribution for "${toDelete.memberName}", amount: ${formatCurrency(toDelete.amount)}.`,
 		color: "red",
 		adminName: "Admin",
 		adminEmail: undefined,
@@ -217,15 +254,15 @@ const AdminContributionsTable: React.FC = () => {
     // --- Add a member activity for this delete ---
     const memberActivity: AdminActivityLog = {
 		id: Date.now() + Math.random(),
-		timestamp: new Date().toISOString(),
+		timestamp: getNowString(),
 		type: "delete_contribution",
-		text: `Deleted contribution of ${toDelete.amount.toLocaleString()} XAF.`,
+		text: `Deleted contribution of${formatCurrency(toDelete.amount)}.`,
 		color: "red",
 		adminName: "Admin",
 		adminEmail: undefined,
 		adminRole: "admin",
 		memberId: toDelete.memberId,
-    };
+	};
     saveMemberEditContributionActivity(memberActivity);
     // --- Update ALL contributions for this member across the app ---
     const members = readMembersFromStorage();
@@ -246,7 +283,7 @@ const AdminContributionsTable: React.FC = () => {
     // Show success toast
 		toast({
 			title: "Contribution Deleted",
-			description: `Deleted ${toDelete.amount.toLocaleString()} XAF contribution for ${
+			description: `Deleted ${formatCurrency(toDelete.amount)} contribution for ${
 				toDelete.memberName
 			}.`,
 			variant: "destructive",

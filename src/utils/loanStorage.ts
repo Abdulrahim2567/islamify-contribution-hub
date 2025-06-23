@@ -42,18 +42,33 @@ export const getTotalMemberLoanAmount = (memberId: number): number => {
         .filter((request) => request.memberId === memberId)
         .reduce((total, request) => total + request.amount, 0);
 };
-export const getPendingLoanRequests = (): LoanRequest[] => {
+export const getPendingLoanRequests = (memberId?: number): LoanRequest[] => {
     const requests = getLoanRequests();
-    return requests.filter((request) => request.status === "pending");
+    return requests.filter((request) => {
+        const isStatusMatch = request.status === "pending";
+        const isMemberMatch = memberId !== undefined ? request.memberId === memberId : true;
+        return isStatusMatch && isMemberMatch;
+    });
 };
-export const getApprovedLoanRequests = (): LoanRequest[] => {
+
+export const getApprovedLoanRequests = (memberId?: number): LoanRequest[] => {
     const requests = getLoanRequests();
-    return requests.filter((request) => request.status === "approved");
+    return requests.filter((request) => {
+        const isStatusMatch = request.status === "approved";
+        const isMemberMatch = memberId !== undefined ? request.memberId === memberId : true;
+        return isStatusMatch && isMemberMatch;
+    });
 };
-export const getRejectedLoanRequests = (): LoanRequest[] => {
+
+export const getRejectedLoanRequests = (memberId?: number): LoanRequest[] => {
     const requests = getLoanRequests();
-    return requests.filter((request) => request.status === "rejected");
+    return requests.filter((request) => {
+        const isStatusMatch = request.status === "rejected";
+        const isMemberMatch = memberId !== undefined ? request.memberId === memberId : true;
+        return isStatusMatch && isMemberMatch;
+    });
 };
+
 export const getLoanRequestsByMemberId = (memberId: number): LoanRequest[] => {
     const requests = getLoanRequests();
     return requests.filter((request) => request.memberId === memberId);

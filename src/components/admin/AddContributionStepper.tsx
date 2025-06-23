@@ -12,6 +12,7 @@ import { Member } from "../../types/types";
 import { readMembersFromStorage } from "../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
 import ContributionFormStep from "./AddContributionStepper/ContributionFormStep";
+import { getNowString } from "@/utils/calculations";
 
 interface AddContributionStepperProps {
 	open: boolean;
@@ -58,10 +59,11 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 						totalContributions: 0,
 						isActive: true,
 						loanEligible: false,
-						joinDate: new Date().toISOString().split("T")[0],
+						joinDate: getNowString(),
 						role: "admin",
 						password: "",
-						needsPasswordChange: false
+						needsPasswordChange: false,
+						canApplyForLoan: false
 					},
 				]);
 			} else {
@@ -110,7 +112,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 			memberId: selectedMember.id,
 			amount: parseFloat(formData.amount),
 			type: "contribution",
-			date: new Date().toISOString(),
+			date:getNowString(),
 			description: formData.description || undefined,
 		});
 		setFormData({ amount: "", description: "" });

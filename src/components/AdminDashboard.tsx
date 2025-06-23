@@ -6,6 +6,9 @@ import {
 	List,
 	User,
 	CreditCard,
+	Clock,
+	ChevronDown,
+	LogOut,
 
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -25,9 +28,12 @@ import MemberDetailModal from "./admin/MemberDetailModal";
 import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import SuccessModal from "./admin/SuccessModal";
 import type {
+	AdminLoanActivity,
 	Contribution,
 	ContributionRecordActivity,
+	LoanRequest,
 	Member,
+	MemberLoanActivity,
 } from "../types/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
 import { addMemberToStorage, deleteMemberFromStorage, readMembersFromStorage, updateMemberActiveStatus, updateMemberInfo, updateMemberLoanEligibility, updateMemberRole, writeMembersToStorage } from "../utils/membersStorage";
@@ -45,7 +51,7 @@ import {
 	PaginationPrevious,
 	PaginationNext,
 } from "@/components/ui/pagination";
-import { formatCurrency } from "../utils/calculations";
+import { formatCurrency, getNowString } from "../utils/calculations";
 import {
 	SidebarProvider,
 	SidebarInset,
@@ -54,12 +60,19 @@ import {
 import { AppSidebar } from "./AppSidebar";
 import { initializeSettings, getSettings } from "../utils/settingsStorage";
 import { AdminActivityLog } from "../types/types";
-import { addContribution, getContributions, getTotalContributions, getTotalMemberContributions } from "@/utils/contributionStorage";
+import { addContribution, getTotalContributions, getTotalMemberContributions } from "@/utils/contributionStorage";
 import {
 	getAdminRecentActivities,
+	getAllContributionsActivitiesForMember,
+	getMemberLoanActivitiesByMember,
 	saveMemberContributionActivity,
 } from "@/utils/recentActivities";
 import { getTotalRegistrationFees } from "@/utils/registrationFees";
+import { getLoanRequestsByMemberId } from "@/utils/loanStorage";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { cn } from "@/lib/utils";
+import { UserDropdown } from "./ui/UserDropdown";
+import { NotificationDropdown } from "./ui/NotificationDropdown";
 
 // Add this type for the new member state
 type NewMember = {
@@ -71,8 +84,15 @@ type NewMember = {
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_admin_recent_activities";
 
+interface AdminDashboardProps {
+	user: Member,
+	onLogout: ()=> void,
+	onNewUser: (member:Member[])=> void,
+	users: Member[]
+}
 
-const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout, onNewUser, users }) => {
 	const [members, setMembers] = useState<Member[]>([]);
 	const [activeTab, setActiveTab] = useState("dashboard");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -107,6 +127,33 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			return [];
 		}
 	});
+	const [memberLoans, setMemberLoans] = useState<LoanRequest[]>([]);
+
+	// Store all activities for this member (contributions history)
+		const [memberContributionActivities, setMemberContributionActivities] =
+			useState<ContributionRecordActivity[]>();
+		const [memberLoanAcivities, setMemberLoanActivities] = useState<MemberLoanActivity[]>()
+	
+		useEffect(() => {
+			setMembers(readMembersFromStorage());
+			setMemberContributionActivities(
+				getAllContributionsActivitiesForMember(user.id)
+			);
+			setMemberLoanActivities(getMemberLoanActivitiesByMember(user.id))
+		}, []);
+
+	useEffect(() => {
+		try {
+			const storedLoans: LoanRequest[] = getLoanRequestsByMemberId(
+				user.id
+			);
+			if (storedLoans) {
+				setMemberLoans(storedLoans);
+			}
+		} catch (error) {
+			console.error("Error loading member loans:", error);
+		}
+	}, [user.id, activeTab]);
 
 	// Always load members from localStorage. If empty, create/save DEMO_ADMIN as sole member.
 	const DEMO_ADMIN_MEMBER: Member = {
@@ -120,7 +167,8 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		totalContributions: 0,
 		isActive: true,
 		loanEligible: false,
-		joinDate: new Date().toISOString().split("T")[0],
+		canApplyForLoan: false,
+		joinDate: getNowString(),
 		role: "admin",
 	};
 
@@ -165,7 +213,11 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 	//re-render component each time settings change
 	useEffect(() => {
 		setSettings(getSettings());
-	}, [settings.associationName, settings.registrationFee, settings.maxLoanMultiplier]);
+	}, [
+		settings.associationName,
+		settings.registrationFee,
+		settings.maxLoanMultiplier,
+	]);
 
 	// Helper to persist and update (never fallback to mock)
 	const persistAndSetMembers = (updateFn) => {
@@ -247,7 +299,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			totalContributions: 0,
 			isActive: true,
 			loanEligible: false,
-			joinDate: new Date().toISOString().split("T")[0],
+			joinDate: getNowString(),
 		};
 
 		persistAndSetMembers([...members, member]);
@@ -257,8 +309,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
 		//add user to localStorage users
 		addMemberToStorage(member);
-
-		
 
 		// Close register modal first
 		setShowRegisterModal(false);
@@ -418,6 +468,22 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			)
 		);
 
+		//readMemberfromStorage and update the member's total contributions
+		const updatedMembers = readMembersFromStorage();
+		const memberIndex = updatedMembers.findIndex((m) => m.id === memberId);
+		if (memberIndex !== -1) {
+			updatedMembers[memberIndex].totalContributions += amount;
+			writeMembersToStorage(updatedMembers);
+		}
+		// Update loan eligibility if contributions exceed threshold
+		if (
+			updatedMembers[memberIndex].totalContributions >
+			settings.loanEligibilityThreshold
+		) {
+			updatedMembers[memberIndex].canApplyForLoan = true;
+		}
+		writeMembersToStorage(updatedMembers);
+
 		// Log in admin activities
 		const adminAddContributionActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
@@ -443,7 +509,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			lastEdited: "",
 			description: description || "",
 			addedBy: user.name,
-			type: "contribution"
+			type: "contribution",
 		};
 		addContribution(newContribution);
 		// ------------ IMPORTANT PART: update islamify_recent_activities for member dashboards ------------
@@ -459,7 +525,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			lastEdited: "",
 			editedBy: user.name,
 			description: description || "",
-			addedBy: user.name
+			addedBy: user.name,
 		};
 		// Save this activity to localStorage for member dashboard
 		saveMemberContributionActivity(memberContributionActivity);
@@ -489,7 +555,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 				timestamp: getNowString(),
 				type: "change_role",
 				text: `Changed role for "${member.name}" (${member.email}) to ${newRole}`,
-				color: "amber",
+				color: "purple",
 				adminName: user.name,
 				adminEmail: user.email,
 				adminRole: user.role,
@@ -535,14 +601,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		});
 	};
 
-	const getNowString = () => {
-		const d = new Date();
-		return d.toLocaleString(undefined, {
-			dateStyle: "medium",
-			timeStyle: "short",
-		});
-	};
-
 	// PAGINATION LOGIC FOR ACTIVITIES
 	const paginatedActivities = activities.slice(
 		(activityPage - 1) * perPage,
@@ -568,7 +626,13 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 	const adminMaxLoanAmount = adminContributions * settings.maxLoanMultiplier;
 
 	// Allow admin to apply for loan if they are found as a member and eligible
-	const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
+	const adminCanApplyForLoan =
+		thisAdminMember?.canApplyForLoan && thisAdminMember?.loanEligible;
+
+	// Check if member has pending loan application
+	const hasPendingLoan = memberLoans.some(
+		(loan) => loan.status === "pending"
+	);
 
 	return (
 		<SidebarProvider>
@@ -583,6 +647,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 					{/* Header */}
 					<div className="bg-white border-b border-gray-200 px-6 py-4">
 						<div className="flex items-center justify-between">
+							{/* LEFT SIDE: Logo + Welcome */}
 							<div className="flex items-center space-x-4">
 								<SidebarTrigger />
 								<div className="flex items-center gap-3">
@@ -594,11 +659,18 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 											{settings.associationName}
 										</h1>
 										<p className="text-sm text-gray-600">
-											Welcome back,{" "}
-											{user.name || user.email}
+											Welcome back, {user.name}
 										</p>
 									</div>
 								</div>
+							</div>
+
+							{/* RIGHT SIDE: User Menu */}
+							<div className="ml-auto relative flex">
+								<UserDropdown user={user} onLogout={onLogout} />
+								<NotificationDropdown
+									notifications={activities} itemsPerPage={10} user={user} memberLoans={memberLoanAcivities} contributions={memberContributionActivities}
+								/>
 							</div>
 						</div>
 					</div>
@@ -627,7 +699,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 								/>
 
 								{/* Allow admin to apply for a loan (just like member dashboard) */}
-								{adminCanApplyForLoan && (
+								{adminCanApplyForLoan && !hasPendingLoan && (
 									<div className="flex justify-end mb-6">
 										<button
 											className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow hover:from-emerald-600 hover:to-blue-600 transition-all"
@@ -640,16 +712,22 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 										</button>
 									</div>
 								)}
+								{hasPendingLoan && (
+									<div className="flex justify-end mb-6 rounded-lg">
+										<div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-6 py-3 rounded-[25px] font-medium flex items-center gap-2">
+											<Clock className="w-5 h-5" />
+											Loan Application Pending
+										</div>
+									</div>
+								)}
 								{showLoanModal && (
 									<LoanApplication
 										memberId={String(adminMemberId)}
 										memberName={
-											thisAdminMember?.name ||
-											user.name 
+											thisAdminMember?.name || user.name
 										}
 										memberEmail={
-											thisAdminMember?.email ||
-											user.email
+											thisAdminMember?.email || user.email
 										}
 										maxAmount={adminMaxLoanAmount}
 										maxLoanMultiplier={
@@ -664,6 +742,14 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 													data.amount
 												)} is pending.`,
 											});
+											// Reload loans to show the new application
+											const userLoans =
+												getLoanRequestsByMemberId(
+													user.id
+												);
+											if (userLoans) {
+												setMemberLoans(userLoans);
+											}
 										}}
 										onCancel={() => setShowLoanModal(false)}
 									/>
@@ -1097,7 +1183,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 								</React.Suspense>
 							)}
 
-						{activeTab === "loans" && <LoanManagement user={user} />}
+						{activeTab === "loans" && (
+							<LoanManagement user={user} />
+						)}
 
 						{activeTab === "settings" && (
 							<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

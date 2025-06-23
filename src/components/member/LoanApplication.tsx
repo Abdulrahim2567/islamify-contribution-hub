@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { CreditCard, X } from "lucide-react";
-import { formatCurrency } from "../../utils/calculations";
+import { Check, CreditCard, X } from "lucide-react";
+import { formatCurrency, getNowString } from "../../utils/calculations";
 import { useToast } from "@/hooks/use-toast";
 import { AdminActivityLog, LoanRequest, MemberLoanActivity } from "@/types/types";
 import { saveLoanRequest } from "@/utils/loanStorage";
@@ -50,7 +50,6 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 		// Create loan request object
 		const loanRequest: LoanRequest = {
 			id: Date.now().toString(),
-			date: new Date().toISOString(),
 			dueDate: undefined, // Optional, can be set later
 			paymentInterval: undefined, // Optional, can be set later
 			paymentIntervalAmount: undefined, // Optional, can be set later
@@ -60,7 +59,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 			memberName,
 			amount,
 			purpose: formData.reason,
-			requestDate: new Date().toISOString(),
+			requestDate: getNowString(),
 			status: "pending" as const,
 		};
 
@@ -75,7 +74,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 				amount,
 				memberId: parseInt(memberId),
 				memberName,
-				date: new Date().toISOString(),
+				date: getNowString(),
 				performedBy: memberName,
 				description: formData.reason,
 			};
@@ -84,7 +83,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 			// Optionally, you can also save the activity to the admin activities
 			const adminActivity: AdminActivityLog = {
 				id: Date.now() + Math.random(),
-				timestamp: new Date().toISOString(),
+				timestamp: getNowString(),
 				type: "loan_request",
 				text: `Loan request of ${formatCurrency(amount)} XAF submitted by ${memberName}.`,
 				color: "blue",
@@ -202,6 +201,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 							className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
 						>
 							Submit Application
+							<Check size={20} />
 						</button>
 					</div>
 				</form>

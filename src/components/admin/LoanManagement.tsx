@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, CheckCircle, XCircle, Clock, User, DollarSign, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "../../utils/calculations";
+import { formatCurrency, getNowString } from "../../utils/calculations";
 import { readMembersFromStorage } from "../../utils/membersStorage";
 import { AdminActivityLog, IslamifyMemberNotification, LoanRequest, Member, MemberLoanActivity } from '@/types/types';
 import { getLoanRequests, updateLoanRequest } from '@/utils/loanStorage';
@@ -20,10 +20,6 @@ interface LoanRequest_ extends LoanRequest{
 interface LoanManagementProps {
   user: Member;
 }
-
-const LOANS_STORAGE_KEY = 'islamify_loan_requests';
-const ADMIN_ACTIVITY_KEY = 'islamify_admin_recent_activities';
-const MEMBER_ACTIVITY_KEY = 'islamify_recent_activities';
 
 const LoanManagement = ({ user }: LoanManagementProps) => {
   const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([]);
@@ -50,11 +46,6 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
   };
 
 
-  const getNowString = () => {
-    const d = new Date();
-    return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  };
-
   const handleApprove = (loanId: string) => {
     const loan = loanRequests.find(l => l.id === loanId);
     if (!loan) return;
@@ -64,14 +55,14 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
         ? {
             ...loan,
             status: 'approved' as const,
-            processedDate: new Date().toISOString(),
-            processedBy: 'Admin'
+            processedDate: getNowString(),
+            processedBy: user.name
           }
         : loan
     );
 
     // Save updated requests
-    updateLoanRequest(loanId, { ...loan, status: 'approved', processedDate: new Date().toISOString(), processedBy: user.name });
+    updateLoanRequest(loanId, { ...loan, status: 'approved', processedDate: getNowString(), processedBy: user.name });
 
     saveLoanRequests(updatedRequests);
     
@@ -92,11 +83,12 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
     saveAdminRecentActivity(adminLoanActivity);
 
     const memberLoanActivity:MemberLoanActivity = {
+      id: Date.now() + Math.random(),
       type: "loan_approval",
       amount: loan.amount,
       memberId: loan.memberId,
       memberName: loan.memberName,
-      date: new Date().toISOString(),
+      date:getNowString(),
       performedBy: user.name,
       description: `Loan application approved`,
     };
@@ -111,7 +103,7 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
       title: "Loan Approved! 🎉",
       message: `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
       type: 'success',
-      date: new Date().toISOString(),
+      date: getNowString(),
       isRead: false
     };
 
@@ -133,12 +125,12 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
         ? {
             ...loan,
             status: 'rejected' as const,
-            processedDate: new Date().toISOString(),
+            processedDate: getNowString(),
             processedBy: 'Admin'
           }
         : loan
     );
-    updateLoanRequest(loanId, { ...loan, status: 'rejected', processedDate: new Date().toISOString(), processedBy: user.name });
+    updateLoanRequest(loanId, { ...loan, status: 'rejected', processedDate: getNowString(), processedBy: user.name });
     saveLoanRequests(updatedRequests);
 
     // Create admin activity
@@ -161,7 +153,7 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
       amount: loan.amount,
       memberId: loan.memberId,
       memberName: loan.memberName,
-      date: new Date().toISOString(),
+      date: getNowString(),
       performedBy: user.name,
       description: `Loan application rejected`,
     };
@@ -176,7 +168,7 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
       title: "Loan Application Update",
       message: `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
       type: 'warning',
-      date: new Date().toISOString(),
+      date: getNowString(),
       isRead: false
     };
     // Save notification to member
@@ -353,15 +345,15 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
       {/* Loan Requests Tabs */}
       <Tabs defaultValue="requests" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="requests" className="flex items-center gap-2">
+          <TabsTrigger value="requests" className="flex items-center gap-2" color='yellow'>
             <Clock className="w-4 h-4" />
             Requests ({pendingRequests.length})
           </TabsTrigger>
-          <TabsTrigger value="approved" className="flex items-center gap-2">
+          <TabsTrigger value="approved" className="flex items-center gap-2" color='green'>
             <CheckCircle className="w-4 h-4" />
             Approved ({approvedRequests.length})
           </TabsTrigger>
-          <TabsTrigger value="rejected" className="flex items-center gap-2">
+          <TabsTrigger value="rejected" className="flex items-center gap-2" color='red'>
             <XCircle className="w-4 h-4" />
             Rejected ({rejectedRequests.length})
           </TabsTrigger>

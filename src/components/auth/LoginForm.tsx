@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock } from "lucide-react";
 import { Member } from "@/types/types";
+import { readMembersFromStorage } from "@/utils/membersStorage";
 
 interface LoginFormProps {
   users: Member[];
@@ -30,9 +31,14 @@ const LoginForm = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const user = users.find(
+    const  members = readMembersFromStorage();
+    const user = members.find(
       (u) => u.email === loginForm.email && u.password === loginForm.password
     );
+    window.addEventListener('scroll', () => {
+      console.log('Scrolled to', window.scrollY);
+    });
+    
 
     if (user) {
       if (user.needsPasswordChange) {

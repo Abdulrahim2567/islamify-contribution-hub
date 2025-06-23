@@ -76,7 +76,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
                         {act.type.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <div className="text-gray-800">{act.text}</div>
+                    <div className="text-gray-800 text-[13px]">{act.text}</div>
                   </div>
                   <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
                     {act.timestamp}

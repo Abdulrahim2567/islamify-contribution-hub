@@ -73,6 +73,12 @@ export const getMemberLoanActivities = (): MemberLoanActivity[] => {
     return data ? JSON.parse(data) : [];
 };
 
+export const getMemberLoanActivitiesByMember = (memberId: number): MemberLoanActivity[] => {
+	const allActivities = getMemberLoanActivities()
+    return allActivities.filter(activity => activity.memberId === memberId);
+}
+
+
 export const clearMemberLoanActivities = () => {
     localStorage.removeItem(MEMBER_LOAN_ACTIVITY_KEY);
 };

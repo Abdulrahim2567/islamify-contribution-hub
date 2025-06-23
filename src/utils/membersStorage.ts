@@ -13,6 +13,13 @@ export function readMembersFromStorage(): Member[] {
   }
 }
 
+/** Get a member by their ID from localStorage. */
+export function getMemberById(memberId: number): Member | undefined {
+  const members = readMembersFromStorage();
+  return members.find(m => m.id === memberId);
+}
+
+
 /** Persist an updated members array in localStorage. */
 export function writeMembersToStorage(members: Member[]): void {
   localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
