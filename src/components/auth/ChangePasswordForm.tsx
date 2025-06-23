@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck } from "lucide-react";
+import { Member } from "@/types/types";
 
 interface ChangePasswordFormProps {
-  user: any;
-  users: any[];
-  setUsers: (users: any[]) => void;
-  onSuccess: (updatedUser: any) => void;
+  user: Member;
+  users: Member[];
+  setUsers: (users: Member[]) => void;
+  onSuccess: (updatedUser: Member) => void;
   onCancel: () => void;
 }
 

@@ -6,89 +6,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, CheckCircle, XCircle, Clock, User, DollarSign, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "../../utils/calculations";
-import { readMembers } from "../../utils/membersStorage";
+import { readMembersFromStorage } from "../../utils/membersStorage";
+import { AdminActivityLog, IslamifyMemberNotification, LoanRequest, Member, MemberLoanActivity } from '@/types/types';
+import { getLoanRequests, updateLoanRequest } from '@/utils/loanStorage';
+import { saveAdminRecentActivity, saveMemberLoanActivity } from '@/utils/recentActivities';
+import { saveMemberNotification } from '@/utils/notificationsStorage';
 
-interface LoanRequest {
-  id: string;
-  memberId: number;
-  memberName: string;
-  amount: number;
-  purpose: string;
-  requestDate: string;
-  status: 'pending' | 'approved' | 'rejected';
+interface LoanRequest_ extends LoanRequest{
   adminNotes?: string;
-  processedBy?: string;
-  processedDate?: string;
+}
+
+//Member as LoanManagementProps
+interface LoanManagementProps {
+  user: Member;
 }
 
 const LOANS_STORAGE_KEY = 'islamify_loan_requests';
-const ADMIN_ACTIVITY_KEY = 'islamify_admin_activities';
+const ADMIN_ACTIVITY_KEY = 'islamify_admin_recent_activities';
 const MEMBER_ACTIVITY_KEY = 'islamify_recent_activities';
 
-const LoanManagement = () => {
+const LoanManagement = ({ user }: LoanManagementProps) => {
   const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([]);
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     // Load loan requests from localStorage
     try {
-      const stored = localStorage.getItem(LOANS_STORAGE_KEY);
+      const stored = getLoanRequests();
       if (stored) {
-        setLoanRequests(JSON.parse(stored));
+        setLoanRequests(stored);
       }
     } catch (error) {
       console.error('Error loading loan requests:', error);
     }
 
     // Load members
-    setMembers(readMembers());
+    setMembers(readMembersFromStorage());
   }, []);
 
   const saveLoanRequests = (requests: LoanRequest[]) => {
-    localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(requests));
     setLoanRequests(requests);
   };
 
-  const addToAdminActivities = (activity: any) => {
-    try {
-      const existingActivities = JSON.parse(localStorage.getItem(ADMIN_ACTIVITY_KEY) || '[]');
-      const updatedActivities = [activity, ...existingActivities];
-      localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(updatedActivities));
-    } catch (error) {
-      console.error('Error saving admin activity:', error);
-    }
-  };
-
-  const addToMemberActivities = (activity: any) => {
-    try {
-      const existingActivities = JSON.parse(localStorage.getItem(MEMBER_ACTIVITY_KEY) || '[]');
-      const updatedActivities = [activity, ...existingActivities];
-      localStorage.setItem(MEMBER_ACTIVITY_KEY, JSON.stringify(updatedActivities));
-    } catch (error) {
-      console.error('Error saving member activity:', error);
-    }
-  };
-
-  const sendNotificationToMember = (memberId: number, title: string, message: string, type: 'success' | 'info' | 'warning' | 'error') => {
-    // Store notification for member to see when they log in
-    try {
-      const NOTIFICATIONS_KEY = `islamify_notifications_${memberId}`;
-      const existingNotifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-      const notification = {
-        id: Date.now().toString(),
-        title,
-        message,
-        type,
-        timestamp: new Date().toISOString(),
-        read: false
-      };
-      const updatedNotifications = [notification, ...existingNotifications];
-      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));
-    } catch (error) {
-      console.error('Error saving notification:', error);
-    }
-  };
 
   const getNowString = () => {
     const d = new Date();
@@ -109,38 +69,54 @@ const LoanManagement = () => {
           }
         : loan
     );
+
+    // Save updated requests
+    updateLoanRequest(loanId, { ...loan, status: 'approved', processedDate: new Date().toISOString(), processedBy: user.name });
+
     saveLoanRequests(updatedRequests);
     
     // Add to admin activities
-    addToAdminActivities({
+
+    const adminLoanActivity: AdminActivityLog = {
       id: Date.now() + Math.random(),
       timestamp: getNowString(),
       type: "loan_approved",
       text: `Approved loan of ${formatCurrency(loan.amount)} for "${loan.memberName}"`,
       color: "green",
-      adminName: "Admin",
-      adminEmail: "admin@islamify.org",
-      adminRole: "admin",
-    });
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
+    };
 
-    // Add to member activities
-    addToMemberActivities({
-      type: "loan_approved",
+    // Save admin activity
+    saveAdminRecentActivity(adminLoanActivity);
+
+    const memberLoanActivity:MemberLoanActivity = {
+      type: "loan_approval",
       amount: loan.amount,
       memberId: loan.memberId,
       memberName: loan.memberName,
       date: new Date().toISOString(),
-      performedBy: "Admin",
+      performedBy: user.name,
       description: `Loan application approved`,
-    });
+    };
+
+    // Add to member activities
+    saveMemberLoanActivity(memberLoanActivity);
+
+    //crete a notification for the member
+    const memberNotification: IslamifyMemberNotification = {
+      id: Date.now(),
+      memberId: loan.memberId,
+      title: "Loan Approved! 🎉",
+      message: `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
+      type: 'success',
+      date: new Date().toISOString(),
+      isRead: false
+    };
 
     // Send notification to member
-    sendNotificationToMember(
-      loan.memberId,
-      "Loan Approved! 🎉",
-      `Your loan application for ${formatCurrency(loan.amount)} has been approved. The funds will be processed shortly.`,
-      'success'
-    );
+    saveMemberNotification(memberNotification);
 
     toast({
       title: "Loan Approved",
@@ -162,38 +138,49 @@ const LoanManagement = () => {
           }
         : loan
     );
+    updateLoanRequest(loanId, { ...loan, status: 'rejected', processedDate: new Date().toISOString(), processedBy: user.name });
     saveLoanRequests(updatedRequests);
-    
-    // Add to admin activities
-    addToAdminActivities({
-      id: Date.now() + Math.random(),
+
+    // Create admin activity
+    const adminActivity: AdminActivityLog = {
+    id: Date.now() + Math.random(),
       timestamp: getNowString(),
       type: "loan_rejected",
-      text: `Rejected loan request from "${loan.memberName}" for ${formatCurrency(loan.amount)}`,
+      text: `Rejected loan request of ${formatCurrency(loan.amount)} for "${loan.memberName}"`,
       color: "red",
-      adminName: "Admin",
-      adminEmail: "admin@islamify.org",
-      adminRole: "admin",
-    });
+      adminName: user.name,
+      adminEmail: user.email,
+      adminRole: user.role,
+    };
+    // Save admin activity
+    saveAdminRecentActivity(adminActivity);
 
-    // Add to member activities
-    addToMemberActivities({
-      type: "loan_rejected",
+    // Create member activity
+    const memberActivity: MemberLoanActivity = {
+      type: "loan_rejection",
       amount: loan.amount,
       memberId: loan.memberId,
       memberName: loan.memberName,
       date: new Date().toISOString(),
-      performedBy: "Admin",
+      performedBy: user.name,
       description: `Loan application rejected`,
-    });
+    };
 
-    // Send notification to member
-    sendNotificationToMember(
-      loan.memberId,
-      "Loan Application Update",
-      `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
-      'warning'
-    );
+    // Save member activity
+    saveMemberLoanActivity(memberActivity);
+
+    // Create notification for the member
+    const memberNotification: IslamifyMemberNotification = {
+      id: Date.now(),
+      memberId: loan.memberId,
+      title: "Loan Application Update",
+      message: `Your loan application for ${formatCurrency(loan.amount)} has been reviewed and unfortunately could not be approved at this time. Please contact the admin for more details.`,
+      type: 'warning',
+      date: new Date().toISOString(),
+      isRead: false
+    };
+    // Save notification to member
+    saveMemberNotification(memberNotification);
 
     toast({
       title: "Loan Rejected",

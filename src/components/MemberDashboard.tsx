@@ -13,7 +13,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import MembersPage from "./member/MembersPage";
 import { useToast } from "@/hooks/use-toast";
-import { readMembers } from "../utils/membersStorage";
+import { readMembersFromStorage } from "../utils/membersStorage";
 import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
@@ -22,6 +22,9 @@ import {
 	AppSettings,
 	initializeSettings,
 } from "../utils/settingsStorage";
+import { getTotalMemberContributions } from "@/utils/contributionStorage";
+import { LoanRequest } from "@/types/types";
+import { getLoanRequestsByMemberId } from "@/utils/loanStorage";
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 const LOANS_STORAGE_KEY = "islamify_loan_requests";
@@ -31,17 +34,19 @@ const MemberDashboard = ({ user, onLogout }) => {
 	const [activeTab, setActiveTab] = useState<string>("dashboard");
 	const [members, setMembers] = useState([]);
 	const [showLoanModal, setShowLoanModal] = useState(false);
-	const [memberLoans, setMemberLoans] = useState([]);
+	const [memberLoans, setMemberLoans] = useState<LoanRequest[]>([]);
 	const [settings, setSettings] = useState<AppSettings>(getSettings());
+	const [totalContributions, setTotalContributions] = useState<number>(0);
+
 
 	// Store all activities for this member (contributions history)
 	const [memberActivities, setMemberActivities] = useState([]);
 
 	useEffect(() => {
-		setMembers(readMembers());
+		setMembers(readMembersFromStorage());
 	}, []);
 
-	// Listen for settings changes
+			// Listen for settings changes
 	useEffect(() => {
 		const handleSettingsChange = (event: CustomEvent) => {
 			setSettings(event.detail);
@@ -62,13 +67,9 @@ const MemberDashboard = ({ user, onLogout }) => {
 	// Load member's loans
 	useEffect(() => {
 		try {
-			const storedLoans = localStorage.getItem(LOANS_STORAGE_KEY);
+			const storedLoans: LoanRequest[] = getLoanRequestsByMemberId(user.id);
 			if (storedLoans) {
-				const allLoans = JSON.parse(storedLoans);
-				const userLoans = allLoans.filter(
-					(loan) => loan.memberId === user.id
-				);
-				setMemberLoans(userLoans);
+				setMemberLoans(storedLoans);
 			}
 		} catch (error) {
 			console.error("Error loading member loans:", error);
@@ -81,41 +82,17 @@ const MemberDashboard = ({ user, onLogout }) => {
 	// Fetch member's real contributions from localStorage recent activities
 	useEffect(() => {
 		try {
-			const storedActivities = localStorage.getItem(
-				ACTIVITY_LOCALSTORAGE_KEY
-			);
-			if (storedActivities) {
-				const allActivities = JSON.parse(storedActivities);
-				// DEBUG: Log all activities found for inspection
-				console.log("All islamify_recent_activities:", allActivities);
-				// Only contributions for this member (works for both regular members and admins)
-				const filtered = allActivities.filter(
-					(a) =>
-						a.type === "contribution" &&
-						typeof a.memberId === "number" &&
-						a.memberId === user.id
-				);
-				// DEBUG: Log activities filtered for this user
-				console.log(
-					"Filtered activities for member",
-					user.id,
-					filtered
-				);
-				setMemberActivities(filtered);
+			const contributions:number = getTotalMemberContributions(user.id);
+			if (contributions) {
+				setTotalContributions(contributions);
 			} else {
-				setMemberActivities([]);
+				setTotalContributions(0);
 			}
 		} catch (err) {
-			console.log("Failed to read member activities", err);
-			setMemberActivities([]);
+			setTotalContributions(0);
 		}
 	}, [user.id, activeTab]);
 
-	// Always use sum from activities for display, to match what admin wrote
-	const totalContributions = memberActivities.reduce(
-		(sum, a) => sum + (a.amount || 0),
-		0
-	);
 
 	// Use settings for registration fee and loan multiplier
 	const registrationFee = settings.registrationFee;
@@ -264,6 +241,7 @@ const MemberDashboard = ({ user, onLogout }) => {
 							<LoanApplication
 								memberId={user.id.toString()}
 								memberName={user.name}
+								memberEmail={user.email}
 								maxAmount={maxLoanAmount}
 								maxLoanMultiplier={settings.maxLoanMultiplier}
 								onSubmit={(data) => {

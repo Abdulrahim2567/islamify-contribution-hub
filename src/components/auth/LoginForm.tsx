@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock } from "lucide-react";
+import { Member } from "@/types/types";
 
 interface LoginFormProps {
-  users: any[];
-  onLogin: (user: any) => void;
-  onRequirePasswordChange: (user: any) => void;
+  users: Member[];
+  onLogin: (user: Member) => void;
+  onRequirePasswordChange: (user: Member) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toast: any;
 }
 
@@ -142,10 +144,6 @@ const LoginForm = ({
             <p>
               <span className="font-medium text-blue-700">Admin:</span>&nbsp;
               admin@islamify.org / admin123
-            </p>
-            <p>
-              <span className="font-medium text-blue-700">Member:</span>&nbsp;
-              member@islamify.org / member123
             </p>
           </div>
         </CardContent>

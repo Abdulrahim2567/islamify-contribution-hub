@@ -19,15 +19,10 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { Contribution } from "@/types/types";
 
-interface ContributionRecord {
-  type: "contribution";
-  amount: number;
-  memberId: number;
+interface ContributionRecord extends Contribution {
   memberName: string;
-  date: string;
-  performedBy: string;
-  description?: string;
 }
 
 interface ContributionsTableProps {
@@ -79,7 +74,7 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
                 <TableCell className="text-emerald-600 font-semibold">{rec.amount.toLocaleString()}</TableCell>
                 <TableCell className="text-gray-700">{new Date(rec.date).toLocaleDateString()}</TableCell>
                 <TableCell className="text-gray-600">{rec.description || "-"}</TableCell>
-                <TableCell className="text-gray-600">{rec.performedBy}</TableCell>
+                <TableCell className="text-gray-600">{rec.editedBy}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
@@ -143,7 +138,7 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
                 )}
                 
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium">Performed by:</span> {rec.performedBy}
+                  <span className="font-medium">Performed by:</span> {rec.editedBy}
                 </div>
                 
                 <div className="flex gap-2 pt-2">

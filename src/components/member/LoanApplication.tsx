@@ -1,94 +1,119 @@
-
-import React, { useState } from 'react';
-import { CreditCard, X } from 'lucide-react';
-import { formatCurrency } from '../../utils/calculations';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { CreditCard, X } from "lucide-react";
+import { formatCurrency } from "../../utils/calculations";
+import { useToast } from "@/hooks/use-toast";
+import { AdminActivityLog, LoanRequest, MemberLoanActivity } from "@/types/types";
+import { saveLoanRequest } from "@/utils/loanStorage";
+import { saveAdminRecentActivity, saveMemberLoanActivity } from "@/utils/recentActivities";
 
 interface LoanApplicationProps {
-  memberId: string;
-  memberName: string;
-  maxAmount: number;
-  maxLoanMultiplier?: number;
-  onSubmit: (data: {
-    amount: number;
-    purpose: string;
-  }) => void;
-  onCancel: () => void;
-}
-
-const LOANS_STORAGE_KEY = 'islamify_loan_requests';
+	memberId: string;
+	memberName: string;
+	memberEmail?: string; // Optional, can be set later
+	maxAmount: number;
+	maxLoanMultiplier?: number;
+	onSubmit: (data: { amount: number; purpose: string }) => void;
+	onCancel: () => void;
+};
 
 const LoanApplication: React.FC<LoanApplicationProps> = ({
-  memberId,
-  memberName,
-  maxAmount,
-  maxLoanMultiplier,
-  onSubmit,
-  onCancel,
+	memberId,
+	memberName,
+	memberEmail,
+	maxAmount,
+	maxLoanMultiplier,
+	onSubmit,
+	onCancel,
 }) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    amount: '',
-    reason: '',
-  });
+	const { toast } = useToast();
+	const [formData, setFormData] = useState({
+		amount: "",
+		reason: "",
+	});
 
-  const amount = parseFloat(formData.amount) || 0;
+	const amount = parseFloat(formData.amount) || 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (amount <= 0 || amount > maxAmount) {
-      toast({
-        title: "Invalid Amount",
-        description: `Please enter an amount between 1 and ${formatCurrency(maxAmount)}`,
-        variant: "destructive",
-      });
-      return;
-    }
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
 
-    // Create loan request object
-    const loanRequest = {
-      id: Date.now().toString(),
-      memberId: parseInt(memberId),
-      memberName,
-      amount,
-      purpose: formData.reason,
-      requestDate: new Date().toISOString(),
-      status: 'pending' as const
-    };
+		if (amount <= 0 || amount > maxAmount) {
+			toast({
+				title: "Invalid Amount",
+				description: `Please enter an amount between 1 and ${formatCurrency(
+					maxAmount
+				)}`,
+				variant: "destructive",
+			});
+			return;
+		}
 
-    // Save to localStorage
-    try {
-      const existingRequests = JSON.parse(localStorage.getItem(LOANS_STORAGE_KEY) || '[]');
-      const updatedRequests = [loanRequest, ...existingRequests];
-      localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(updatedRequests));
-    } catch (error) {
-      console.error('Error saving loan request:', error);
-    }
+		// Create loan request object
+		const loanRequest: LoanRequest = {
+			id: Date.now().toString(),
+			date: new Date().toISOString(),
+			dueDate: undefined, // Optional, can be set later
+			paymentInterval: undefined, // Optional, can be set later
+			paymentIntervalAmount: undefined, // Optional, can be set later
+			nextPaymentDate: undefined, // Optional, can be set later
+			nextPaymentAmount: undefined, // Optional, can be set later
+			memberId: parseInt(memberId),
+			memberName,
+			amount,
+			purpose: formData.reason,
+			requestDate: new Date().toISOString(),
+			status: "pending" as const,
+		};
 
-    // Add to member activities
-    try {
-      const memberActivities = JSON.parse(localStorage.getItem('islamify_recent_activities') || '[]');
-      const memberActivity = {
-        type: "loan_request",
-        amount,
-        memberId: parseInt(memberId),
-        memberName,
-        date: new Date().toISOString(),
-        performedBy: memberName,
-        description: formData.reason,
-      };
-      const updatedMemberActivities = [memberActivity, ...memberActivities];
-      localStorage.setItem('islamify_recent_activities', JSON.stringify(updatedMemberActivities));
-    } catch (error) {
-      console.error('Error saving member activity:', error);
-    }
+		// Save to localStorage
+		saveLoanRequest(loanRequest);
 
-    onSubmit({ amount, purpose: formData.reason });
-    setFormData({ amount: '', reason: '' });
-  };
+		// Add to member activities
+		try {
 
-  return (
+			const memberActivity: MemberLoanActivity = {
+				type: "loan_request",
+				amount,
+				memberId: parseInt(memberId),
+				memberName,
+				date: new Date().toISOString(),
+				performedBy: memberName,
+				description: formData.reason,
+			};
+
+			saveMemberLoanActivity(memberActivity);
+			// Optionally, you can also save the activity to the admin activities
+			const adminActivity: AdminActivityLog = {
+				id: Date.now() + Math.random(),
+				timestamp: new Date().toISOString(),
+				type: "loan_request",
+				text: `Loan request of ${formatCurrency(amount)} XAF submitted by ${memberName}.`,
+				color: "blue",
+				adminName: memberName,
+				adminEmail: memberEmail,
+				adminRole: "member",
+				memberId: parseInt(memberId),
+			};
+			saveAdminRecentActivity(adminActivity);
+
+			toast({
+				title: "Loan Request Submitted",
+				description: `Your loan request of ${formatCurrency(amount)} XAF has been submitted successfully.`,
+				variant: "default",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to submit your loan request. Please try again.",
+				variant: "destructive",
+			});
+			return;
+		}
+
+		onSubmit({ amount, purpose: formData.reason });
+		setFormData({ amount: "", reason: "" });
+	};
+
+	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
 			<div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in relative">
 				<button
@@ -182,7 +207,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 				</form>
 			</div>
 		</div>
-  );
+	);
 };
 
 export default LoanApplication;

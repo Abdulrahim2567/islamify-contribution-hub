@@ -4,22 +4,17 @@ import { Coins, FileText, Check, DollarSign } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Contribution } from "@/types/types";
 
-interface ContributionRecord {
-  type: "contribution";
-  amount: number;
-  memberId: number;
+interface ContributionRecord extends Contribution {
   memberName: string;
-  date: string;
-  performedBy: string;
-  description?: string;
 }
 
 interface EditContributionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   record: ContributionRecord | null;
-  onSave: (updated: ContributionRecord) => void;
+  onSave: (updated: ContributionRecord, oldRecord: ContributionRecord) => void;
 }
 
 const EditContributionDialog: React.FC<EditContributionDialogProps> = ({
@@ -30,12 +25,16 @@ const EditContributionDialog: React.FC<EditContributionDialogProps> = ({
 }) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [oldRecord, setOldRecord] = useState<ContributionRecord | null>(null);
   useEffect(() => {
     if (record) {
       setAmount(record.amount.toString());
       setDescription(record.description || "");
+      setOldRecord({ ...record }); // Store a copy of the original record
     }
   }, [record]);
+  
+
   if (!record) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,7 +45,7 @@ const EditContributionDialog: React.FC<EditContributionDialogProps> = ({
       amount: Number(amount),
       description,
     };
-    onSave(updated);
+    onSave(updated, oldRecord!);
     onOpenChange(false);
   };
 

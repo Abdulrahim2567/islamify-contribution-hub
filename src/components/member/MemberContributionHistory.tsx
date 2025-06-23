@@ -2,20 +2,14 @@
 import { useState, useEffect } from "react";
 import { CreditCard, TrendingUp, User, History, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ContributionRecordActivity } from "@/types/types";
+import { getAllContributionsActivitiesForMember, getMemberContributionActivities } from "@/utils/recentActivities";
 
-const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
+const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities_contributions";
 const PER_PAGE = 10;
 
 // Activity type used in admin dashboard
-interface Activity {
-  type: "contribution" | string;
-  amount?: number;
-  memberId?: number;
-  memberName?: string;
-  date: string;
-  performedBy?: string;
-  description?: string;
-}
+type Activity = ContributionRecordActivity
 
 interface MemberContributionHistoryProps {
   memberId: number;
@@ -28,15 +22,14 @@ const MemberContributionHistory = ({ memberId, memberName }: MemberContributionH
   const [isLoading, setIsLoading] = useState(true);
 
   // Load activities from localStorage
-  const loadActivities = () => {
+  const loadActivities = (memberId: number) => {
     setIsLoading(true);
     try {
-      const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
+      const stored = getAllContributionsActivitiesForMember(memberId);
       console.log("Loading activities from localStorage:", stored);
       if (stored) {
-        const parsedActivities = JSON.parse(stored);
-        console.log("Parsed activities:", parsedActivities);
-        setActivities(parsedActivities);
+        console.log("Parsed activities:", stored);
+        setActivities(stored);
       } else {
         setActivities([]);
       }
@@ -48,14 +41,14 @@ const MemberContributionHistory = ({ memberId, memberName }: MemberContributionH
   };
 
   useEffect(() => {
-    loadActivities();
-  }, []);
+    loadActivities(memberId);
+  }, [memberId]);
 
   // Listen for storage changes to refresh data
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === ACTIVITY_LOCALSTORAGE_KEY) {
-        loadActivities();
+        loadActivities(memberId);
       }
     };
 
@@ -65,17 +58,8 @@ const MemberContributionHistory = ({ memberId, memberName }: MemberContributionH
 
   // Filter for contributions for THIS member only (type: contribution && memberId matches)
   const filtered = activities
-    .filter(
-      (activity) => {
-        const isContribution = activity.type === "contribution";
-        const matchesMember = typeof activity.memberId === "number" && activity.memberId === memberId;
-        console.log("Filtering activity:", activity, "isContribution:", isContribution, "matchesMember:", matchesMember);
-        return isContribution && matchesMember;
-      }
-    )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  console.log("Filtered contributions for member", memberId, ":", filtered);
 
   const totalCount = filtered.length;
   const maxPage = Math.max(1, Math.ceil(totalCount / PER_PAGE));
@@ -88,7 +72,7 @@ const MemberContributionHistory = ({ memberId, memberName }: MemberContributionH
         <History className="w-6 h-6 text-green-700" />
         <h2 className="font-bold text-lg text-gray-800">Contribution History</h2>
         <button
-          onClick={loadActivities}
+          onClick={() => loadActivities(memberId)}
           className="ml-auto p-1 hover:bg-gray-100 rounded-full transition-colors"
           title="Refresh contributions"
         >
@@ -130,10 +114,10 @@ const MemberContributionHistory = ({ memberId, memberName }: MemberContributionH
                   {activity.description ? activity.description + " • " : ""}
                   {new Date(activity.date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                 </div>
-                {activity.performedBy && (
+                {activity.addedBy   && (
                   <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                     <User className="w-3.5 h-3.5 text-gray-400" />
-                    By <span className="font-medium ml-0.5">{activity.performedBy || "Admin"}</span>
+                    By <span className="font-medium ml-0.5">{activity.addedBy || "Admin"}</span>
                   </div>
                 )}
               </div>

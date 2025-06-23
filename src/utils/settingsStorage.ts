@@ -35,6 +35,7 @@ export const saveSettings = (settings: AppSettings): void => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     // Dispatch a custom event to notify other components of settings changes
     window.dispatchEvent(new CustomEvent('settingsChanged', { detail: settings }));
+
     console.log('Settings saved:', settings);
   } catch (error) {
     console.error('Error saving settings:', error);

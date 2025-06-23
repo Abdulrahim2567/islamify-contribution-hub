@@ -1,22 +1,29 @@
-
 import React, { useState, useEffect } from "react";
-import { X, Check, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Plus } from "lucide-react";
-import { Member } from "./types";
-import { readMembers } from "../../utils/membersStorage";
+import {
+	X,
+	Check,
+	ChevronLeft,
+	ChevronRight,
+	ArrowRight,
+	ArrowLeft,
+	Plus,
+} from "lucide-react";
+import { Member } from "../../types/types";
+import { readMembersFromStorage } from "../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
 import ContributionFormStep from "./AddContributionStepper/ContributionFormStep";
 
 interface AddContributionStepperProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  members: Member[]; // unused now
-  onSubmit: (data: {
-    memberId: number;
-    amount: number;
-    type: "contribution";
-    date: string;
-    description?: string;
-  }) => void;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	members: Member[]; // unused now
+	onSubmit: (data: {
+		memberId: number;
+		amount: number;
+		type: "contribution";
+		date: string;
+		description?: string;
+	}) => void;
 }
 
 const PAGE_SIZE = 6;
@@ -24,93 +31,98 @@ const PAGE_SIZE = 6;
 const DEMO_ADMIN_EMAIL = "admin@islamify.org";
 
 const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
-  open,
-  onOpenChange,
-  members: _propMembers, // ignore propMembers
-  onSubmit,
+	open,
+	onOpenChange,
+	members: _propMembers, // ignore propMembers
+	onSubmit,
 }) => {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [page, setPage] = useState(0);
-  const [formData, setFormData] = useState({ amount: "", description: "" });
-  const [localMembers, setLocalMembers] = useState<Member[]>([]);
+	const [step, setStep] = useState<1 | 2>(1);
+	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+	const [page, setPage] = useState(0);
+	const [formData, setFormData] = useState({ amount: "", description: "" });
+	const [localMembers, setLocalMembers] = useState<Member[]>([]);
 
-  useEffect(() => {
-    if (open) {
-      // Only get members from localStorage. If empty, insert only demo admin.
-      const freshMembers = readMembers();
-      // Only demo admin user if no other persisted members
-      if (!freshMembers || freshMembers.length === 0) {
-        setLocalMembers([
-          {
-            id: 1,
-            name: "Admin User",
-            email: DEMO_ADMIN_EMAIL,
-            phone: "",
-            registrationFee: 0,
-            totalContributions: 0,
-            isActive: true,
-            loanEligible: false,
-            joinDate: (new Date()).toISOString().split("T")[0],
-            role: "admin",
-          },
-        ]);
-      } else {
-        setLocalMembers(freshMembers);
-      }
-    }
-  }, [open]);
+	useEffect(() => {
+		if (open) {
+			// Only get members from localStorage. If empty, insert only demo admin.
+			const freshMembers = readMembersFromStorage();
+			// Only demo admin user if no other persisted members
+			if (!freshMembers || freshMembers.length === 0) {
+				setLocalMembers([
+					{
+						id: 1,
+						name: "Admin User",
+						email: DEMO_ADMIN_EMAIL,
+						phone: "",
+						registrationFee: 0,
+						totalContributions: 0,
+						isActive: true,
+						loanEligible: false,
+						joinDate: new Date().toISOString().split("T")[0],
+						role: "admin",
+						password: "",
+						needsPasswordChange: false
+					},
+				]);
+			} else {
+				setLocalMembers(freshMembers);
+			}
+		}
+	}, [open]);
 
-  // Only non-admins selectable for contributions
-  const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
-  const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
+	// Only non-admins selectable for contributions
+	const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
+	const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 
-  const handleSelectMember = (member: Member) => {
-    setSelectedMember(member);
-  };
+	const handleSelectMember = (member: Member) => {
+		setSelectedMember(member);
+	};
 
-  const handleNext = () => {
-    if (selectedMember) setStep(2);
-  };
+	const handleNext = () => {
+		if (selectedMember) setStep(2);
+	};
 
-  const handleBack = () => {
-    setStep(1);
-  };
+	const handleBack = () => {
+		setStep(1);
+	};
 
-  const handleClose = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      setStep(1);
-      setSelectedMember(null);
-      setFormData({ amount: "", description: "" });
-      setPage(0);
-    }, 250);
-  };
+	const handleClose = () => {
+		onOpenChange(false);
+		setTimeout(() => {
+			setStep(1);
+			setSelectedMember(null);
+			setFormData({ amount: "", description: "" });
+			setPage(0);
+		}, 250);
+	};
 
-  const handleFormDataChange = (data: { amount: string; description: string }) => {
-    setFormData(data);
-  };
+	const handleFormDataChange = (data: {
+		amount: string;
+		description: string;
+	}) => {
+		setFormData(data);
+	};
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedMember) return;
-    onSubmit({
-      memberId: selectedMember.id,
-      amount: parseFloat(formData.amount),
-      type: "contribution",
-      date: new Date().toISOString(),
-      description: formData.description || undefined,
-    });
-    setFormData({ amount: "", description: "" });
-    setSelectedMember(null);
-    setStep(1);
-    setPage(0);
-    onOpenChange(false);
-  };
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!selectedMember) return;
+		onSubmit({
+			memberId: selectedMember.id,
+			amount: parseFloat(formData.amount),
+			type: "contribution",
+			date: new Date().toISOString(),
+			description: formData.description || undefined,
+		});
+		setFormData({ amount: "", description: "" });
+		setSelectedMember(null);
+		setStep(1);
+		setPage(0);
+		onOpenChange(false);
+	};
 
-  if (!open) return null;
+	if (!open) return null;
 
-  return (
+	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
 			<div
 				className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col relative overflow-hidden"
@@ -283,7 +295,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 				</div>
 			</div>
 		</div>
-  );
+	);
 };
 
 export default AddContributionStepper;

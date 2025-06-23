@@ -3,22 +3,50 @@ import { Save } from "lucide-react";
 import React from "react";
 import { useToast } from "@/hooks/use-toast";
 import { saveSettings, AppSettings } from "../../utils/settingsStorage";
+import { AdminActivityLog, Member } from "@/types/types";
+import { saveAdminRecentActivity } from "@/utils/recentActivities";
 
 interface AdminSettingsFormProps {
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+  member:Member
 }
 
 const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
   settings,
   setSettings,
+  member
 }) => {
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const getNowString = () => {
+		const d = new Date();
+		return d.toLocaleString(undefined, {
+			dateStyle: "medium",
+			timeStyle: "short",
+		});
+	};
     try {
       saveSettings(settings);
+
+      //activity log
+      const editSettings: AdminActivityLog = {
+        id: Date.now() + Math.random(),
+        timestamp: getNowString(),
+        type: "edit_member",
+        text: `Updated settings for "${settings.associationName}"`,
+        color: "emerald",
+        adminName: member.name,
+        adminEmail: member.email,
+        adminRole: member.role,
+        memberId: member.id, // Include member ID for reference
+      };
+
+      // Save the activity log to localStorage or wherever you store it
+      saveAdminRecentActivity(editSettings);
+
       toast({
         title: "Settings Saved",
         description: "Your settings have been updated successfully.",

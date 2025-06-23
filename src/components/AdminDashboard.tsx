@@ -1,25 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { LogOut, Users, Plus, Search, Eye, UserCheck, DollarSign, UserX, Trash2, ToggleLeft, ToggleRight, Settings, Grid, List, Mail, Phone, User, Shield, CreditCard, TrendingUp, X, Save, History } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
+import {
+	Search,
+	DollarSign,
+	Grid,
+	List,
+	User,
+	CreditCard,
+
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { AccentColorToggle } from "@/components/ui/AccentColorToggle";
 import { useTheme } from "@/components/ui/ThemeProvider";
 import MemberCard from "./admin/MemberCard";
 import MemberTable from "./admin/MemberTable";
 import MemberDetailModal from "./admin/MemberDetailModal";
 import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import SuccessModal from "./admin/SuccessModal";
-import type { Member } from "./admin/types";
+import type {
+	Contribution,
+	ContributionRecordActivity,
+	Member,
+} from "../types/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
-import { readMembers, writeMembers } from "../utils/membersStorage";
+import { addMemberToStorage, deleteMemberFromStorage, readMembersFromStorage, updateMemberActiveStatus, updateMemberInfo, updateMemberLoanEligibility, updateMemberRole, writeMembersToStorage } from "../utils/membersStorage";
 import AdminStatsCards from "./admin/AdminStatsCards";
 import AdminRecentActivity from "./admin/AdminRecentActivity";
 import AdminSettingsForm from "./admin/AdminSettingsForm";
@@ -27,54 +38,84 @@ import AdminContributionsTable from "./admin/AdminContributionsTable";
 import LoanApplication from "./member/LoanApplication";
 import LoanManagement from "./admin/LoanManagement";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationPrevious,
+	PaginationNext,
 } from "@/components/ui/pagination";
 import { formatCurrency } from "../utils/calculations";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+	SidebarProvider,
+	SidebarInset,
+	SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { set } from 'date-fns';
 import { initializeSettings, getSettings } from "../utils/settingsStorage";
+import { AdminActivityLog } from "../types/types";
+import { addContribution, getContributions, getTotalContributions, getTotalMemberContributions } from "@/utils/contributionStorage";
+import {
+	getAdminRecentActivities,
+	saveMemberContributionActivity,
+} from "@/utils/recentActivities";
+import { getTotalRegistrationFees } from "@/utils/registrationFees";
 
 // Add this type for the new member state
 type NewMember = {
-  name: string;
-  email: string;
-  phone: string;
-  role: "member" | "admin";
+	name: string;
+	email: string;
+	phone: string;
+	role: "member" | "admin";
 };
 
-const USERS_LOCALSTORAGE_KEY = 'islamify_users';
-const ACTIVITY_LOCALSTORAGE_KEY = 'islamify_admin_activities';
+const ACTIVITY_LOCALSTORAGE_KEY = "islamify_admin_recent_activities";
 
-// Helper to update users in localStorage (also called by Index)
-function persistUsers(users) {
-  localStorage.setItem(USERS_LOCALSTORAGE_KEY, JSON.stringify(users));
-}
-
-function readActivities() {
-  try {
-    const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-function writeActivities(activities: any[]) {
-  localStorage.setItem(ACTIVITY_LOCALSTORAGE_KEY, JSON.stringify(activities));
-}
 
 const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
+	const [members, setMembers] = useState<Member[]>([]);
+	const [activeTab, setActiveTab] = useState("dashboard");
+	const [searchTerm, setSearchTerm] = useState("");
+	const [showRegisterModal, setShowRegisterModal] = useState(false);
+	const [showSuccessModal, setShowSuccessModal] = useState(false);
+	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+	const [viewMode, setViewMode] = useState("table"); // 'table' or 'card'
+	const [newMember, setNewMember] = useState<NewMember>({
+		name: "",
+		email: "",
+		phone: "",
+		role: "member",
+	});
+	const [generatedPassword, setGeneratedPassword] = useState("");
+	const [showContributionModal, setShowContributionModal] = useState(false);
+	const [targetMemberId, setTargetMemberId] = useState<number | null>(null);
+	const [settings, setSettings] = useState(getSettings());
+	const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
+	const [activityPage, setActivityPage] = useState(1);
+	const perPage = 10;
+	const [showLoanModal, setShowLoanModal] = useState(false);
+	const [membersPage, setMembersPage] = useState(1);
+	const [membersPerPage, setMembersPerPage] = useState(12);
+	const { toast } = useToast();
+	const [showAddContributionStepper, setShowAddContributionStepper] =
+		useState(false);
+	// Retrieve from localStorage only on mount
+	const [activities, setActivities] = useState<AdminActivityLog[]>(() => {
+		try {
+			return getAdminRecentActivities();
+		} catch {
+			return [];
+		}
+	});
+
 	// Always load members from localStorage. If empty, create/save DEMO_ADMIN as sole member.
 	const DEMO_ADMIN_MEMBER: Member = {
 		id: 1,
 		name: "Admin User",
 		email: "admin@islamify.org",
-		phone: "",
+		phone: "677947823",
+		password: "admin123", // Default password for demo
+		needsPasswordChange: false, // must change password on first login
 		registrationFee: 0,
 		totalContributions: 0,
 		isActive: true,
@@ -83,28 +124,48 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		role: "admin",
 	};
 
-	const [members, setMembers] = useState<Member[]>([]);
-	const [activeTab, setActiveTab] = useState("dashboard");
-
 	useEffect(() => {
 		// On mount: get members from localStorage, fallback only to DEMO_ADMIN_MEMBER.
-		const loaded = readMembers();
+		const loaded = readMembersFromStorage();
 		if (loaded.length > 0) {
 			setMembers(loaded);
 		} else {
 			setMembers([DEMO_ADMIN_MEMBER]);
-			writeMembers([DEMO_ADMIN_MEMBER]);
+			writeMembersToStorage([DEMO_ADMIN_MEMBER]);
 		}
 	}, []);
 
 	useEffect(() => {
 		const syncMembers = () => {
-			const loaded = readMembers();
+			const loaded = readMembersFromStorage();
 			setMembers(loaded.length > 0 ? loaded : [DEMO_ADMIN_MEMBER]);
 		};
 		window.addEventListener("storage", syncMembers);
 		return () => window.removeEventListener("storage", syncMembers);
 	}, []);
+
+	// NEW: Add this useEffect to initialize settings on component mount
+	useEffect(() => {
+		initializeSettings();
+	}, []);
+
+	// Every time activities changes, update localStorage
+	useEffect(() => {
+		localStorage.setItem(
+			ACTIVITY_LOCALSTORAGE_KEY,
+			JSON.stringify(activities)
+		);
+	}, [activities]);
+
+	// Reset page when search changes
+	useEffect(() => {
+		setMembersPage(1);
+	}, [searchTerm, membersPerPage]);
+
+	//re-render component each time settings change
+	useEffect(() => {
+		setSettings(getSettings());
+	}, [settings.associationName, settings.registrationFee, settings.maxLoanMultiplier]);
 
 	// Helper to persist and update (never fallback to mock)
 	const persistAndSetMembers = (updateFn) => {
@@ -118,28 +179,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			const finalMembers = hasDemoAdmin
 				? updated
 				: [DEMO_ADMIN_MEMBER, ...updated];
-			writeMembers(finalMembers); // save to localStorage
 			return finalMembers;
 		});
 	};
-
-	// Retrieve from localStorage only on mount
-	const [activities, setActivities] = useState<any[]>(() => {
-		try {
-			const stored = localStorage.getItem(ACTIVITY_LOCALSTORAGE_KEY);
-			return stored ? JSON.parse(stored) : [];
-		} catch {
-			return [];
-		}
-	});
-
-	// Every time activities changes, update localStorage
-	useEffect(() => {
-		localStorage.setItem(
-			ACTIVITY_LOCALSTORAGE_KEY,
-			JSON.stringify(activities)
-		);
-	}, [activities]);
 
 	// Helper to always persist after updates (activities)
 	const persistAndSetActivities = (activityOrUpdateFn) => {
@@ -157,35 +199,6 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			return updated;
 		});
 	};
-
-	const [searchTerm, setSearchTerm] = useState("");
-	const [showRegisterModal, setShowRegisterModal] = useState(false);
-	const [showSuccessModal, setShowSuccessModal] = useState(false);
-	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-	const [viewMode, setViewMode] = useState("table"); // 'table' or 'card'
-	const [newMember, setNewMember] = useState<NewMember>({
-		name: "",
-		email: "",
-		phone: "",
-		role: "member",
-	});
-	const [generatedPassword, setGeneratedPassword] = useState("");
-	const [showContributionModal, setShowContributionModal] = useState(false);
-	const [targetMemberId, setTargetMemberId] = useState<number | null>(null);
-	const [settings, setSettings] = useState({
-		associationName: "Islamify",
-		registrationFee: 5000,
-		maxLoanMultiplier: 3,
-	});
-	const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
-	const [activityPage, setActivityPage] = useState(1);
-	const perPage = 10;
-	const [showLoanModal, setShowLoanModal] = useState(false);
-	const [membersPage, setMembersPage] = useState(1);
-	const [membersPerPage, setMembersPerPage] = useState(12);
-	const { toast } = useToast();
-	const [showAddContributionStepper, setShowAddContributionStepper] =
-		useState(false);
 
 	const generatePassword = () => {
 		const chars =
@@ -218,51 +231,34 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		setMembersPage(page);
 	};
 
-	// Reset page when search changes
-	useEffect(() => {
-		setMembersPage(1);
-	}, [searchTerm, membersPerPage]);
-
 	const handleRegisterMember = (e) => {
 		e.preventDefault();
 		const password = generatePassword();
 		const id = Date.now(); // Use timestamp for uniqueness
-		const member = {
+		const member: Member = {
 			id,
 			name: newMember.name,
 			email: newMember.email,
 			phone: newMember.phone,
+			password,
+			needsPasswordChange: true, // must change password on first login
 			role: newMember.role,
-			registrationFee: 5000,
+			registrationFee: settings.registrationFee,
 			totalContributions: 0,
 			isActive: true,
 			loanEligible: false,
 			joinDate: new Date().toISOString().split("T")[0],
 		};
+
 		persistAndSetMembers([...members, member]);
 
 		// Set the generated password BEFORE showing the success modal
 		setGeneratedPassword(password);
 
-		// Update localStorage users for login
-		let persistedUsers = [];
-		try {
-			const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
-			if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
-		} catch {}
-		// User for login should match Index.tsx login format
-		const loginUser = {
-			id,
-			email: newMember.email,
-			password,
-			role: newMember.role,
-			name: newMember.name,
-			needsPasswordChange: true, // must change password on first login
-		};
-		const updatedUsers = [...persistedUsers, loginUser];
-		persistUsers(updatedUsers);
-		// Optionally notify Index of user update (for state sync in SPA)
-		if (onNewUser) onNewUser([...users, loginUser]);
+		//add user to localStorage users
+		addMemberToStorage(member);
+
+		
 
 		// Close register modal first
 		setShowRegisterModal(false);
@@ -274,7 +270,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		setShowSuccessModal(true);
 
 		// Activity log with admin name/email
-		persistAndSetActivities({
+		const AdminActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
 			timestamp: getNowString(),
 			type: "add_member",
@@ -283,7 +279,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-		});
+			memberId: id, // Include member ID for reference
+		};
+		persistAndSetActivities(AdminActivity);
 
 		toast({
 			title: "Member Registered",
@@ -299,19 +297,24 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 					: member
 			)
 		);
+
 		const member = members.find((m) => m.id === id);
-		persistAndSetActivities({
+		updateMemberActiveStatus(id, !member.isActive);
+		const statusActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
 			timestamp: getNowString(),
 			type: "toggle_status",
 			text: `Changed status of "${member?.name}" to ${
-				member?.isActive ? "Inactive" : "Active"
+				member?.isActive ? "Active" : "Inactive"
 			}`,
 			color: "orange",
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-		});
+			memberId: id, // Include member ID for reference
+		};
+		persistAndSetActivities(statusActivity);
+
 		toast({
 			title: "Member Status Updated",
 			description: "Member status has been changed successfully",
@@ -327,18 +330,24 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			)
 		);
 		const member = members.find((m) => m.id === id);
-		persistAndSetActivities({
+		// Update loan eligibility in localStorage
+		updateMemberLoanEligibility(id, !member.loanEligible);
+		const loanEligibilityActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
 			timestamp: getNowString(),
-			type: "loan_eligibility",
+			type: "toggle_loan_eligibility",
 			text: `Changed loan eligibility for "${member?.name}" to ${
-				member?.loanEligible ? "Disabled" : "Enabled"
+				member?.loanEligible ? "Enabled" : "Disabled"
 			}`,
 			color: "indigo",
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-		});
+			memberId: id, // Include member ID for reference
+		};
+		// Add to activities
+		persistAndSetActivities(loanEligibilityActivity);
+
 		toast({
 			title: "Loan Eligibility Updated",
 			description:
@@ -348,130 +357,41 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 
 	const deleteMember = (id) => {
 		const member = members.find((m) => m.id === id);
-		if (
-			window.confirm(
-				`Are you sure you want to delete ${member?.name}? This action cannot be undone.`
-			)
-		) {
-			persistAndSetMembers((members) =>
-				members.filter((member) => member.id !== id)
-			);
-			persistAndSetActivities({
-				id: Date.now() + Math.random(),
-				timestamp: getNowString(),
-				type: "delete_member",
-				text: `Deleted member "${member?.name}"`,
-				color: "red",
-				adminName: user.name,
-				adminEmail: user.email,
-				adminRole: user.role,
-			});
-			toast({
-				title: "Member Deleted",
-				description: "Member has been removed from the system",
-				variant: "destructive",
-			});
-		}
+
+		persistAndSetMembers((members) =>
+			members.filter((member) => member.id !== id)
+		);
+
+		deleteMemberFromStorage(id);
+
+		const deleteActivity: AdminActivityLog = {
+			id: Date.now() + Math.random(),
+			timestamp: getNowString(),
+			type: "delete_member",
+			text: `Deleted member "${member?.name}" (${member?.email})`,
+			color: "red",
+			adminName: user.name,
+			adminEmail: user.email,
+			adminRole: user.role,
+			memberId: id, // Include member ID for reference
+		};
+
+		persistAndSetActivities(deleteActivity);
+
+		toast({
+			title: "Member Deleted",
+			description: "Member has been removed from the system",
+			variant: "destructive",
+		});
 	};
-
-	// --- Calculate real contribution totals via activities ---
-	function getRealMemberContributions(memberId: number): number {
-		// Only count "contribution" type activities for this member
-		return activities
-			.filter(
-				(act) =>
-					act.type === "add_contribution" &&
-					typeof act.text === "string" &&
-					act.text.includes(
-						`"${members.find((m) => m.id === memberId)?.name}"`
-					)
-			)
-			.reduce((sum, act) => {
-				// Extract contribution from text: "Added contribution of 5,000 XAF for "John Doe"..."
-				const match = /contribution of ([\d,]+) XAF/.exec(act.text);
-				const amt = match ? parseInt(match[1].replace(/,/g, "")) : 0;
-				return sum + (isNaN(amt) ? 0 : amt);
-			}, 0);
-	}
-
-	// For all members: create a map, defaulting to 0 if none
-	const memberContributionMap = members.reduce((map, m) => {
-		map[m.id] = getRealMemberContributions(m.id);
-		return map;
-	}, {} as Record<number, number>);
 
 	const totalMembers = members.length;
 	const activeMembers = members.filter((m) => m.isActive).length;
 	const inactiveMembers = totalMembers - activeMembers;
-	const totalContributions = Object.values(memberContributionMap).reduce(
-		(sum, v) => sum + v,
-		0
-	);
-	const totalRegistrationFees = members.reduce(
-		(sum, m) => sum + m.registrationFee,
-		0
-	);
+	const totalContributions = getTotalContributions();
+	const totalRegistrationFees = getTotalRegistrationFees();
 
 	const { theme, accent } = useTheme();
-
-	// Helper for accent classes
-	const accentGradient =
-		accent === "blue"
-			? "from-blue-500 to-blue-700"
-			: accent === "indigo"
-			? "from-indigo-500 to-indigo-700"
-			: accent === "violet"
-			? "from-violet-500 to-violet-700"
-			: "from-emerald-500 to-emerald-700";
-
-	// Handle admin adding contribution to a member
-	const handleOpenAddContribution = () => {
-		setShowContributionModal(false);
-		setTargetMemberId(null);
-	};
-	const openContributionModalFor = (memberId: number) => {
-		setTargetMemberId(memberId);
-		setShowContributionModal(true);
-	};
-
-	const handleAddContribution = ({
-		amount,
-		description,
-	}: {
-		amount: number;
-		description?: string;
-	}) => {
-		if (!targetMemberId) return;
-		const member = members.find((m) => m.id === targetMemberId);
-		persistAndSetMembers((members) =>
-			members.map((m) =>
-				m.id === targetMemberId
-					? {
-							...m,
-							totalContributions: m.totalContributions + amount,
-					  }
-					: m
-			)
-		);
-		persistAndSetActivities({
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
-			type: "add_contribution",
-			text: `Added contribution of ${amount.toLocaleString()} XAF for "${
-				member?.name
-			}"${description ? ` (${description})` : ""}`,
-			color: "cyan",
-			adminName: user.name,
-			adminEmail: user.email,
-			adminRole: user.role,
-		});
-		setShowContributionModal(false);
-		setTargetMemberId(null);
-		toast({
-			title: "Contribution Added",
-			description: `Added ${amount.toLocaleString()} XAF contribution.`,
-		});
-	};
 
 	const handleAddContributionStepper = ({
 		memberId,
@@ -497,8 +417,9 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 					: m
 			)
 		);
+
 		// Log in admin activities
-		persistAndSetActivities({
+		const adminAddContributionActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
 			timestamp: getNowString(),
 			type: "add_contribution",
@@ -509,38 +430,39 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-		});
+			memberId: member.id, // Include member ID for reference
+		};
 
+		persistAndSetActivities(adminAddContributionActivity);
+
+		const newContribution: Contribution = {
+			id: Date.now() + Math.random(),
+			memberId,
+			amount,
+			date,
+			lastEdited: "",
+			description: description || "",
+			addedBy: user.name,
+			type: "contribution"
+		};
+		addContribution(newContribution);
 		// ------------ IMPORTANT PART: update islamify_recent_activities for member dashboards ------------
 
 		// Prepare activity object for member dashboard
-		const memberActivity = {
+		const memberContributionActivity: ContributionRecordActivity = {
+			id: Date.now() + Math.random(),
 			type: "contribution",
 			amount,
 			memberId,
 			memberName: member?.name || "",
 			date,
-			performedBy: user.name,
+			lastEdited: "",
+			editedBy: user.name,
 			description: description || "",
+			addedBy: user.name
 		};
-
-		// Read recent activities (as member dashboard expects)
-		const MEMBER_ACTIVITY_KEY = "islamify_recent_activities";
-		let recentActivities: any[] = [];
-		try {
-			const stored = localStorage.getItem(MEMBER_ACTIVITY_KEY);
-			if (stored) {
-				recentActivities = JSON.parse(stored);
-			}
-		} catch {
-			/* empty */
-		}
-		// Prepend new activity, keep to a max size if desired
-		recentActivities = [memberActivity, ...recentActivities];
-		localStorage.setItem(
-			MEMBER_ACTIVITY_KEY,
-			JSON.stringify(recentActivities)
-		);
+		// Save this activity to localStorage for member dashboard
+		saveMemberContributionActivity(memberContributionActivity);
 
 		// ------------ END IMPORTANT PART ------------
 
@@ -557,35 +479,23 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		persistAndSetMembers((members) =>
 			members.map((m) => (m.id === id ? { ...m, role: newRole } : m))
 		);
-
-		// Update user object in localStorage USERS_LOCALSTORAGE_KEY
-		let persistedUsers = [];
-		try {
-			const fromStorage = localStorage.getItem(USERS_LOCALSTORAGE_KEY);
-			if (fromStorage) persistedUsers = JSON.parse(fromStorage) || [];
-		} catch {}
 		// Find the member for the user
 		const member = members.find((m) => m.id === id);
+		updateMemberRole(id, newRole);
 		if (member) {
 			// Find the index of the user matching the member's email.
-			const updatedUsers = persistedUsers.map((u) =>
-				u.email === member.email || u.id === id
-					? { ...u, role: newRole }
-					: u
-			);
-			persistUsers(updatedUsers);
-			// Update parent state if needed (triggers re-render for login, etc)
-			if (onNewUser) onNewUser(updatedUsers);
-			persistAndSetActivities({
+			const roleChangeActivity: AdminActivityLog = {
 				id: Date.now() + Math.random(),
 				timestamp: getNowString(),
 				type: "change_role",
-				text: `Changed role for "${member.name}" to "${newRole}"`,
+				text: `Changed role for "${member.name}" (${member.email}) to ${newRole}`,
 				color: "amber",
 				adminName: user.name,
 				adminEmail: user.email,
 				adminRole: user.role,
-			});
+				memberId: id, // Include member ID for reference
+			};
+			persistAndSetActivities(roleChangeActivity);
 		}
 
 		toast({
@@ -602,7 +512,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 		persistAndSetMembers((members) =>
 			members.map((m) => (m.id === id ? { ...m, ...data } : m))
 		);
-		persistAndSetActivities({
+		updateMemberInfo(id, { ...data });
+
+		//create edit activity
+		const edit_member_activity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
 			timestamp: getNowString(),
 			type: "edit_member",
@@ -611,7 +524,11 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-		});
+			memberId: id, // Include member ID for reference
+		};
+		// Add to activities
+		persistAndSetActivities(edit_member_activity);
+
 		toast({
 			title: "Member Updated",
 			description: "Member details updated successfully",
@@ -647,18 +564,11 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 	// For loan, use sum of admin's contributions (like member dashboard logic)
 	const adminMemberId = thisAdminMember?.id ?? user.id;
 	// Fallback: If no member record, default contributions to 0
-	const adminContributions = thisAdminMember
-		? memberContributionMap[thisAdminMember.id] || 0
-		: 0;
+	const adminContributions = getTotalMemberContributions(adminMemberId) || 0;
 	const adminMaxLoanAmount = adminContributions * settings.maxLoanMultiplier;
 
 	// Allow admin to apply for loan if they are found as a member and eligible
 	const adminCanApplyForLoan = !!thisAdminMember?.loanEligible;
-
-	// NEW: Add this useEffect to initialize settings on component mount
-	useEffect(() => {
-		initializeSettings();
-	}, []);
 
 	return (
 		<SidebarProvider>
@@ -735,7 +645,10 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 										memberId={String(adminMemberId)}
 										memberName={
 											thisAdminMember?.name ||
-											user.name ||
+											user.name 
+										}
+										memberEmail={
+											thisAdminMember?.email ||
 											user.email
 										}
 										maxAmount={adminMaxLoanAmount}
@@ -1083,15 +996,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 									<>
 										<div className="min-h-[400px]">
 											<MemberTable
-												members={paginatedMembers.map(
-													(m) => ({
-														...m,
-														totalContributions:
-															memberContributionMap[
-																m.id
-															] || 0,
-													})
-												)}
+												members={members}
 												onView={setSelectedMember}
 												onStatusToggle={
 													toggleMemberStatus
@@ -1192,7 +1097,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 								</React.Suspense>
 							)}
 
-						{activeTab === "loans" && <LoanManagement />}
+						{activeTab === "loans" && <LoanManagement user={user} />}
 
 						{activeTab === "settings" && (
 							<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1208,6 +1113,7 @@ const AdminDashboard = ({ user, onLogout, onNewUser, users }) => {
 									<AdminSettingsForm
 										settings={settings}
 										setSettings={setSettings}
+										member={thisAdminMember}
 									/>
 								</div>
 							</div>

@@ -1,21 +1,27 @@
-
 import React, { useEffect, useState } from "react";
-import { User, ArrowLeft, ArrowRight, Users, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Member } from "../types";
+import {
+	User,
+	ArrowLeft,
+	ArrowRight,
+	Users,
+	ChevronLeft,
+	ChevronRight,
+} from "lucide-react";
+import type { Member } from "../../../types/types";
 
 const DEMO_ADMIN_EMAIL = "admin@islamify.org";
 const MEMBERS_KEY = "islamify_members";
 
 interface MemberSelectStepProps {
-  // We will not use the passed 'members' prop, instead always read from localStorage
-  members: Member[]; // unused now
-  selectedMember: Member | null;
-  onSelect: (member: Member) => void;
-  onNext: () => void;
-  page: number;
-  setPage: (page: number) => void;
-  totalPages: number;
-  hideControls?: boolean;
+	// We will not use the passed 'members' prop, instead always read from localStorage
+	members: Member[]; // unused now
+	selectedMember: Member | null;
+	onSelect: (member: Member) => void;
+	onNext: () => void;
+	page: number;
+	setPage: (page: number) => void;
+	totalPages: number;
+	hideControls?: boolean;
 }
 
 const PAGE_SIZE = 6;
@@ -25,39 +31,42 @@ const PAGE_SIZE = 6;
  * Do this on every render so dialog reflects the latest changes.
  */
 function getLocalMembers() {
-  try {
-    const data = localStorage.getItem(MEMBERS_KEY);
-    const members: Member[] = data ? JSON.parse(data) : [];
-    // Exclude only demo admin (by email), show everyone else
-    return members.filter(m => m.email !== DEMO_ADMIN_EMAIL);
-  } catch {
-    return [];
-  }
+	try {
+		const data = localStorage.getItem(MEMBERS_KEY);
+		const members: Member[] = data ? JSON.parse(data) : [];
+		// Exclude only demo admin (by email), show everyone else
+		return members.filter((m) => m.email !== DEMO_ADMIN_EMAIL);
+	} catch {
+		return [];
+	}
 }
 
 const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
-  // do not use members or totalPages prop
-  selectedMember,
-  onSelect,
-  onNext,
-  page,
-  setPage,
-  hideControls = false,
+	// do not use members or totalPages prop
+	selectedMember,
+	onSelect,
+	onNext,
+	page,
+	setPage,
+	hideControls = false,
 }) => {
-  const [localMembers, setLocalMembers] = useState<Member[]>([]);
+	const [localMembers, setLocalMembers] = useState<Member[]>([]);
 
-  useEffect(() => {
-    // Always get latest from localStorage on every mount or re-render
-    setLocalMembers(getLocalMembers());
-  }, [page]); // re-read if page changes (in case dialog stays open while members change)
+	useEffect(() => {
+		// Always get latest from localStorage on every mount or re-render
+		setLocalMembers(getLocalMembers());
+	}, [page]); // re-read if page changes (in case dialog stays open while members change)
 
-  // Freshly calculate paged members and totalPages anytime localMembers/page changes
-  const totalPages = Math.ceil(localMembers.length / PAGE_SIZE) || 2;
-  const pageMembers = localMembers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+	// Freshly calculate paged members and totalPages anytime localMembers/page changes
+	const totalPages = Math.ceil(localMembers.length / PAGE_SIZE) || 2;
+	const pageMembers = localMembers.slice(
+		page * PAGE_SIZE,
+		(page + 1) * PAGE_SIZE
+	);
 
-  const hasNoMembers = localMembers.length === 0;
+	const hasNoMembers = localMembers.length === 0;
 
-  return (
+	return (
 		<div
 			className={`
         transition-all duration-300 ease-in-out w-full px-6 pb-6
@@ -145,7 +154,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
 				</>
 			)}
 		</div>
-  );
+	);
 };
 
 export default MemberSelectStep;
