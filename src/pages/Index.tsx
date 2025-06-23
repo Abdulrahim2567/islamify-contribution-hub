@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
 	Card,
@@ -90,9 +91,18 @@ const Index = () => {
 	};
 
 	const handleLogout = () => {
+		// Prevent auto-scroll by maintaining current scroll position
+		const currentScrollY = window.scrollY;
+		
 		setIsLoggedIn(false);
 		setCurrentUser(null);
 		setShowPasswordChange(false);
+		
+		// Restore scroll position after state updates
+		setTimeout(() => {
+			window.scrollTo(0, currentScrollY);
+		}, 0);
+		
 		toast({
 			title: "Logged Out",
 			description: "You have been logged out successfully",
@@ -100,8 +110,16 @@ const Index = () => {
 	};
 
 	const handleLogin = (user: Member) => {
+		// Prevent auto-scroll during login
+		const currentScrollY = window.scrollY;
+		
 		setCurrentUser(user);
 		setIsLoggedIn(true);
+		
+		// Maintain scroll position
+		setTimeout(() => {
+			window.scrollTo(0, currentScrollY);
+		}, 0);
 	};
 
 	const requirePasswordChange = (user: Member) => {
@@ -177,7 +195,7 @@ const Index = () => {
 
 			{/* Hero Section */}
 			<div className="container mx-auto px-4 py-12">
-				<div className="text-center mb-12 animate-fade-in">
+				<div className="text-center mb-12">
 					<h2 className="text-4xl font-bold text-gray-800 mb-4">
 						Manage Your Association
 					</h2>

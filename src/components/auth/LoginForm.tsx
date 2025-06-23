@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -62,7 +63,7 @@ const LoginForm = ({
 
   return (
     <div className="flex items-center justify-center min-h-[440px] px-2">
-      <Card className="w-full max-w-md shadow-lg animate-scale-in">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="flex flex-col items-center pb-2">
           <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
             <LogIn className="w-8 h-8 text-white" />
