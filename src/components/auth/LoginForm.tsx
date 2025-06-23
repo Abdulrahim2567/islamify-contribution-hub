@@ -35,9 +35,6 @@ const LoginForm = ({
     const user = members.find(
       (u) => u.email === loginForm.email && u.password === loginForm.password
     );
-    window.addEventListener('scroll', () => {
-      console.log('Scrolled to', window.scrollY);
-    });
     
 
     if (user) {
