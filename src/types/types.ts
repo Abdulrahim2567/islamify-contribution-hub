@@ -51,11 +51,7 @@ export interface Contribution {
   type: "contribution"
 }
 
-export interface RegistrationFees {
-  memberId: number;
-  amount: number;
-  date: string;
-}
+
 
 export interface ContributionRecordActivity extends Contribution {
   memberName: string;

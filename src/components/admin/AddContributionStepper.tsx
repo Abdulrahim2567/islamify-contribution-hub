@@ -198,7 +198,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 							</div>
 						</div>
 						{/* Text descriptions under each step */}
-						<div className="flex w-full justify-between px-1 max-w-xs text-xs font-medium select-none">
+						<div className="flex w-full justify-between px-1 pr-3 max-w-xs text-xs font-medium select-none">
 							<span
 								className={`transition-colors ${
 									step === 1

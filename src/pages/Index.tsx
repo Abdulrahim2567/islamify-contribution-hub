@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
 	Card,
@@ -22,6 +21,7 @@ import { Member } from "@/types/types";
 import { getSettings } from "@/utils/settingsStorage";
 import { add } from "date-fns";
 import { getNowString } from "@/utils/calculations";
+import { useMembers } from "@/hooks/useMembers";
 
 // Default admin user: always present as fallback if localstorage empty
 const DEMO_ADMIN: Member = {
@@ -57,7 +57,7 @@ function addAdminToMembers() {
 }
 
 const Index = () => {
-	const [users, setUsers] = useState<Member[]>([]);
+	const {members, addMember, updateMember} = useMembers();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [currentUser, setCurrentUser] = useState<Member | null>(null);
 	const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -68,15 +68,16 @@ const Index = () => {
 
 	// On mount/load: get all users from localStorage (plus demo admin if needed)
 	useEffect(() => {
-		const localUsers: Member[] = getPersistedUsers();
-		setUsers(localUsers);
+		if(members.length < 1){
+			addMember(DEMO_ADMIN)
+		}
 	}, []);
 
 	// On settings change, update the demo admin's registration fee
 	useEffect(() => {
 		if (settings.registrationFee !== undefined) {
-		DEMO_ADMIN.registrationFee = settings.registrationFee;
-		addAdminToMembers(); // Ensure demo admin is updated in localStorage
+			DEMO_ADMIN.registrationFee = settings.registrationFee;
+			addAdminToMembers(); // Ensure demo admin is updated in localStorage
 		}
 	}, [settings.registrationFee]);
 
@@ -85,24 +86,20 @@ const Index = () => {
 		setSettings(getSettings());
 	}, []);
 
-	// Helper: write users to both state and localStorage
-	const updateUsers = (newUsers: Member[]) => {
-		setUsers(getPersistedUsers());
-	};
 
 	const handleLogout = () => {
 		// Prevent auto-scroll by maintaining current scroll position
 		const currentScrollY = window.scrollY;
-		
+
 		setIsLoggedIn(false);
 		setCurrentUser(null);
 		setShowPasswordChange(false);
-		
+
 		// Restore scroll position after state updates
 		setTimeout(() => {
-			window.scrollTo(0, currentScrollY);
+			window.scrollTo({ top: 0, behavior: "smooth" }); // or 'auto' for instant scroll
 		}, 0);
-		
+
 		toast({
 			title: "Logged Out",
 			description: "You have been logged out successfully",
@@ -110,15 +107,12 @@ const Index = () => {
 	};
 
 	const handleLogin = (user: Member) => {
-		// Prevent auto-scroll during login
-		const currentScrollY = window.scrollY;
-		
+
 		setCurrentUser(user);
 		setIsLoggedIn(true);
-		
-		// Maintain scroll position
+
 		setTimeout(() => {
-			window.scrollTo(0, currentScrollY);
+			window.scrollTo({ top: 0, behavior: "smooth" }); // or 'auto' for instant scroll
 		}, 0);
 	};
 
@@ -135,28 +129,20 @@ const Index = () => {
 			title: "Password Updated",
 			description: "Your password has been changed successfully",
 		});
-		//update the users in localStorage with updated user password and set needsPasswordChange to false
-		updatedUser.needsPasswordChange = false;
-		updateMemberInfo(updatedUser.id, { ...updatedUser });
-		const updatedUsers = users.map((u) =>
-			u.email === updatedUser.email ? updatedUser : u
-		);
-		setUsers(updatedUsers);
 	};
 
 	if (showPasswordChange && currentUser) {
 		return (
 			<ChangePasswordForm
-				user={currentUser}
-				users={users}
-				setUsers={updateUsers}
+				member={currentUser}
 				onSuccess={(updatedUser) => {
 					handleOnSuccess(updatedUser);
-				}}
+				} }
 				onCancel={() => {
 					setShowPasswordChange(false);
 					setIsLoggedIn(false);
-				}}
+				} } 
+				updateMember={updateMember}			
 			/>
 		);
 	}
@@ -166,8 +152,7 @@ const Index = () => {
 			<AdminDashboard
 				user={currentUser}
 				onLogout={handleLogout}
-				onNewUser={updateUsers}
-				users={users}
+				users={members}
 			/>
 		) : (
 			<MemberDashboard user={currentUser} onLogout={handleLogout} />
@@ -253,7 +238,7 @@ const Index = () => {
 
 				{/* Login Form */}
 				<LoginForm
-					users={users}
+					users={members}
 					onLogin={handleLogin}
 					onRequirePasswordChange={requirePasswordChange}
 					toast={toast}

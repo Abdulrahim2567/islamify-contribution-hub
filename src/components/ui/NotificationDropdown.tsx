@@ -7,6 +7,15 @@ import {
 	Member,
 	MemberLoanActivity,
 } from "@/types/types";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationPrevious,
+	PaginationNext,
+	PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 type TabKey = "admin" | "contribution" | "loan";
 
@@ -40,28 +49,34 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	const [open, setOpen] = useState(false);
 	const defaultTab: TabKey = user.role === "admin" ? "admin" : "contribution";
 	const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
-	const [page, setPage] = useState(1);
+
+	// page per tab, persist page number per tab
+	const [tabPages, setTabPages] = useState<Record<TabKey, number>>({
+		admin: 1,
+		contribution: 1,
+		loan: 1,
+	});
 	const [searchTerm, setSearchTerm] = useState("");
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const [readIds, setReadIds] = useState<Set<number>>(new Set());
 
-	// Choose the correct loan data based on role
+	// loans mapping
 	const loans: LoanActivityItem[] =
-		(memberLoans.map((l) => ({
-					id: l.id,
-					timestamp: l.date,
-					text: l.description,
-					color: "amber", // or assign based on `l.status` if needed
-					memberName: l.memberName,
-					type: l.type,
-			    }))) ?? [];
+		memberLoans.map((l) => ({
+			id: l.id,
+			timestamp: l.date,
+			text: l.description,
+			color: "amber",
+			memberName: l.memberName,
+			type: l.type,
+		})) ?? [];
 
 	const markCurrentTabAsRead = () => {
 		let idsToMark: number[] = [];
 		if (activeTab === "admin") idsToMark = notifications.map((n) => n.id);
 		else if (activeTab === "contribution")
 			idsToMark = contributions.map((c) => c.id);
-		else if (activeTab === "loan") idsToMark = loans.map((l: any) => l.id); // both AdminLoanActivity & MemberLoanActivity have `id`
+		else if (activeTab === "loan") idsToMark = loans.map((l: any) => l.id);
 		setReadIds((prev) => new Set([...prev, ...idsToMark]));
 	};
 
@@ -69,6 +84,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		if (!(activeTab in allTabs)) {
 			setActiveTab(defaultTab);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user, activeTab, defaultTab]);
 
 	useEffect(() => {
@@ -112,6 +128,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		}
 	}, [open, activeTab]);
 
+	// Filtering helper
 	const filterBySearch = <
 		T extends {
 			text?: string;
@@ -167,11 +184,21 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	};
 
 	const currentTab = allTabs[activeTab];
+
+	// IMPORTANT: Use page number from tabPages state keyed by activeTab
+	const page = tabPages[activeTab] || 1;
+
 	const totalPages = Math.ceil(currentTab.items.length / itemsPerPage);
+
 	const paginatedItems = currentTab.items.slice(
 		(page - 1) * itemsPerPage,
 		page * itemsPerPage
 	);
+
+	const changePage = (newPage: number) => {
+		if (newPage < 1 || newPage > totalPages) return; // safety check
+		setTabPages((prev) => ({ ...prev, [activeTab]: newPage }));
+	};
 
 	return (
 		<div className="relative" ref={dropdownRef}>
@@ -179,7 +206,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				onClick={() => setOpen(!open)}
 				className="relative inline-flex items-center p-2 text-gray-500 hover:text-gray-900 transition-colors"
 			>
-				<Bell className="w-5 h-5 mt-3" />
+				<Bell className="w-5 h-5 mt-2" />
 				{Object.values(allTabs).some((tab) => tab.unreadCount > 0) && (
 					<span className="absolute -top-1 right-0 w-2.5 h-2.5 mt-3 bg-red-500 border-2 border-white rounded-full" />
 				)}
@@ -212,7 +239,14 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 									)}
 									onClick={() => {
 										setActiveTab(key as TabKey);
-										setPage(1);
+										// Reset search and keep page or reset page for new tab
+										setSearchTerm("");
+										// Optionally reset page to 1 when switching tabs:
+										setTabPages((prev) => ({
+											...prev,
+											[key as TabKey]:
+												prev[key as TabKey] || 1,
+										}));
 									}}
 								>
 									{tab.label}
@@ -234,7 +268,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							value={searchTerm}
 							onChange={(e) => {
 								setSearchTerm(e.target.value);
-								setPage(1);
+								// Reset page to 1 when search changes
+								setTabPages((prev) => ({
+									...prev,
+									[activeTab]: 1,
+								}));
 							}}
 						/>
 					</div>
@@ -298,26 +336,69 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 				{/* Pagination */}
 				{totalPages > 1 && (
-					<div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 bg-gray-50 text-sm">
-						<button
-							onClick={() => setPage((p) => Math.max(1, p - 1))}
-							disabled={page === 1}
-							className="text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
-						>
-							Previous
-						</button>
-						<span className="text-gray-500">
-							Page {page} of {totalPages}
-						</span>
-						<button
-							onClick={() =>
-								setPage((p) => Math.min(totalPages, p + 1))
-							}
-							disabled={page === totalPages}
-							className="text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
-						>
-							Next
-						</button>
+					<div className="flex justify-center py-3 border-t border-gray-100 bg-gray-50">
+						<Pagination>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious
+										href="#"
+										aria-disabled={page === 1}
+										tabIndex={page === 1 ? -1 : 0}
+										onClick={(e) => {
+											e.preventDefault();
+											changePage(page - 1);
+										}}
+									/>
+								</PaginationItem>
+								{[...Array(totalPages)].map((_, i) => {
+									const showEllipsis =
+										(i === 1 && page > 4) ||
+										(i === totalPages - 2 &&
+											page < totalPages - 3);
+									if (showEllipsis) {
+										return (
+											<PaginationItem
+												key={`ellipsis-${i}`}
+											>
+												<PaginationEllipsis />
+											</PaginationItem>
+										);
+									}
+									if (
+										i === 0 ||
+										i === totalPages - 1 ||
+										(i >= page - 2 && i <= page + 1)
+									) {
+										return (
+											<PaginationItem key={i}>
+												<PaginationLink
+													href="#"
+													isActive={page === i + 1}
+													onClick={(e) => {
+														e.preventDefault();
+														changePage(i + 1);
+													}}
+												>
+													{i + 1}
+												</PaginationLink>
+											</PaginationItem>
+										);
+									}
+									return null;
+								})}
+								<PaginationItem>
+									<PaginationNext
+										href="#"
+										aria-disabled={page === totalPages}
+										tabIndex={page === totalPages ? -1 : 0}
+										onClick={(e) => {
+											e.preventDefault();
+											changePage(page + 1);
+										}}
+									/>
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination>
 					</div>
 				)}
 			</div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Member } from "../../types/types";
-import { User, Mail, Phone } from "lucide-react"; // Only these icons are allowed
+import { User, Mail, Phone, X } from "lucide-react"; // Only these icons are allowed
 import { CreditCard } from "lucide-react";
 
 interface MemberDetailModalProps {
@@ -21,8 +21,7 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 
 	return (
 		<div
-			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50
-      animate-fade-in"
+			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in"
 		>
 			<div
 				className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col
@@ -33,9 +32,9 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 				<button
 					onClick={onClose}
 					aria-label="Close"
-					className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+					className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl p-1 rounded-[25px] h-fit w-fit bg-gray-100 hover:bg-gray-200 transition"
 				>
-					×
+					<X />
 				</button>
 				{/* Avatar section */}
 				<div className="flex flex-col items-center justify-center -mt-14 mb-3">

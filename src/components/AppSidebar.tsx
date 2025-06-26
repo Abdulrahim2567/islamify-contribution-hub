@@ -59,7 +59,7 @@ const navigationItems = [
 export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSidebarProps) {
   return (
     <Sidebar className="fixed top-0 left-0 h-screen">
-      <SidebarHeader className="border-b border-gray-200 p-4 overflow-visible">
+      <SidebarHeader className="border-b border-gray-200 p-7 overflow-visible">
         <div className="flex items-center justify-between w-full">
           <h2 className="text-lg font-semibold text-gray-900">Islamify Management</h2>
         </div>

@@ -72,9 +72,9 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 	const noop = () => {};
 
 	return (
-		<div className="max-w-5xl mx-auto px-2 py-7">
+		<div className="max-w-8xl mx-auto px-4 py-7">
 			<div className="mb-7 flex justify-between items-center">
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-3 px-3">
 					<Users className="w-8 h-8 text-emerald-600" />
 					<h1 className="text-2xl font-bold text-gray-900">
 						Members Directory
@@ -114,7 +114,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 			</div>
 
 			{/* Search and Pagination Controls */}
-			<div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+			<div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center px-2">
 				<div className="relative flex-1 max-w-md">
 					<Search
 						className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -171,7 +171,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 
 			{viewMode === "card" ? (
 				<>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
+					<div className="flex flex-row flex-grow flex-wrap lg:justify-start sm:justify-center min-h-[400px] w-full">
 						{paginatedMembers.map((member, idx) => (
 							<div
 								key={member.id}

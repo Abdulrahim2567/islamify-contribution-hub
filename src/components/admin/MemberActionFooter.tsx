@@ -6,7 +6,6 @@ import type { Member } from "../../types/types";
 interface MemberActionFooterProps {
 	member: Member;
 	onView: (member: Member) => void;
-	onStatusToggle: (id: number) => void;
 	onLoanToggle: (id: number) => void;
 	onDelete: (id: number) => void;
 	readOnly?: boolean;
@@ -15,7 +14,6 @@ interface MemberActionFooterProps {
 const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 	member,
 	onView,
-	onStatusToggle,
 	onLoanToggle,
 	onDelete,
 	readOnly = false,
@@ -69,23 +67,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 									: "Loan Disabled"}
 							</span>
 						</button>
-						{/* Toggle status */}
-						<button
-							onClick={() => onStatusToggle(member.id)}
-							className={`flex flex-col items-center justify-center rounded-lg hover:bg-orange-100 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
-                ${member.isActive ? "text-orange-600" : "text-green-600"}
-              `}
-							title={
-								member.isActive ? "Deactivate" : "Reactivate"
-							}
-							tabIndex={0}
-							type="button"
-						>
-							<UserX size={18} />
-							<span className="mt-0.5 leading-none">
-								{member.isActive ? "Deactivate" : "Reactivate"}
-							</span>
-						</button>
+						
 						{/* Delete (only for non-admins) */}
 						{member.role !== "admin" && (
 							<>

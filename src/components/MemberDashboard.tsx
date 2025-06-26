@@ -10,8 +10,6 @@ import {
 	Calendar,
 	DollarSign,
 	User,
-	LogOut,
-	ChevronDown,
 } from "lucide-react";
 import {
 	SidebarProvider,
@@ -21,7 +19,6 @@ import {
 import { AppSidebar } from "./AppSidebar";
 import MembersPage from "./member/MembersPage";
 import { useToast } from "@/hooks/use-toast";
-import { readMembersFromStorage } from "../utils/membersStorage";
 import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
@@ -30,8 +27,13 @@ import {
 	AppSettings,
 	initializeSettings,
 } from "../utils/settingsStorage";
-import { getTotalMemberContributions } from "@/utils/contributionStorage";
-import { ContributionRecordActivity, LoanRequest, Member, MemberLoanActivity } from "@/types/types";
+
+import {
+	ContributionRecordActivity,
+	LoanRequest,
+	Member,
+	MemberLoanActivity,
+} from "@/types/types";
 import {
 	getApprovedLoanRequests,
 	getLoanRequestsByMemberId,
@@ -39,15 +41,16 @@ import {
 	getRejectedLoanRequests,
 } from "@/utils/loanStorage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+
 import { UserDropdown } from "./ui/UserDropdown";
 import { NotificationDropdown } from "./ui/NotificationDropdown";
-import { getAllContributionsActivitiesForMember, getMemberLoanActivities, getMemberLoanActivitiesByMember } from "@/utils/recentActivities";
+import {
+	getAllContributionsActivitiesForMember,
+	getMemberLoanActivitiesByMember,
+} from "@/utils/recentActivities";
+
+import { useContributions } from "@/hooks/useContributions";
+import { useMembers } from "@/hooks/useMembers";
 
 interface MemberDashboardProps {
 	user: Member;
@@ -58,25 +61,25 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	user,
 	onLogout,
 }) => {
+	const { getTotalContributionsByMember } = useContributions();
+	const { members } = useMembers();
 	const { toast } = useToast();
 	const [activeTab, setActiveTab] = useState<string>("dashboard");
-	const [members, setMembers] = useState([]);
 	const [showLoanModal, setShowLoanModal] = useState(false);
 	const [memberLoans, setMemberLoans] = useState<LoanRequest[]>([]);
 	const [settings, setSettings] = useState<AppSettings>(getSettings());
-	const [totalContributions, setTotalContributions] = useState<number>(0);
 
 	// Store all activities for this member (contributions history)
 	const [memberContributionActivities, setMemberContributionActivities] =
 		useState<ContributionRecordActivity[]>();
-	const [memberLoanAcivities, setMemberLoanActivities] = useState<MemberLoanActivity[]>()
+	const [memberLoanActivities, setMemberLoanActivities] =
+		useState<MemberLoanActivity[]>();
 
 	useEffect(() => {
-		setMembers(readMembersFromStorage());
 		setMemberContributionActivities(
 			getAllContributionsActivitiesForMember(user.id)
 		);
-		setMemberLoanActivities(getMemberLoanActivitiesByMember(user.id))
+		setMemberLoanActivities(getMemberLoanActivitiesByMember(user.id));
 	}, []);
 
 	// Listen for settings changes
@@ -115,21 +118,10 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	const thisMember = members.find((m) => m.id === user.id);
 
 	// Fetch member's real contributions from localStorage recent activities
-	useEffect(() => {
-		try {
-			const contributions: number = getTotalMemberContributions(user.id);
-			if (contributions) {
-				setTotalContributions(contributions);
-			} else {
-				setTotalContributions(0);
-			}
-		} catch (err) {
-			setTotalContributions(0);
-		}
-	}, [user.id, activeTab]);
 
+	const totalContributions = getTotalContributionsByMember(user.id);
 	// Use settings for registration fee and loan multiplier
-	const registrationFee = settings.registrationFee;
+	const registrationFee = thisMember.registrationFee;
 	const maxLoanAmount = totalContributions * settings.maxLoanMultiplier;
 	const canApplyForLoan =
 		thisMember?.canApplyForLoan && thisMember?.loanEligible;
@@ -275,8 +267,9 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 												Total Contributions
 											</p>
 											<p className="text-3xl font-bold text-blue-600">
-												{totalContributions.toLocaleString()}{" "}
-												XAF
+												{formatCurrency(
+													totalContributions
+												)}
 											</p>
 										</div>
 										<TrendingUp className="w-8 h-8 text-blue-600" />
@@ -292,8 +285,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 												Max Loan Amount
 											</p>
 											<p className="text-3xl font-bold text-green-600">
-												{maxLoanAmount.toLocaleString()}{" "}
-												XAF
+												{formatCurrency(maxLoanAmount)}
 											</p>
 											<p className="text-xs text-gray-500 mt-1">
 												{settings.maxLoanMultiplier}×
@@ -313,8 +305,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 												Registration Fee
 											</p>
 											<p className="text-3xl font-bold text-purple-600">
-												{registrationFee.toLocaleString()}{" "}
-												XAF
+												{formatCurrency(registrationFee)}
 											</p>
 											<Badge
 												variant="outline"
@@ -393,16 +384,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 			case "loans":
 				return (
 					<div className="container mx-auto px-4 py-8">
-						{/* Admin Notice */}
-						{user.role === "admin" && (
-							<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-								<p className="text-blue-800 font-medium">
-									👑 Admin View: These are your personal loan
-									applications as a member.
-								</p>
-							</div>
-						)}
-
 						<div className="max-w-6xl mx-auto px-4 py-8">
 							<h1 className="text-3xl font-bold text-gray-900 mb-2">
 								My Loan Applications
@@ -570,10 +551,14 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 										onLogout={onLogout}
 									/>
 									<NotificationDropdown
-										memberLoans={memberLoanAcivities}
-										contributions={memberContributionActivities}
+										memberLoans={memberLoanActivities}
+										contributions={
+											memberContributionActivities
+										}
 										itemsPerPage={10}
-										user={user} notifications={[]}									/>
+										user={user}
+										notifications={[]}
+									/>
 								</div>
 							</div>
 						</div>

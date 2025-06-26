@@ -50,7 +50,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
 	return (
 		<div
-			className="group bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col hover:shadow-xl transition-shadow min-h-[320px] relative cursor-pointer"
+			className="group  mt-3 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col hover:shadow-xl min-h-[320px] min-w-[280px] max-w-[325px] md:mx-2 mx-1 relative cursor-pointer transition-all"
 			onClick={handleCardClick}
 			tabIndex={0}
 			role="button"
@@ -115,13 +115,12 @@ const MemberCard: React.FC<MemberCardProps> = ({
 						)}
 					</span>
 				</div>
-				<StatusBadge isActive={member.isActive} />
+				<StatusBadge member={member} />
 			</div>
 			<MemberInfoSection member={member} />
 			<MemberActionFooter
 				member={member}
 				onView={onView}
-				onStatusToggle={onStatusToggle}
 				onLoanToggle={onLoanToggle}
 				onDelete={onDelete}
 				readOnly={readOnly}

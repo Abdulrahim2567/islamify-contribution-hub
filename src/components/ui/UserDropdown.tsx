@@ -74,6 +74,22 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
 			>
 				{/* Header */}
 				<div className="px-5 py-4 border-b border-gray-100">
+					{/* User Info */}
+					<div className="flex items-center gap-3 md:hidden">
+						<div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 text-white flex items-center justify-center font-bold">
+							{user?.name?.charAt(0) ||
+								user?.email?.charAt(0) ||
+								"U"}
+						</div>
+						<div>
+							<p className="font-semibold text-sm text-gray-800">
+								{user.name || "User"}
+							</p>
+							<p className="text-xs text-gray-500 truncate max-w-[170px]">
+								{user.email}
+							</p>
+						</div>
+					</div>
 
 					{/* Role & Join Date */}
 					<div className="mt-3 space-y-1 text-sm text-gray-700">
