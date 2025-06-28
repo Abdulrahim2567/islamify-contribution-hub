@@ -252,7 +252,7 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({curren
 	};
 
 	return (
-		<div className="container mx-auto px-4 py-6 max-w-7xl">
+		<div className="mx-auto px-4 py-6 ">
 			<div className="mb-8">
 				<div className="flex items-center gap-4 mb-2">
 					<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">

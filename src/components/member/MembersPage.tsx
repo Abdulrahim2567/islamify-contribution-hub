@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users, User, Shield } from "lucide-react";
-import MemberCard from "../admin/MemberCard";
+import MemberCard from "../admin/member/MemberCard";
 import { Member } from "../../types/types";
-import MemberDetailModal from "../admin/MemberDetailModal";
+import MemberDetailModal from "../admin/member/MemberDetailModal";
 import { readMembersFromStorage } from "../../utils/membersStorage";
 import {
 	Select,

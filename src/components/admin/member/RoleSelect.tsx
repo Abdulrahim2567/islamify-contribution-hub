@@ -7,7 +7,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { User, Shield } from "lucide-react";
-import type { Member } from "../../types/types";
+import type { Member } from "../../../types/types";
 
 interface RoleSelectProps {
 	member: Member;

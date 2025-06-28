@@ -8,7 +8,7 @@ import {
 	User,
 	Shield,
 } from "lucide-react";
-import { Member } from "../../types/types";
+import { Member } from "../../../types/types";
 import DeleteMemberDialog from "./DeleteMemberDialog";
 import EditMemberDialog from "./EditMemberDialog";
 import {

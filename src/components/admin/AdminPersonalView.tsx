@@ -6,6 +6,7 @@ import { TrendingUp, CreditCard, Clock, CheckCircle, XCircle, User } from "lucid
 import { formatCurrency } from "../../utils/calculations";
 import { getSettings } from "../../utils/settingsStorage";
 import MemberContributionHistory from "../member/MemberContributionHistory";
+import { LoanRequest } from '@/types/types';
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities";
 const LOANS_STORAGE_KEY = 'islamify_loan_requests';
@@ -68,7 +69,7 @@ const AdminPersonalView: React.FC<AdminPersonalViewProps> = ({ user }) => {
 
   const totalContributions = memberActivities.reduce((sum: number, a: any) => sum + (a.amount || 0), 0);
   const maxLoanAmount = totalContributions * settings.maxLoanMultiplier;
-  const hasPendingLoan = memberLoans.some((loan: any) => loan.status === 'pending');
+  const hasPendingLoan = memberLoans.some((loan: LoanRequest) => loan.status === 'pending');
 
   const getStatusIcon = (status: string) => {
     switch (status) {

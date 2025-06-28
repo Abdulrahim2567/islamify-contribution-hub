@@ -20,24 +20,24 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ui/ThemeProvider";
-import MemberCard from "./admin/MemberCard";
-import MemberTable from "./admin/MemberTable";
-import MemberDetailModal from "./admin/MemberDetailModal";
-import RegisterMemberDialog from "./admin/RegisterMemberDialog";
-import SuccessModal from "./admin/SuccessModal";
+import MemberCard from "./admin/member/MemberCard";
+import MemberTable from "./admin/member/MemberTable";
+import MemberDetailModal from "./admin/member/MemberDetailModal";
+import RegisterMemberDialog from "./admin/member/RegisterMemberDialog";
+import SuccessModal from "./admin/member/SuccessModal";
 import type {
 	Contribution,
 	ContributionRecordActivity,
 	Member,
 } from "../types/types";
-import AddContributionStepper from "./admin/AddContributionStepper";
+import AddContributionStepper from "@/components/admin/contribution/AddContributionStepper";
 
-import AdminStatsCards from "./admin/AdminStatsCards";
-import AdminRecentActivity from "./admin/AdminRecentActivity";
-import AdminSettingsForm from "./admin/AdminSettingsForm";
-import AdminContributionsTable from "./admin/AdminContributionsTable";
+import AdminStatsCards from "./admin/dashboard/AdminStatsCards";
+import AdminRecentActivity from "./admin/dashboard/AdminRecentActivity";
+import AdminSettingsForm from "./admin/settings/AdminSettingsForm";
+import AdminContributionsTable from "./admin/contribution/AdminContributionsTable";
 import LoanApplication from "./member/LoanApplication";
-import LoanManagement from "./admin/LoanManagement";
+import LoanManagement from "@/components/admin/loan/LoanManagement";
 import {
 	Pagination,
 	PaginationContent,
@@ -54,7 +54,6 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AdminActivityLog } from "../types/types";
-
 
 import { UserDropdown } from "./ui/UserDropdown";
 import { NotificationDropdown } from "./ui/NotificationDropdown";
@@ -89,11 +88,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		addMemberContribution,
 		getTotalAllContributions,
 		getTotalContributionsByMember,
-		deleteAllMemberContributions
+		deleteAllMemberContributions,
 	} = useContributions();
 	const { getLoanRequestsByMemberId } = useLoanRequests();
-	const {adminActivities, memberLoanActivities, memberContributionActivities, saveAdminActivity, saveContributionActivity } = useRecentActivities()
-	const {settings, updateSettings} = useIslamifySettings()
+	const {
+		adminActivities,
+		memberLoanActivities,
+		memberContributionActivities,
+		saveAdminActivity,
+		saveContributionActivity,
+	} = useRecentActivities();
+	const { settings, updateSettings } = useIslamifySettings();
 	const [activeTab, setActiveTab] = useState("dashboard");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [searchStatus, setSearchStatus] = useState<
@@ -119,26 +124,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	const [showAddContributionStepper, setShowAddContributionStepper] =
 		useState(false);
 
-
 	// Reset page when search changes
 	useEffect(() => {
 		setMembersPage(1);
 	}, [searchTerm, membersPerPage]);
 
 	useEffect(() => {
-			if (searchTerm === "") {
-				setSearchStatus("idle");
-				return;
-			}
-	
-			setSearchStatus("typing");
-	
-			const timeout = setTimeout(() => {
-				setSearchStatus("done");
-			}, 300); // debounce duration
-	
-			return () => clearTimeout(timeout);
-		}, [searchTerm]);
+		if (searchTerm === "") {
+			setSearchStatus("idle");
+			return;
+		}
+
+		setSearchStatus("typing");
+
+		const timeout = setTimeout(() => {
+			setSearchStatus("done");
+		}, 300); // debounce duration
+
+		return () => clearTimeout(timeout);
+	}, [searchTerm]);
 
 	const generatePassword = () => {
 		const chars =
@@ -164,7 +168,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		(membersPage - 1) * membersPerPage,
 		membersPage * membersPerPage
 	);
-
 
 	// Handle page change
 	const handleMembersPageChange = (page: number) => {
@@ -219,7 +222,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			adminRole: user.role,
 			memberId: id, // Include member ID for reference
 		};
-		saveAdminActivity(AdminActivity)
+		saveAdminActivity(AdminActivity);
 
 		toast({
 			title: "Member Registered",
@@ -306,7 +309,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 				variant: "destructive",
 			});
 		}
-		
 	};
 
 	const totalMembers = members.length;
@@ -454,9 +456,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-
 	const totalPages = Math.ceil(adminActivities.length / perPage);
-
 
 	// For admin, find "self" as a member record, e.g., by email
 	const thisAdminMember = members.find(
@@ -1054,7 +1054,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 								<React.Suspense
 									fallback={<div>Loading...</div>}
 								>
-									<AdminContributionsTable currentUser={thisAdminMember}/>
+									<AdminContributionsTable
+										currentUser={thisAdminMember}
+									/>
 								</React.Suspense>
 							)}
 

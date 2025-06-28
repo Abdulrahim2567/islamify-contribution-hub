@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, Pencil, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import type { Member } from "../../types/types";
+import type { Member } from "../../../types/types";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface EditMemberDialogProps {

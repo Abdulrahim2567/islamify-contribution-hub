@@ -1,6 +1,6 @@
 import React from "react";
 import { Mail, Phone, CreditCard, User } from "lucide-react";
-import type { Member } from "../../types/types";
+import type { Member } from "../../../types/types";
 
 const MemberInfoSection = ({ member }: { member: Member }) => {
 	const maxLoanAmount = member.totalContributions * 3;

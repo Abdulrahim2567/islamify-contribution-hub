@@ -7,7 +7,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 } from "lucide-react";
-import type { Member } from "../../../types/types";
+import type { Member } from "../../../../types/types";
 
 const DEMO_ADMIN_EMAIL = "admin@islamify.org";
 const MEMBERS_KEY = "islamify_members";

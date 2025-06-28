@@ -1,6 +1,6 @@
 import React from "react";
 import { DollarSign, ArrowLeft, Plus, User } from "lucide-react";
-import type { Member } from "../../../types/types";
+import type { Member } from "../../../../types/types";
 
 interface ContributionFormStepProps {
 	selectedMember: Member;

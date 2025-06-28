@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { AlignJustify }from "lucide-react"
+import { AlignJustify, ArrowLeft, ArrowRight }from "lucide-react"
 
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -259,29 +259,37 @@ const Sidebar = React.forwardRef<
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
+	React.ElementRef<typeof Button>,
+	React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+	const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
 
-  return (
+	const shouldShowTrigger = isMobile ? !openMobile : !open;
+
+	if (!shouldShowTrigger) return null;
+
+	return (
 		<Button
 			ref={ref}
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
-			className={cn("h-7 w-7", className)}
+			className={cn(
+				"mt-1 top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl p-2 rounded-[25px] h-fit w-fit bg-gray-100 hover:bg-gray-200 transition",
+				className
+			)}
 			onClick={(event) => {
 				onClick?.(event);
 				toggleSidebar();
 			}}
 			{...props}
 		>
-			<AlignJustify/>
+			<ArrowRight />
 			<span className="sr-only">Toggle Sidebar</span>
 		</Button>
-  );
-})
+	);
+});
+
 SidebarTrigger.displayName = "SidebarTrigger"
 
 const SidebarRail = React.forwardRef<

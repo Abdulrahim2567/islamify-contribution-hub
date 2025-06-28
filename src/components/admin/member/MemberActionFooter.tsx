@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, ToggleRight, ToggleLeft, UserX, Trash2 } from "lucide-react";
 import DeleteMemberDialog from "./DeleteMemberDialog";
-import type { Member } from "../../types/types";
+import type { Member } from "../../../types/types";
 
 interface MemberActionFooterProps {
 	member: Member;
@@ -67,7 +67,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 									: "Loan Disabled"}
 							</span>
 						</button>
-						
+
 						{/* Delete (only for non-admins) */}
 						{member.role !== "admin" && (
 							<>

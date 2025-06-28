@@ -1,5 +1,5 @@
 import React from "react";
-import { Member } from "../../types/types";
+import { Member } from "../../../types/types";
 import { User, Mail, Phone, X } from "lucide-react"; // Only these icons are allowed
 import { CreditCard } from "lucide-react";
 
@@ -20,9 +20,7 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 		"&background=10b981&color=fff&size=128";
 
 	return (
-		<div
-			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in"
-		>
+		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in">
 			<div
 				className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col
         animate-scale-in"

@@ -12,7 +12,7 @@ import {
 	Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, getNowString } from "../../utils/calculations";
+import { formatCurrency, getNowString } from "@/utils/calculations";
 import {
 	AdminActivityLog,
 	LoanRequest,

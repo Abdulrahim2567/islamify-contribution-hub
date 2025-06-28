@@ -1,6 +1,6 @@
 import React from "react";
 import { Edit, User, Shield } from "lucide-react";
-import { Member } from "../../types/types";
+import { Member } from "../../../types/types";
 import EditMemberDialog from "./EditMemberDialog";
 import MemberAvatar from "./MemberAvatar";
 import RoleSelect from "./RoleSelect";

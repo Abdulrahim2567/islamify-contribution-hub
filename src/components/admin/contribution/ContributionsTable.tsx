@@ -6,9 +6,9 @@ import {
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
-} from "../ui/pagination";
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
+} from "../../ui/pagination";
+import { Card, CardContent } from "../../ui/card";
+import { Button } from "../../ui/button";
 import { Coins, Pencil, Trash2, Search, Check, List, Grid } from "lucide-react";
 import {
 	Table,
@@ -17,7 +17,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "../ui/table";
+} from "../../ui/table";
 import { Contribution } from "@/types/types";
 import {
 	Select,
@@ -25,8 +25,8 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "../ui/select";
-import { Input } from "../ui/input";
+} from "../../ui/select";
+import { Input } from "../../ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { formatCurrency } from "@/utils/calculations";
 
@@ -124,7 +124,7 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 						className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
 					/>
 					<Input
-						className="pl-9 pr-4 h-9 rounded-md text-sm border border-gray-300 focus-visible:ring-emerald-300 w-full"
+						className="pl-9 pr-4 h-9 rounded-md text-sm border border-gray-300 focus-visible:ring-emerald-300 w-full max-w-[400px]"
 						placeholder="Filter by name or amount"
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
@@ -287,7 +287,7 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 					</div>
 				</div>
 			) : (
-				<div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+				<div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center">
 					{paginatedData.length === 0 ? (
 						<Card>
 							<CardContent className="p-8 text-center text-gray-500">
@@ -301,7 +301,7 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 						paginatedData.map((rec, idx) => (
 							<Card
 								key={idx}
-								className="border border-gray-200 rounded-xl shadow-sm w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] flex flex-col min-w-[270px]"
+								className="border border-gray-200 rounded-xl shadow-sm w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] flex flex-col min-w-[270px] md:max-w-[320px]"
 							>
 								<CardContent className="flex flex-col justify-between h-full p-4 space-y-4">
 									{/* Section 1 */}

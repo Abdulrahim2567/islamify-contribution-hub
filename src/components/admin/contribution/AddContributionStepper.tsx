@@ -8,8 +8,8 @@ import {
 	ArrowLeft,
 	Plus,
 } from "lucide-react";
-import { Member } from "../../types/types";
-import { readMembersFromStorage } from "../../utils/membersStorage";
+import { Member } from "../../../types/types";
+import { readMembersFromStorage } from "../../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
 import ContributionFormStep from "./AddContributionStepper/ContributionFormStep";
 import { getNowString } from "@/utils/calculations";
@@ -63,7 +63,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 						role: "admin",
 						password: "",
 						needsPasswordChange: false,
-						canApplyForLoan: false
+						canApplyForLoan: false,
 					},
 				]);
 			} else {
@@ -112,7 +112,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 			memberId: selectedMember.id,
 			amount: parseFloat(formData.amount),
 			type: "contribution",
-			date:getNowString(),
+			date: getNowString(),
 			description: formData.description || undefined,
 		});
 		setFormData({ amount: "", description: "" });
