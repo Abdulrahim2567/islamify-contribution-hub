@@ -1,66 +1,65 @@
-
 import { Save } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { saveSettings, AppSettings } from "../../utils/settingsStorage";
-import { AdminActivityLog, Member } from "@/types/types";
-import { saveAdminRecentActivity } from "@/utils/recentActivities";
+import { AdminActivityLog, AppSettings, Member } from "@/types/types";
+import { saveAdminRecentActivity } from "@/utils/recentActivitiesStorage";
 
 interface AdminSettingsFormProps {
-  settings: AppSettings;
-  setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
-  member:Member
+	settings: AppSettings;
+	updateSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+	member: Member;
 }
 
 const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
-  settings,
-  setSettings,
-  member
+	settings,
+	updateSettings,
+	member,
 }) => {
-  const { toast } = useToast();
+	const { toast } = useToast();
+	const [adminSettings, setAdminSettings] = useState<AppSettings>()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const getNowString = () => {
-		const d = new Date();
-		return d.toLocaleString(undefined, {
-			dateStyle: "medium",
-			timeStyle: "short",
-		});
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		const getNowString = () => {
+			const d = new Date();
+			return d.toLocaleString(undefined, {
+				dateStyle: "medium",
+				timeStyle: "short",
+			});
+		};
+		try {
+			updateSettings(adminSettings);
+
+			//activity log
+			const editSettings: AdminActivityLog = {
+				id: Date.now() + Math.random(),
+				timestamp: getNowString(),
+				type: "edit_member",
+				text: `Updated settings for "${settings.associationName}"`,
+				color: "black",
+				adminName: member.name,
+				adminEmail: member.email,
+				adminRole: member.role,
+				memberId: member.id, // Include member ID for reference
+			};
+
+			// Save the activity log to localStorage or wherever you store it
+			saveAdminRecentActivity(editSettings);
+
+			toast({
+				title: "Settings Saved",
+				description: "Your settings have been updated successfully.",
+			});
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to save settings. Please try again.",
+				variant: "destructive",
+			});
+		}
 	};
-    try {
-      saveSettings(settings);
 
-      //activity log
-      const editSettings: AdminActivityLog = {
-        id: Date.now() + Math.random(),
-        timestamp: getNowString(),
-        type: "edit_member",
-        text: `Updated settings for "${settings.associationName}"`,
-        color: "black",
-        adminName: member.name,
-        adminEmail: member.email,
-        adminRole: member.role,
-        memberId: member.id, // Include member ID for reference
-      };
-
-      // Save the activity log to localStorage or wherever you store it
-      saveAdminRecentActivity(editSettings);
-
-      toast({
-        title: "Settings Saved",
-        description: "Your settings have been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
+	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
 			<div>
 				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -70,7 +69,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					type="text"
 					value={settings.associationName}
 					onChange={(e) =>
-						setSettings((s) => ({
+						setAdminSettings((s) => ({
 							...s,
 							associationName: e.target.value,
 						}))
@@ -87,7 +86,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					type="number"
 					value={settings.registrationFee}
 					onChange={(e) =>
-						setSettings((s) => ({
+						setAdminSettings((s) => ({
 							...s,
 							registrationFee: Number(e.target.value),
 						}))
@@ -105,7 +104,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					type="number"
 					value={settings.maxLoanMultiplier}
 					onChange={(e) =>
-						setSettings((s) => ({
+						setAdminSettings((s) => ({
 							...s,
 							maxLoanMultiplier: Number(e.target.value),
 						}))
@@ -128,7 +127,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					type="number"
 					value={settings.loanEligibilityThreshold}
 					onChange={(e) =>
-						setSettings((s) => ({
+						setAdminSettings((s) => ({
 							...s,
 							loanEligibilityThreshold: Number(e.target.value),
 						}))
@@ -146,7 +145,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 				<span>Save Settings</span>
 			</button>
 		</form>
-  );
+	);
 };
 
 export default AdminSettingsForm;

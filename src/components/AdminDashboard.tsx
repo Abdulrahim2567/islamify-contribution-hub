@@ -7,6 +7,7 @@ import {
 	User,
 	CreditCard,
 	Clock,
+	Check,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
@@ -25,12 +26,9 @@ import MemberDetailModal from "./admin/MemberDetailModal";
 import RegisterMemberDialog from "./admin/RegisterMemberDialog";
 import SuccessModal from "./admin/SuccessModal";
 import type {
-	AdminLoanActivity,
 	Contribution,
 	ContributionRecordActivity,
-	LoanRequest,
 	Member,
-	MemberLoanActivity,
 } from "../types/types";
 import AddContributionStepper from "./admin/AddContributionStepper";
 
@@ -55,21 +53,17 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { initializeSettings, getSettings } from "../utils/settingsStorage";
 import { AdminActivityLog } from "../types/types";
 
-import {
-	getAdminRecentActivities,
-	getAllContributionsActivitiesForMember,
-	getMemberLoanActivitiesByMember,
-	saveMemberContributionActivity,
-} from "@/utils/recentActivities";
-import { getLoanRequestsByMemberId } from "@/utils/loanStorage";
 
 import { UserDropdown } from "./ui/UserDropdown";
 import { NotificationDropdown } from "./ui/NotificationDropdown";
 import { useMembers } from "@/hooks/useMembers";
 import { useContributions } from "@/hooks/useContributions";
+import { useLoanRequests } from "@/hooks/useLoanRequests";
+import { useRecentActivities } from "@/hooks/useRecentActivities";
+import { useIslamifySettings } from "@/hooks/useIslamifySettings";
+import { Input } from "./ui/input";
 
 // Add this type for the new member state
 type NewMember = {
@@ -78,8 +72,6 @@ type NewMember = {
 	phone: string;
 	role: "member" | "admin";
 };
-
-const ACTIVITY_LOCALSTORAGE_KEY = "islamify_admin_recent_activities";
 
 interface AdminDashboardProps {
 	user: Member;
@@ -93,9 +85,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	users,
 }) => {
 	const { members, addMember, updateMember, deleteMember } = useMembers();
-	const {addMemberContribution, getTotalAllContributions, getTotalContributionsByMember} = useContributions()
+	const {
+		addMemberContribution,
+		getTotalAllContributions,
+		getTotalContributionsByMember,
+		deleteAllMemberContributions
+	} = useContributions();
+	const { getLoanRequestsByMemberId } = useLoanRequests();
+	const {adminActivities, memberLoanActivities, memberContributionActivities, saveAdminActivity, saveContributionActivity } = useRecentActivities()
+	const {settings, updateSettings} = useIslamifySettings()
 	const [activeTab, setActiveTab] = useState("dashboard");
 	const [searchTerm, setSearchTerm] = useState("");
+	const [searchStatus, setSearchStatus] = useState<
+		"idle" | "typing" | "done"
+	>("idle");
 	const [showRegisterModal, setShowRegisterModal] = useState(false);
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -107,9 +110,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		role: "member",
 	});
 	const [generatedPassword, setGeneratedPassword] = useState("");
-	const [settings, setSettings] = useState(getSettings());
 	const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
-	const [activityPage, setActivityPage] = useState(1);
 	const perPage = 10;
 	const [showLoanModal, setShowLoanModal] = useState(false);
 	const [membersPage, setMembersPage] = useState(1);
@@ -117,108 +118,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	const { toast } = useToast();
 	const [showAddContributionStepper, setShowAddContributionStepper] =
 		useState(false);
-	// Retrieve from localStorage only on mount
-	const [activities, setActivities] = useState<AdminActivityLog[]>(() => {
-		try {
-			return getAdminRecentActivities();
-		} catch {
-			return [];
-		}
-	});
-	const [memberLoans, setMemberLoans] = useState<LoanRequest[]>([]);
 
-	// Store all activities for this member (contributions history)
-	const [memberContributionActivities, setMemberContributionActivities] =
-		useState<ContributionRecordActivity[]>();
-	const [memberLoanAcivities, setMemberLoanActivities] =
-		useState<MemberLoanActivity[]>();
-
-	useEffect(() => {
-		setMemberContributionActivities(
-			getAllContributionsActivitiesForMember(user.id)
-		);
-		setMemberLoanActivities(getMemberLoanActivitiesByMember(user.id));
-	}, []);
-
-	useEffect(() => {
-		try {
-			const storedLoans: LoanRequest[] = getLoanRequestsByMemberId(
-				user.id
-			);
-			if (storedLoans) {
-				setMemberLoans(storedLoans);
-			}
-		} catch (error) {
-			console.error("Error loading member loans:", error);
-		}
-	}, [user.id, activeTab]);
-
-	// Always load members from localStorage. If empty, create/save DEMO_ADMIN as sole member.
-	const DEMO_ADMIN_MEMBER: Member = {
-		id: 1,
-		name: "Admin User",
-		email: "admin@islamify.org",
-		phone: "677947823",
-		password: "admin123", // Default password for demo
-		needsPasswordChange: false, // must change password on first login
-		registrationFee: 0,
-		totalContributions: 0,
-		isActive: true,
-		loanEligible: false,
-		canApplyForLoan: false,
-		joinDate: getNowString(),
-		role: "admin",
-	};
-
-	useEffect(() => {
-		if (members.length < 0) {
-			addMember(DEMO_ADMIN_MEMBER);
-		}
-	}, []);
-
-	// NEW: Add this useEffect to initialize settings on component mount
-	useEffect(() => {
-		initializeSettings();
-	}, []);
-
-	// Every time activities changes, update localStorage
-	useEffect(() => {
-		localStorage.setItem(
-			ACTIVITY_LOCALSTORAGE_KEY,
-			JSON.stringify(activities)
-		);
-	}, [activities]);
 
 	// Reset page when search changes
 	useEffect(() => {
 		setMembersPage(1);
 	}, [searchTerm, membersPerPage]);
 
-	//re-render component each time settings change
 	useEffect(() => {
-		setSettings(getSettings());
-	}, [
-		settings.associationName,
-		settings.registrationFee,
-		settings.maxLoanMultiplier,
-	]);
-
-	// Helper to always persist after updates (activities)
-	const persistAndSetActivities = (activityOrUpdateFn) => {
-		setActivities((prev) => {
-			let updated;
-			if (typeof activityOrUpdateFn === "function") {
-				updated = activityOrUpdateFn(prev);
-			} else {
-				// Accept single activity or array
-				updated = Array.isArray(activityOrUpdateFn)
-					? activityOrUpdateFn
-					: [activityOrUpdateFn, ...prev];
+			if (searchTerm === "") {
+				setSearchStatus("idle");
+				return;
 			}
-			// No need to set localStorage here, useEffect handles it
-			return updated;
-		});
-	};
+	
+			setSearchStatus("typing");
+	
+			const timeout = setTimeout(() => {
+				setSearchStatus("done");
+			}, 300); // debounce duration
+	
+			return () => clearTimeout(timeout);
+		}, [searchTerm]);
 
 	const generatePassword = () => {
 		const chars =
@@ -244,6 +164,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		(membersPage - 1) * membersPerPage,
 		membersPage * membersPerPage
 	);
+
 
 	// Handle page change
 	const handleMembersPageChange = (page: number) => {
@@ -298,7 +219,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			adminRole: user.role,
 			memberId: id, // Include member ID for reference
 		};
-		persistAndSetActivities(AdminActivity);
+		saveAdminActivity(AdminActivity)
 
 		toast({
 			title: "Member Registered",
@@ -306,7 +227,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-	const toggleMemberStatus = (memberId:number) => {
+	const toggleMemberStatus = (memberId: number) => {
 		const member = members.find((m) => m.id === memberId);
 		member.isActive = !member.isActive;
 		updateMember(member.id, member);
@@ -323,7 +244,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			adminRole: user.role,
 			memberId: member.id, // Include member ID for reference
 		};
-		persistAndSetActivities(statusActivity);
+		saveAdminActivity(statusActivity);
 
 		toast({
 			title: "Member Status Updated",
@@ -331,7 +252,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-	const toggleLoanEligibility = (memberId:number) => {
+	const toggleLoanEligibility = (memberId: number) => {
 		const member = members.find((m) => m.id === memberId);
 		// Update loan eligibility in localStorage
 		member.loanEligible = !member.loanEligible;
@@ -350,7 +271,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			memberId: member.id, // Include member ID for reference
 		};
 		// Add to activities
-		persistAndSetActivities(loanEligibilityActivity);
+		saveAdminActivity(loanEligibilityActivity);
 
 		toast({
 			title: "Loan Eligibility Updated",
@@ -359,7 +280,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-	const handleDeleteMember = (memberId:number) => {
+	const handleDeleteMember = (memberId: number) => {
 		const member = members.find((m) => m.id === memberId);
 
 		//delete member from storage
@@ -376,22 +297,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			adminRole: user.role,
 			memberId: member.id, // Include member ID for reference
 		};
+		saveAdminActivity(deleteActivity);
 
-		persistAndSetActivities(deleteActivity);
-
-		toast({
-			title: "Member Deleted",
-			description: "Member has been removed from the system",
-			variant: "destructive",
-		});
+		if (deleteAllMemberContributions(member.id)) {
+			toast({
+				title: "Member Deleted",
+				description: "Member has been removed from the system",
+				variant: "destructive",
+			});
+		}
+		
 	};
 
 	const totalMembers = members.length;
 	const activeMembers = members.filter((m) => m.isActive).length;
 	const inactiveMembers = totalMembers - activeMembers;
 	const totalContributions = getTotalAllContributions();
-	const totalRegistrationFees = members.reduce((sum, member) => sum + member.registrationFee, 0);
-
+	const totalRegistrationFees = members.reduce(
+		(sum, member) => sum + member.registrationFee,
+		0
+	);
 
 	const handleAddContributionStepper = ({
 		memberId,
@@ -431,7 +356,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			memberId: member.id, // Include member ID for reference
 		};
 
-		persistAndSetActivities(adminAddContributionActivity);
+		saveAdminActivity(adminAddContributionActivity);
 
 		const newContribution: Contribution = {
 			id: Date.now() + Math.random(),
@@ -443,7 +368,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			addedBy: user.name,
 			type: "contribution",
 		};
-		addMemberContribution(newContribution)
+		addMemberContribution(newContribution);
 		// ------------ IMPORTANT PART: update islamify_recent_activities for member dashboards ------------
 
 		// Prepare activity object for member dashboard
@@ -460,7 +385,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			addedBy: user.name,
 		};
 		// Save this activity to localStorage for member dashboard
-		saveMemberContributionActivity(memberContributionActivity);
+		saveContributionActivity(memberContributionActivity);
 
 		// ------------ END IMPORTANT PART ------------
 
@@ -472,7 +397,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	};
 
 	// NEW: Change role handler
-	const handleChangeRole = (memberId: number, newRole: "member" | "admin") => {
+	const handleChangeRole = (
+		memberId: number,
+		newRole: "member" | "admin"
+	) => {
 		// Find the member for the user
 		const member = members.find((m) => m.id === memberId);
 
@@ -490,7 +418,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			adminRole: user.role,
 			memberId: member.id, // Include member ID for reference
 		};
-		persistAndSetActivities(roleChangeActivity);
+		saveAdminActivity(roleChangeActivity);
 
 		toast({
 			title: "Role Updated",
@@ -518,7 +446,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 			memberId: id, // Include member ID for reference
 		};
 		// Add to activities
-		persistAndSetActivities(edit_member_activity);
+		saveAdminActivity(edit_member_activity);
 
 		toast({
 			title: "Member Updated",
@@ -526,18 +454,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-	// PAGINATION LOGIC FOR ACTIVITIES
-	const paginatedActivities = activities.slice(
-		(activityPage - 1) * perPage,
-		activityPage * perPage
-	);
-	const totalPages = Math.ceil(activities.length / perPage);
 
-	// Handler for pagination clicks
-	const handleActivityPageChange = (page: number) => {
-		if (page < 1 || page > totalPages) return;
-		setActivityPage(page);
-	};
+	const totalPages = Math.ceil(adminActivities.length / perPage);
+
 
 	// For admin, find "self" as a member record, e.g., by email
 	const thisAdminMember = members.find(
@@ -547,7 +466,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	// For loan, use sum of admin's contributions (like member dashboard logic)
 	const adminMemberId = thisAdminMember?.id ?? user.id;
 	// Fallback: If no member record, default contributions to 0
-	const adminContributions = getTotalContributionsByMember(adminMemberId) || 0;
+	const adminContributions =
+		getTotalContributionsByMember(adminMemberId) || 0;
 	const adminMaxLoanAmount = adminContributions * settings.maxLoanMultiplier;
 
 	// Allow admin to apply for loan if they are found as a member and eligible
@@ -555,7 +475,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		thisAdminMember?.canApplyForLoan && thisAdminMember?.loanEligible;
 
 	// Check if member has pending loan application
-	const hasPendingLoan = memberLoans.some(
+	const hasPendingLoan = getLoanRequestsByMemberId(user.id).some(
 		(loan) => loan.status === "pending"
 	);
 
@@ -594,10 +514,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 							<div className="ml-auto relative flex">
 								<UserDropdown user={user} onLogout={onLogout} />
 								<NotificationDropdown
-									notifications={activities}
+									notifications={adminActivities}
 									itemsPerPage={10}
 									user={user}
-									memberLoans={memberLoanAcivities}
+									memberLoans={memberLoanActivities}
 									contributions={memberContributionActivities}
 								/>
 							</div>
@@ -671,14 +591,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 													data.amount
 												)} is pending.`,
 											});
-											// Reload loans to show the new application
-											const userLoans =
-												getLoanRequestsByMemberId(
-													user.id
-												);
-											if (userLoans) {
-												setMemberLoans(userLoans);
-											}
 										}}
 										onCancel={() => setShowLoanModal(false)}
 									/>
@@ -686,13 +598,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 								{/* Recent Activity */}
 								<AdminRecentActivity
-									activities={activities}
-									paginatedActivities={paginatedActivities}
-									totalPages={totalPages}
-									activityPage={activityPage}
-									onActivityPageChange={
-										handleActivityPageChange
-									}
+									activities={adminActivities}
 								/>
 							</>
 						)}
@@ -786,70 +692,110 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 								<div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
 									<div className="relative flex-1 max-w-md">
 										<Search
-											className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-											size={20}
+											size={16}
+											className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
 										/>
-										<input
-											type="text"
+										{/* Custom input */}
+										<Input
+											className="pl-9 pr-8 h-9 py-[22px] rounded-md text-sm border-gray-300 focus-visible:ring-emerald-300"
+											placeholder="Search by admin or type"
 											value={searchTerm}
-											onChange={(e) =>
-												setSearchTerm(e.target.value)
-											}
-											className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-											placeholder="Search members..."
+											onChange={(e) => {
+												setSearchTerm(e.target.value);
+											}}
 										/>
-									</div>
-									<div className="flex items-center gap-4">
-										<div className="flex items-center gap-2">
-											<Label
-												htmlFor="members-per-page"
-												className="text-sm text-gray-600"
-											>
-												Per page:
-											</Label>
-											<Select
-												value={membersPerPage.toString()}
-												onValueChange={(value) =>
-													setMembersPerPage(
-														Number(value)
-													)
-												}
-											>
-												<SelectTrigger className="w-20">
-													<SelectValue />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="6">
-														6
-													</SelectItem>
-													<SelectItem value="12">
-														12
-													</SelectItem>
-													<SelectItem value="24">
-														24
-													</SelectItem>
-													<SelectItem value="48">
-														48
-													</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="text-sm text-gray-600">
-											Showing{" "}
-											{Math.min(
-												(membersPage - 1) *
-													membersPerPage +
-													1,
-												filteredMembers.length
-											)}
-											-
-											{Math.min(
-												membersPage * membersPerPage,
-												filteredMembers.length
-											)}{" "}
-											of {filteredMembers.length} members
+										{/* Right icon: spinner or tick */}
+										<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+											{searchStatus === "typing" ? (
+												<svg
+													className="animate-spin h-4 w-4 text-gray-400"
+													xmlns="http://www.w3.org/2000/svg"
+													fill="none"
+													viewBox="0 0 24 24"
+												>
+													<circle
+														className="opacity-25"
+														cx="12"
+														cy="12"
+														r="10"
+														stroke="currentColor"
+														strokeWidth="4"
+													></circle>
+													<path
+														className="opacity-75"
+														fill="currentColor"
+														d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+													></path>
+												</svg>
+											) : searchStatus === "done" ? (
+												<Check
+													size={16}
+													className="text-emerald-600"
+												/>
+											) : null}
 										</div>
 									</div>
+									{viewMode &&
+										viewMode === "card" &&
+										totalMembersPages > 1 && (
+											<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 bg-white/90 flex-shrink-0">
+												<div className="flex items-center gap-2 text-sm">
+													<span className="text-gray-500">
+														Per page:
+													</span>
+													<Select
+														value={membersPerPage.toString()}
+														onValueChange={(
+															value
+														) =>
+															setMembersPerPage(
+																Number(value)
+															)
+														}
+													>
+														<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[110px] hover:bg-blue-100 flex justify-center">
+															<SelectValue />
+														</SelectTrigger>
+														<SelectContent side="top">
+															{[
+																"6",
+																"12",
+																"24",
+																"48",
+															].map((value) => (
+																<SelectItem
+																	key={value}
+																	value={
+																		value
+																	}
+																>
+																	{value} /
+																	page
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												</div>
+
+												<div className="text-sm text-gray-600 whitespace-nowrap">
+													Showing{" "}
+													{Math.min(
+														(membersPage - 1) *
+															membersPerPage +
+															1,
+														filteredMembers.length
+													)}
+													-
+													{Math.min(
+														membersPage *
+															membersPerPage,
+														filteredMembers.length
+													)}{" "}
+													of {filteredMembers.length}{" "}
+													members
+												</div>
+											</div>
+										)}
 								</div>
 
 								{/* Members Display */}
@@ -1011,7 +957,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 									<>
 										<div className="min-h-[400px]">
 											<MemberTable
-												members={members}
+												members={paginatedMembers}
 												onView={setSelectedMember}
 												onStatusToggle={
 													toggleMemberStatus
@@ -1108,7 +1054,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 								<React.Suspense
 									fallback={<div>Loading...</div>}
 								>
-									<AdminContributionsTable />
+									<AdminContributionsTable currentUser={thisAdminMember}/>
 								</React.Suspense>
 							)}
 
@@ -1129,7 +1075,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 								<div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
 									<AdminSettingsForm
 										settings={settings}
-										setSettings={setSettings}
+										updateSettings={updateSettings}
 										member={thisAdminMember}
 									/>
 								</div>

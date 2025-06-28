@@ -6,24 +6,31 @@ import EditContributionDialog from "./EditContributionDialog";
 import ContributionsTable from "./ContributionsTable";
 import { AdminActivityLog, Contribution, Member } from "@/types/types";
 
-import {
-	saveAdminRecentActivity,
-	saveMemberEditContributionActivity,
-} from "@/utils/recentActivities";
 import { formatCurrency, getNowString } from "@/utils/calculations";
-import { AppSettings, getSettings } from "@/utils/settingsStorage";
 import { useMembers } from "@/hooks/useMembers";
 import { useContributions } from "@/hooks/useContributions";
+import { useRecentActivities } from "@/hooks/useRecentActivities";
+import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
 // Type for islamify_recent_activities
 interface ContributionRecord extends Contribution {
 	memberName: string; // Name of the member for display
 }
 
+interface AdminContributionsTableProps {
+	currentUser: Member
+}
 
-const AdminContributionsTable: React.FC = () => {
-	const {members, updateMember} = useMembers()
-	const {contributions, getTotalContributionsByMember,updateMemberContribution, deleteMemberContribution} = useContributions()
+const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({currentUser}) => {
+	const { members, updateMember } = useMembers();
+	const {
+		contributions,
+		getTotalContributionsByMember,
+		updateMemberContribution,
+		deleteMemberContribution,
+	} = useContributions();
+	const {saveAdminActivity, saveEditContributionActivity} = useRecentActivities()
+	const {settings} = useIslamifySettings()
 	const { toast } = useToast();
 
 	const [editing, setEditing] = useState<ContributionRecord | null>(null);
@@ -37,12 +44,6 @@ const AdminContributionsTable: React.FC = () => {
 	const PER_PAGE = 10;
 	const [page, setPage] = useState(1);
 
-	//load app settings from localStorage
-	const [appSettings, setAppSettings] = useState<AppSettings>();
-	useEffect(() => {
-		const storedSettings = getSettings();
-		setAppSettings(storedSettings);
-	}, []);
 
 
 	// Pagination derived values
@@ -62,7 +63,6 @@ const AdminContributionsTable: React.FC = () => {
 		if (totalPages === 0 && page !== 1) setPage(1);
 	}, [contributions, page, totalPages]);
 
-
 	// Function to update all contributions for a member across the app
 
 	const handleSaveEdit = (
@@ -73,7 +73,6 @@ const AdminContributionsTable: React.FC = () => {
 			(x) => x.date === editing?.date && x.memberId === editing?.memberId
 		);
 		if (idx !== -1 && editing) {
-
 			// --- Update the member's totalContributions in islamify_members, for consistency ---
 			updateMemberContribution(
 				updatedContribution.id,
@@ -81,15 +80,24 @@ const AdminContributionsTable: React.FC = () => {
 			);
 
 			const member: Member = members.find(
-				(m) =>  m.id === updatedContribution.memberId
+				(m) => m.id === updatedContribution.memberId
 			);
-			const totalMemberContributions: number =
-				getTotalContributionsByMember(member.id);
-			member.totalContributions = totalMemberContributions;
 
+			let amountDifference = oldRecord.amount - updatedContribution.amount
+
+
+
+			if(amountDifference < 0){
+				//this means contribution added
+				amountDifference *= -1
+				member.totalContributions+=amountDifference
+			} else if(amountDifference > 0){
+				//then contribution was reduced
+				member.totalContributions-=amountDifference
+			}
 			if (
 				member.totalContributions >=
-				appSettings.loanEligibilityThreshold
+				settings.loanEligibilityThreshold
 			)
 				member.canApplyForLoan = true;
 			else member.canApplyForLoan = false;
@@ -111,7 +119,7 @@ const AdminContributionsTable: React.FC = () => {
 				memberId: updatedContribution.memberId,
 			};
 
-			saveAdminRecentActivity(adminActivity);
+			saveAdminActivity(adminActivity);
 
 			let editContributionText = null;
 
@@ -123,13 +131,15 @@ const AdminContributionsTable: React.FC = () => {
 			if (amountChanged && descriptionChanged) {
 				editContributionText = `Edited contribution amount and description for "${
 					updatedContribution.memberName
-				}", new amount: ${formatCurrency(updatedContribution.amount)}. Description: ${
+				}", new amount: ${formatCurrency(
+					updatedContribution.amount
+				)}. Description: ${
 					updatedContribution.description || "No description provided"
 				}.`;
 			} else if (amountChanged) {
 				editContributionText = `Edited contribution amount for "${
 					updatedContribution.memberName
-				}", new amount: ${formatCurrency(updatedContribution.amount)}`
+				}", new amount: ${formatCurrency(updatedContribution.amount)}`;
 			} else if (descriptionChanged) {
 				editContributionText = `Edited contribution description for "${
 					updatedContribution.memberName
@@ -153,7 +163,7 @@ const AdminContributionsTable: React.FC = () => {
 				memberId: updatedContribution.memberId,
 			};
 
-			saveMemberEditContributionActivity(editContributionActivity);
+			saveEditContributionActivity(editContributionActivity);
 
 			toast({
 				title: "Contribution Updated",
@@ -185,23 +195,21 @@ const AdminContributionsTable: React.FC = () => {
 		deleteMemberContribution(toDelete.id);
 
 		//update member canApplyForLoan status
-		const memberFound = members.find(
-			(m) => m.id === toDelete.memberId
-		);
+		const memberFound = members.find((m) => m.id === toDelete.memberId);
 		if (memberFound) {
-			const updatedMember:Member = {
+			const updatedMember: Member = {
 				...memberFound,
 				totalContributions:
 					memberFound.totalContributions - toDelete.amount, //if totolContributions < 0  set memberTotalContribution to 0
 				canApplyForLoan:
 					memberFound.totalContributions - toDelete.amount >=
-					appSettings.loanEligibilityThreshold, // Assuming 1,000,000 XAF is the threshold
+					settings.loanEligibilityThreshold, // Assuming 1,000,000 XAF is the threshold
 			};
 			if (updatedMember.totalContributions < 0) {
 				updatedMember.totalContributions = 0;
 			}
-			
-			updateMember(updatedMember.id, updatedMember)
+
+			updateMember(updatedMember.id, updatedMember);
 		}
 		// --- Add an admin activity for this delete ---
 		const adminActivity: AdminActivityLog = {
@@ -217,7 +225,7 @@ const AdminContributionsTable: React.FC = () => {
 			adminRole: "admin",
 			memberId: toDelete.memberId,
 		};
-		saveAdminRecentActivity(adminActivity);
+		saveAdminActivity(adminActivity);
 		// --- Add a member activity for this delete ---
 		const memberActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
@@ -230,7 +238,7 @@ const AdminContributionsTable: React.FC = () => {
 			adminRole: "admin",
 			memberId: toDelete.memberId,
 		};
-		saveMemberEditContributionActivity(memberActivity);	
+		saveEditContributionActivity(memberActivity);
 		// Show success toast
 		toast({
 			title: "Contribution Deleted",
@@ -275,6 +283,7 @@ const AdminContributionsTable: React.FC = () => {
 
 			<EditContributionDialog
 				open={editOpen}
+				currentUser={currentUser}
 				onOpenChange={(open) => {
 					setEditOpen(open);
 					if (!open) setEditing(null);

@@ -1,76 +1,163 @@
-
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { LineChart, Line } from "recharts";
 import { Users, DollarSign, TrendingUp, CreditCard } from "lucide-react";
 
-interface AdminStatsCardsProps {
-  totalMembers: number;
-  activeMembers: number;
-  inactiveMembers: number;
-  totalContributions: number;
-  totalRegistrationFees: number;
+interface StatsCardProps {
+	title: string;
+	value: string;
+	subtitle?: string;
+	icon: React.ReactNode;
+	chartData: { date: string; value: number }[];
+	color: "blue" | "emerald" | "indigo" | "purple";
 }
 
-const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
-  totalMembers,
-  activeMembers,
-  inactiveMembers,
-  totalContributions,
-  totalRegistrationFees,
-}) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Members</p>
-            <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Active: {activeMembers} &bull; Inactive: {inactiveMembers}
-            </p>
-          </div>
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <Users className="w-6 h-6 text-blue-600" />
-          </div>
-        </div>
-      </div>
+interface AdminStatsCardsProps {
+	totalMembers: number;
+	activeMembers: number;
+	inactiveMembers: number;
+	totalContributions: number;
+	totalRegistrationFees: number;
+}
 
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Contributions</p>
-            <p className="text-2xl font-bold text-gray-900">{totalContributions.toLocaleString()} XAF</p>
-          </div>
-          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-emerald-600" />
-          </div>
-        </div>
-      </div>
+function StatsCard({
+	title,
+	value,
+	subtitle,
+	icon,
+	chartData,
+	color,
+}: StatsCardProps) {
+	const textColorMap: Record<StatsCardProps["color"], string> = {
+		blue: "text-blue-600",
+		emerald: "text-emerald-600",
+		indigo: "text-indigo-600",
+		purple: "text-purple-600",
+	};
 
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Registration Fees</p>
-            <p className="text-2xl font-bold text-gray-900">{totalRegistrationFees.toLocaleString()} XAF</p>
-          </div>
-          <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-indigo-600" />
-          </div>
-        </div>
-      </div>
+	const bgColorMap: Record<StatsCardProps["color"], string> = {
+		blue: "bg-blue-100",
+		emerald: "bg-emerald-100",
+		indigo: "bg-indigo-100",
+		purple: "bg-purple-100",
+	};
 
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Funds</p>
-            <p className="text-2xl font-bold text-gray-900">{(totalContributions + totalRegistrationFees).toLocaleString()} XAF</p>
-          </div>
-          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-            <CreditCard className="w-6 h-6 text-purple-600" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+	const strokeColorMap: Record<StatsCardProps["color"], string> = {
+		blue: "#3b82f6",
+		emerald: "#10b981",
+		indigo: "#6366f1",
+		purple: "#8b5cf6",
+	};
 
-export default AdminStatsCards;
+	const textColorClass = textColorMap[color];
+	const bgColorClass = bgColorMap[color];
+	const strokeColor = strokeColorMap[color];
 
+	return (
+		<Card className="hover:shadow-md transition-shadow mb-4">
+			<CardHeader>
+				<div className="flex justify-between items-center">
+					<div>
+						<CardTitle className="text-gray-500 text-lg leading-tight">
+							{title}
+						</CardTitle>
+
+						<p
+							className={`text-[16px] mt-3 font-bold ${textColorClass}`}
+						>
+							{value}
+						</p>
+						{subtitle && (
+							<p className="text-gray-500 text-sm mt-0.5">
+								{subtitle}
+							</p>
+						)}
+					</div>
+					<div className={`p-3 rounded-xl ${bgColorClass}`}>
+						{icon}
+					</div>
+				</div>
+			</CardHeader>
+{/* 
+			<CardContent>
+				<ChartContainer
+					config={{
+						value: {
+							label: title,
+							color: strokeColor,
+						},
+					}}
+				>
+					<LineChart
+						data={chartData}
+						margin={{ top: 0, bottom: 0, left: -10, right: 0 }}
+						width={200}
+						height={50}
+					>
+						<Line
+							type="monotone"
+							dataKey="value"
+							stroke={strokeColor}
+							strokeWidth={2}
+							dot={false}
+						/>
+						<ChartTooltipContent
+							nameKey="value"
+							labelFormatter={(x: string) => x}
+						/>
+					</LineChart>
+				</ChartContainer>
+			</CardContent> */}
+		</Card>
+	);
+}
+
+export default function AdminStatsCards({
+	totalMembers,
+	activeMembers,
+	inactiveMembers,
+	totalContributions,
+	totalRegistrationFees,
+}: AdminStatsCardsProps) {
+	const makeData = () =>
+		Array.from({ length: 7 }, (_, i) => ({
+			date: `D-${6 - i}`,
+			value: Math.floor(Math.random() * 1000),
+		}));
+
+	const totalFunds = totalContributions + totalRegistrationFees;
+
+	return (
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			<StatsCard
+				title="Total Members"
+				value={totalMembers.toLocaleString()}
+				subtitle={`Active: ${activeMembers} • Inactive: ${inactiveMembers}`}
+				icon={<Users className="w-6 h-6 text-blue-600" />}
+				chartData={makeData()}
+				color="blue"
+			/>
+			<StatsCard
+				title="Contributions"
+				value={`${totalContributions.toLocaleString()} XAF`}
+				icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
+				chartData={makeData()}
+				color="emerald"
+			/>
+			<StatsCard
+				title="Registration Fees"
+				value={`${totalRegistrationFees.toLocaleString()} XAF`}
+				icon={<TrendingUp className="w-6 h-6 text-indigo-600" />}
+				chartData={makeData()}
+				color="indigo"
+			/>
+			<StatsCard
+				title="Total Funds"
+				value={`${totalFunds.toLocaleString()} XAF`}
+				icon={<CreditCard className="w-6 h-6 text-purple-600" />}
+				chartData={makeData()}
+				color="purple"
+			/>
+		</div>
+	);
+}

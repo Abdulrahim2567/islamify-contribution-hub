@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { MemberProvider } from "./islamify-context/MemberContext";
-import { ContributionProvider } from "./islamify-context/ContributionContext";
+import IslamifyProviders from "@/islamify-provider/IslamifyProviders";
 
 const queryClient = new QueryClient();
 
@@ -16,15 +15,13 @@ const App = () => (
 			<Toaster />
 			<Sonner />
 			<BrowserRouter>
-				<MemberProvider>
-					<ContributionProvider>
-						<Routes>
-							<Route path="/" element={<Index />} />
-							{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-							<Route path="*" element={<NotFound />} />
-						</Routes>
-					</ContributionProvider>
-				</MemberProvider>
+				<IslamifyProviders>
+					<Routes>
+						<Route path="/" element={<Index />} />
+						{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+						<Route path="*" element={<NotFound />} />
+					</Routes>
+				</IslamifyProviders>
 			</BrowserRouter>
 		</TooltipProvider>
 	</QueryClientProvider>

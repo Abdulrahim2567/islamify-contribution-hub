@@ -1,11 +1,6 @@
-const SETTINGS_STORAGE_KEY = 'islamify_settings';
+import { AppSettings } from "@/types/types";
 
-export interface AppSettings {
-  associationName: string;
-  registrationFee: number;
-  maxLoanMultiplier: number;
-  loanEligibilityThreshold: number; // Optional, can be added later
-}
+const SETTINGS_STORAGE_KEY = 'islamify_settings';
 
 export const defaultSettings: AppSettings = {
   associationName: 'Islamify',

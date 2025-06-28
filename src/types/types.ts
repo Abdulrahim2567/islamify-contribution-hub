@@ -30,6 +30,7 @@ export interface AdminActivityLog {
 
 
 
+
 export interface AdminDashboardData {
   totalMembers: number;
   totalContributions: number;
@@ -58,7 +59,6 @@ export interface ContributionRecordActivity extends Contribution {
 }
 
 export interface MemberLoanActivity {
-  id:number;
   type: "loan_request" | "loan_approval" | "loan_rejection";
   amount: number;
   memberId: number;
@@ -110,12 +110,10 @@ export interface AdminLoanActivity {
   memberId: number; // ID of the member related to the activity
 }
 
-export interface IslamifyMemberNotification {
-  id: number;
-  memberId: number; // ID of the member receiving the notification
-  title: string; // Notification title
-  message: string; // Notification message
-  date: string; // Date of the notification
-  isRead: boolean; // Whether the notification has been read
-  type: 'success' | 'info' | 'warning' | 'error'; // Type of notification
+
+export interface AppSettings {
+  associationName: string;
+  registrationFee: number;
+  maxLoanMultiplier: number;
+  loanEligibilityThreshold: number; // Optional, can be added later
 }

@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Contribution } from "@/types/types";
 import {
 	getContributions,
-	addContribution,
-	updateMemberContribution,
-	deleteContribution,
-	getTotalContributions,
-	getTotalMemberContributions,
-	clearContributions,
+	addContribution as addContributionToStorage,
+	updateMemberContribution as updateContributionInStorage,
+	deleteContribution as deleteContributionFromStorage,
+	getTotalContributions as getTotalContributionsFromStorage,
+	getTotalMemberContributions as getTotalByMemberFromStorage,
+	clearContributions as clearContributionsFromStorage,
 } from "@/utils/contributionsStorage";
 
 import { ContributionContext } from "@/hooks/useContributions";
@@ -17,6 +17,7 @@ export interface ContributionContextProps {
 	addMemberContribution: (contribution: Contribution) => void;
 	updateMemberContribution: (id: number, updated: Contribution) => void;
 	deleteMemberContribution: (id: number) => void;
+	deleteAllMemberContributions: (memberId: number) => boolean
 	getTotalContributionsByMember: (memberId: number) => number;
 	getTotalAllContributions: () => number;
 	refresh: () => void;
@@ -38,43 +39,67 @@ export const ContributionProvider = ({
 		setContributions(getContributions());
 	};
 
-	const add = (contribution: Contribution) => {
-		addContribution(contribution);
-		refresh();
+	const addMemberContribution = (contribution: Contribution) => {
+		const updated = [...contributions, contribution];
+		setContributions(updated);
+		addContributionToStorage(contribution);
 	};
 
-	const update = (id: number, updated: Contribution) => {
-		updateMemberContribution(id, updated);
-		refresh();
+	const updateMemberContribution = (id: number, updated: Contribution) => {
+		const updatedList = contributions.map((c) =>
+			c.id === id ? updated : c
+		);
+		setContributions(updatedList);
+		updateContributionInStorage(id, updated);
 	};
 
-	const remove = (id: number) => {
-		deleteContribution(id);
-		refresh();
+	const deleteMemberContribution = (id: number) => {
+		const updated = contributions.filter((c) => c.id !== id);
+		setContributions(updated);
+		deleteContributionFromStorage(id);
 	};
 
-	const getTotalByMember = (memberId: number): number => {
-		return getTotalMemberContributions(memberId);
+	const getTotalContributionsByMember = (memberId: number): number => {
+		return contributions
+			.filter((c) => c.memberId === memberId)
+			.reduce((total, c) => total + c.amount, 0);
 	};
 
-	const getTotalAll = (): number => {
-		return getTotalContributions();
+	const getTotalAllContributions = (): number => {
+		return contributions.reduce((total, c) => total + c.amount, 0);
 	};
 
-	const clear = () => {
-		clearContributions();
-		refresh();
+	const deleteAllContributions = () => {
+		setContributions([]);
+		clearContributionsFromStorage();
 	};
+	const deleteAllMemberContributions = (memberId: number): boolean => {
+		const filtered = contributions.filter((c) => c.memberId !== memberId);
+		const wasDeleted = filtered.length !== contributions.length;
+
+		if (wasDeleted) {
+			setContributions(filtered);
+			// Overwrite localStorage with the filtered list
+			localStorage.setItem(
+				"islamify_contributions",
+				JSON.stringify(filtered)
+			);
+		}
+
+		return wasDeleted;
+	};
+	
 
 	const values: ContributionContextProps = {
 		contributions,
-		addMemberContribution: add,
-		updateMemberContribution: update,
-		deleteMemberContribution: remove,
-		getTotalContributionsByMember: getTotalByMember,
-		getTotalAllContributions: getTotalAll,
+		addMemberContribution,
+		updateMemberContribution,
+		deleteMemberContribution,
+		getTotalContributionsByMember,
+		getTotalAllContributions,
 		refresh,
-		deleteAllContributions: clear,
+		deleteAllContributions,
+		deleteAllMemberContributions
 	};
 
 	return (

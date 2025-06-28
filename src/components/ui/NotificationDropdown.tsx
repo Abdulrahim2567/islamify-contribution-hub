@@ -16,6 +16,7 @@ import {
 	PaginationNext,
 	PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { formatDistanceToNow } from "date-fns";
 
 type TabKey = "admin" | "contribution" | "loan";
 
@@ -63,7 +64,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	// loans mapping
 	const loans: LoanActivityItem[] =
 		memberLoans.map((l) => ({
-			id: l.id,
+			id: l.memberId,
 			timestamp: l.date,
 			text: l.description,
 			color: "amber",
@@ -136,9 +137,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			adminName?: string;
 			memberName?: string;
 		}
-	>(
-		items: T[]
-	): T[] => {
+	>(items: T[]): T[] => {
 		return items.filter((item) => {
 			const combined = [
 				item.text,
@@ -164,7 +163,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			admin: {
 				label: "Admin Activities",
 				color: tabColors.admin,
-				items: filterBySearch(notifications),
+				items: filterBySearch(
+					[...notifications].sort(
+						(a, b) =>
+							new Date(b.timestamp).getTime() -
+							new Date(a.timestamp).getTime()
+					)
+				),
 				unreadCount: notifications.filter((n) => !readIds.has(n.id))
 					.length,
 			},
@@ -172,16 +177,28 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		contribution: {
 			label: "Contribution Activities",
 			color: tabColors.contribution,
-			items: filterBySearch(contributions),
+			items: filterBySearch(
+				[...contributions].sort(
+					(a, b) =>
+						new Date(b.date).getTime() - new Date(a.date).getTime()
+				)
+			),
 			unreadCount: contributions.filter((n) => !readIds.has(n.id)).length,
 		},
 		loan: {
 			label: "Loan Activities",
 			color: tabColors.loan,
-			items: filterBySearch(loans),
+			items: filterBySearch(
+				[...loans].sort(
+					(a, b) =>
+						new Date(b.timestamp).getTime() -
+						new Date(a.timestamp).getTime()
+				)
+			),
 			unreadCount: loans.filter((n) => !readIds.has(n.id)).length,
 		},
 	};
+	
 
 	const currentTab = allTabs[activeTab];
 
@@ -315,9 +332,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 										</p>
 										<div className="flex justify-between items-center mt-2 text-xs">
 											<span className="text-gray-400">
-												{new Date(
-													timestamp
-												).toLocaleString()}
+												{formatDistanceToNow(
+													new Date(timestamp),
+													{
+														addSuffix: true,
+													}
+												).replace(/^about\s/, "")}
 											</span>
 											{badge && (
 												<span

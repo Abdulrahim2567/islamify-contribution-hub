@@ -2,9 +2,16 @@ import React, { useState } from "react";
 import { Check, CreditCard, X } from "lucide-react";
 import { formatCurrency, getNowString } from "../../utils/calculations";
 import { useToast } from "@/hooks/use-toast";
-import { AdminActivityLog, LoanRequest, MemberLoanActivity } from "@/types/types";
-import { saveLoanRequest } from "@/utils/loanStorage";
-import { saveAdminRecentActivity, saveMemberLoanActivity } from "@/utils/recentActivities";
+import {
+	AdminActivityLog,
+	LoanRequest,
+	MemberLoanActivity,
+} from "@/types/types";
+import {
+	saveAdminRecentActivity,
+	saveMemberLoanActivity,
+} from "@/utils/recentActivitiesStorage";
+import { useLoanRequests } from "@/hooks/useLoanRequests";
 
 interface LoanApplicationProps {
 	memberId: string;
@@ -14,7 +21,7 @@ interface LoanApplicationProps {
 	maxLoanMultiplier?: number;
 	onSubmit: (data: { amount: number; purpose: string }) => void;
 	onCancel: () => void;
-};
+}
 
 const LoanApplication: React.FC<LoanApplicationProps> = ({
 	memberId,
@@ -26,6 +33,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 	onCancel,
 }) => {
 	const { toast } = useToast();
+	const { addLoanRequest } = useLoanRequests();
 	const [formData, setFormData] = useState({
 		amount: "",
 		reason: "",
@@ -64,11 +72,10 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 		};
 
 		// Save to localStorage
-		saveLoanRequest(loanRequest);
+		addLoanRequest(loanRequest);
 
 		// Add to member activities
 		try {
-
 			const memberActivity: MemberLoanActivity = {
 				type: "loan_request",
 				amount,
@@ -85,7 +92,9 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 				id: Date.now() + Math.random(),
 				timestamp: getNowString(),
 				type: "loan_request",
-				text: `Loan request of ${formatCurrency(amount)} XAF submitted by ${memberName}.`,
+				text: `Loan request of ${formatCurrency(
+					amount
+				)} XAF submitted by ${memberName}.`,
 				color: "blue",
 				adminName: memberName,
 				adminEmail: memberEmail,
@@ -96,13 +105,16 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 
 			toast({
 				title: "Loan Request Submitted",
-				description: `Your loan request of ${formatCurrency(amount)} XAF has been submitted successfully.`,
+				description: `Your loan request of ${formatCurrency(
+					amount
+				)} XAF has been submitted successfully.`,
 				variant: "default",
 			});
 		} catch (error) {
 			toast({
 				title: "Error",
-				description: "Failed to submit your loan request. Please try again.",
+				description:
+					"Failed to submit your loan request. Please try again.",
 				variant: "destructive",
 			});
 			return;

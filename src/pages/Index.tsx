@@ -12,84 +12,25 @@ import AdminDashboard from "@/components/AdminDashboard";
 import MemberDashboard from "@/components/MemberDashboard";
 import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
-import {
-	addMemberToStorage,
-	readMembersFromStorage,
-	updateMemberInfo,
-} from "@/utils/membersStorage";
+
 import { Member } from "@/types/types";
-import { getSettings } from "@/utils/settingsStorage";
 import { add } from "date-fns";
-import { getNowString } from "@/utils/calculations";
 import { useMembers } from "@/hooks/useMembers";
+import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
-// Default admin user: always present as fallback if localstorage empty
-const DEMO_ADMIN: Member = {
-	id: 1,
-	email: "admin@islamify.org",
-	password: "admin123",
-	role: "admin",
-	name: "Admin User",
-	phone: "677941823",
-	needsPasswordChange: false,
-	registrationFee: 0,
-	totalContributions: 0,
-	isActive: true,
-	loanEligible: false,
-	canApplyForLoan: false,
-	joinDate: getNowString(),
-};
 
-function getPersistedUsers() {
-	// Read from localStorage and ensure demo admin is present
-	addAdminToMembers(); // Ensure demo admin is added if not present
-	const parsed = readMembersFromStorage() || [];
-	// Always include the demo admin if not in localStorage
-	const hasAdmin = parsed.some((u) => u.email === DEMO_ADMIN.email);
-	return hasAdmin ? parsed : [DEMO_ADMIN, ...parsed];
-}
-
-function addAdminToMembers() {
-	// Always ensure the demo admin remains present in the users list
-	const settings = getSettings();
-	DEMO_ADMIN.registrationFee = settings.registrationFee || 0;
-	addMemberToStorage(DEMO_ADMIN);
-}
 
 const Index = () => {
-	const {members, addMember, updateMember} = useMembers();
+	const {members, updateMember} = useMembers();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [currentUser, setCurrentUser] = useState<Member | null>(null);
 	const [showPasswordChange, setShowPasswordChange] = useState(false);
-	//get settings from localStorage and initialize a useState variable
-	const [settings, setSettings] = useState(getSettings());
+	const {settings} = useIslamifySettings()
 
 	const { toast } = useToast();
 
-	// On mount/load: get all users from localStorage (plus demo admin if needed)
-	useEffect(() => {
-		if(members.length < 1){
-			addMember(DEMO_ADMIN)
-		}
-	}, []);
-
-	// On settings change, update the demo admin's registration fee
-	useEffect(() => {
-		if (settings.registrationFee !== undefined) {
-			DEMO_ADMIN.registrationFee = settings.registrationFee;
-			addAdminToMembers(); // Ensure demo admin is updated in localStorage
-		}
-	}, [settings.registrationFee]);
-
-	//on settings change, update the state
-	useEffect(() => {
-		setSettings(getSettings());
-	}, []);
-
 
 	const handleLogout = () => {
-		// Prevent auto-scroll by maintaining current scroll position
-		const currentScrollY = window.scrollY;
 
 		setIsLoggedIn(false);
 		setCurrentUser(null);

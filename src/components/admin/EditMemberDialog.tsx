@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, Pencil, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { Member } from "../../types/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface EditMemberDialogProps {
 	open: boolean;
@@ -49,7 +55,16 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-md">
-				{/* Header */}
+				<DialogTitle>
+					<VisuallyHidden>Edit Member Dialog</VisuallyHidden>
+					{/* Or use visible: <span>Edit Member</span> */}
+				</DialogTitle>
+				<DialogDescription>
+					Update this member's account information including full
+					name, email, and phone number.
+				</DialogDescription>
+
+				{/* Rest of your component remains unchanged */}
 				<div className="text-center mb-8">
 					<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
 						<Pencil className="w-8 h-8 text-white" />
@@ -62,7 +77,6 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 					</p>
 				</div>
 
-				{/* Info Banner */}
 				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
 					<p className="text-sm text-emerald-800">
 						<strong>Email and phone should be unique.</strong>
@@ -72,7 +86,6 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 					</p>
 				</div>
 
-				{/* Form */}
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div>
 						<Label className="block text-sm font-medium text-gray-700 mb-2">

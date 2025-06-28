@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,35 +22,19 @@ import { useToast } from "@/hooks/use-toast";
 import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
-import {
-	getSettings,
-	AppSettings,
-	initializeSettings,
-} from "../utils/settingsStorage";
 
-import {
-	ContributionRecordActivity,
-	LoanRequest,
-	Member,
-	MemberLoanActivity,
-} from "@/types/types";
-import {
-	getApprovedLoanRequests,
-	getLoanRequestsByMemberId,
-	getPendingLoanRequests,
-	getRejectedLoanRequests,
-} from "@/utils/loanStorage";
+import { LoanRequest, Member } from "@/types/types";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { UserDropdown } from "./ui/UserDropdown";
 import { NotificationDropdown } from "./ui/NotificationDropdown";
-import {
-	getAllContributionsActivitiesForMember,
-	getMemberLoanActivitiesByMember,
-} from "@/utils/recentActivities";
 
 import { useContributions } from "@/hooks/useContributions";
 import { useMembers } from "@/hooks/useMembers";
+import { useRecentActivities } from "@/hooks/useRecentActivities";
+import { useLoanRequests } from "@/hooks/useLoanRequests";
+import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
 interface MemberDashboardProps {
 	user: Member;
@@ -63,56 +47,22 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 }) => {
 	const { getTotalContributionsByMember } = useContributions();
 	const { members } = useMembers();
+	const {
+		getAllContributionsActivitiesForMember,
+		getMemberLoanActivitiesByMember,
+	} = useRecentActivities();
+	const {
+		getLoanRequestsByMemberId,
+		getApprovedLoanRequests,
+		getPendingLoanRequests,
+		getRejectedLoanRequests,
+	} = useLoanRequests();
+	const { settings } = useIslamifySettings();
 	const { toast } = useToast();
 	const [activeTab, setActiveTab] = useState<string>("dashboard");
 	const [showLoanModal, setShowLoanModal] = useState(false);
-	const [memberLoans, setMemberLoans] = useState<LoanRequest[]>([]);
-	const [settings, setSettings] = useState<AppSettings>(getSettings());
-
-	// Store all activities for this member (contributions history)
-	const [memberContributionActivities, setMemberContributionActivities] =
-		useState<ContributionRecordActivity[]>();
-	const [memberLoanActivities, setMemberLoanActivities] =
-		useState<MemberLoanActivity[]>();
-
-	useEffect(() => {
-		setMemberContributionActivities(
-			getAllContributionsActivitiesForMember(user.id)
-		);
-		setMemberLoanActivities(getMemberLoanActivitiesByMember(user.id));
-	}, []);
-
-	// Listen for settings changes
-	useEffect(() => {
-		const handleSettingsChange = (event: CustomEvent) => {
-			setSettings(event.detail);
-		};
-
-		window.addEventListener(
-			"settingsChanged",
-			handleSettingsChange as EventListener
-		);
-		return () => {
-			window.removeEventListener(
-				"settingsChanged",
-				handleSettingsChange as EventListener
-			);
-		};
-	}, []);
 
 	// Load member's loans
-	useEffect(() => {
-		try {
-			const storedLoans: LoanRequest[] = getLoanRequestsByMemberId(
-				user.id
-			);
-			if (storedLoans) {
-				setMemberLoans(storedLoans);
-			}
-		} catch (error) {
-			console.error("Error loading member loans:", error);
-		}
-	}, [user.id, activeTab]);
 
 	// Find current member record for up-to-date fields
 	const thisMember = members.find((m) => m.id === user.id);
@@ -126,6 +76,8 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	const canApplyForLoan =
 		thisMember?.canApplyForLoan && thisMember?.loanEligible;
 
+	const memberLoans = getLoanRequestsByMemberId(thisMember.id);
+
 	// Check if member has pending loan application
 	const hasPendingLoan = memberLoans.some(
 		(loan) => loan.status === "pending"
@@ -134,6 +86,11 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	const pendingRequests = getPendingLoanRequests(user.id);
 	const approvedRequests = getApprovedLoanRequests(user.id);
 	const rejectedRequests = getRejectedLoanRequests(user.id);
+
+	const memberLoanActivities = getMemberLoanActivitiesByMember(thisMember.id);
+	const memberContributionActivities = getAllContributionsActivitiesForMember(
+		thisMember.id
+	);
 
 	// ... keep existing code (getStatusIcon and getStatusColor functions)
 
@@ -305,7 +262,9 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 												Registration Fee
 											</p>
 											<p className="text-3xl font-bold text-purple-600">
-												{formatCurrency(registrationFee)}
+												{formatCurrency(
+													registrationFee
+												)}
 											</p>
 											<Badge
 												variant="outline"
@@ -360,13 +319,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 											data.amount
 										)} is pending.`,
 									});
-									// Reload loans to show the new application
-									const userLoans = getLoanRequestsByMemberId(
-										user.id
-									);
-									if (userLoans) {
-										setMemberLoans(userLoans);
-									}
 								}}
 								onCancel={() => setShowLoanModal(false)}
 							/>
@@ -507,10 +459,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 				return null;
 		}
 	};
-
-	useEffect(() => {
-		initializeSettings();
-	}, []);
 
 	return (
 		<SidebarProvider>

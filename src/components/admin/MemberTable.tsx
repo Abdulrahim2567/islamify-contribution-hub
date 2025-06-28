@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
 	ToggleLeft,
 	ToggleRight,
@@ -18,6 +18,14 @@ import {
 	SelectItem,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationPrevious,
+	PaginationNext,
+} from "@/components/ui/pagination";
 
 interface MemberTableProps {
 	members: Member[];
@@ -47,6 +55,29 @@ const MemberTable: React.FC<MemberTableProps> = ({
 	const [editMember, setEditMember] = useState<Member | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
 
+	// Pagination state
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+
+	// Filter members by search term if needed (optional)
+	const filteredMembers = useMemo(() => {
+		if (!searchTerm) return members;
+		const lowerTerm = searchTerm.toLowerCase();
+		return members.filter(
+			(m) =>
+				m.name.toLowerCase().includes(lowerTerm) ||
+				m.email.toLowerCase().includes(lowerTerm) ||
+				m.phone.toLowerCase().includes(lowerTerm)
+		);
+	}, [members, searchTerm]);
+
+	const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+
+	const paginatedMembers = useMemo(() => {
+		const startIdx = (currentPage - 1) * itemsPerPage;
+		return filteredMembers.slice(startIdx, startIdx + itemsPerPage);
+	}, [filteredMembers, currentPage, itemsPerPage]);
+
 	const handleEditSave = (
 		id: number,
 		data: { name: string; email: string; phone: string }
@@ -55,7 +86,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 	};
 
 	return (
-		<div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+		<div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
 			<div className="overflow-x-auto">
 				<table className="w-full">
 					<thead className="bg-gray-50 border-b border-gray-200">
@@ -84,7 +115,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 						</tr>
 					</thead>
 					<tbody className="bg-white divide-y divide-gray-200">
-						{members.map((member, idx) => {
+						{paginatedMembers.map((member, idx) => {
 							const maxLoanAmount = member.totalContributions * 3;
 
 							return (
@@ -263,6 +294,85 @@ const MemberTable: React.FC<MemberTableProps> = ({
 					</tbody>
 				</table>
 			</div>
+
+			{/* Pagination + Items per page */}
+			{totalPages > 1 && (
+				<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 bg-white/90 flex-shrink-0">
+					<div className="flex items-center gap-2 text-sm">
+						<span className="text-gray-500">Items per page:</span>
+						<Select
+							value={String(itemsPerPage)}
+							onValueChange={(value) => {
+								setItemsPerPage(Number(value));
+								setCurrentPage(1);
+							}}
+						>
+							<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[110px] hover:bg-blue-100 flex justify-center mx-auto">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent side="top">
+								{[5, 10, 20, 50].map((value) => (
+									<SelectItem
+										key={value}
+										value={String(value)}
+									>
+										{value} / page
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<Pagination>
+						<PaginationContent>
+							<PaginationItem>
+								<PaginationPrevious
+									href="#"
+									aria-disabled={currentPage === 1}
+									tabIndex={currentPage === 1 ? -1 : 0}
+									onClick={(e) => {
+										e.preventDefault();
+										setCurrentPage((prev) =>
+											Math.max(1, prev - 1)
+										);
+									}}
+								/>
+							</PaginationItem>
+							{Array.from({ length: totalPages }).map((_, i) => (
+								<PaginationItem key={i}>
+									<PaginationLink
+										href="#"
+										isActive={currentPage === i + 1}
+										onClick={(e) => {
+											e.preventDefault();
+											setCurrentPage(i + 1);
+										}}
+									>
+										{i + 1}
+									</PaginationLink>
+								</PaginationItem>
+							))}
+							<PaginationItem>
+								<PaginationNext
+									href="#"
+									aria-disabled={currentPage === totalPages}
+									tabIndex={
+										currentPage === totalPages ? -1 : 0
+									}
+									onClick={(e) => {
+										e.preventDefault();
+										setCurrentPage((prev) =>
+											Math.min(totalPages, prev + 1)
+										);
+									}}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
+				</div>
+			)}
+
 			<EditMemberDialog
 				open={editOpen}
 				onOpenChange={(open) => {
