@@ -17,16 +17,12 @@ import {
 	PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { formatDistanceToNow } from "date-fns";
+import { colorMap } from "@/utils/colorMap";
+import { cn } from "@/lib/utils";
+
+const READ_IDS_STORAGE_KEY = "NOTIFICATION_READ_IDS";
 
 type TabKey = "admin" | "contribution" | "loan";
-
-interface NotificationDropdownProps {
-	notifications: AdminActivityLog[];
-	contributions?: ContributionRecordActivity[];
-	memberLoans?: MemberLoanActivity[];
-	user: Member;
-	itemsPerPage?: number;
-}
 
 type LoanActivityItem = {
 	id: number;
@@ -38,7 +34,13 @@ type LoanActivityItem = {
 	type?: string;
 };
 
-const READ_IDS_STORAGE_KEY = "NOTIFICATION_READ_IDS";
+interface NotificationDropdownProps {
+	notifications: AdminActivityLog[];
+	contributions?: ContributionRecordActivity[];
+	memberLoans?: MemberLoanActivity[];
+	user: Member;
+	itemsPerPage?: number;
+}
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	notifications,
@@ -50,42 +52,40 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	const [open, setOpen] = useState(false);
 	const defaultTab: TabKey = user.role === "admin" ? "admin" : "contribution";
 	const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
-
-	// page per tab, persist page number per tab
 	const [tabPages, setTabPages] = useState<Record<TabKey, number>>({
 		admin: 1,
 		contribution: 1,
 		loan: 1,
 	});
 	const [searchTerm, setSearchTerm] = useState("");
-	const dropdownRef = useRef<HTMLDivElement>(null);
 	const [readIds, setReadIds] = useState<Set<number>>(new Set());
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	// loans mapping
-	const loans: LoanActivityItem[] =
-		memberLoans.map((l) => ({
-			id: l.memberId,
-			timestamp: l.date,
-			text: l.description,
-			color: "amber",
-			memberName: l.memberName,
-			type: l.type,
-		})) ?? [];
+	const loans: LoanActivityItem[] = memberLoans.map((l) => ({
+		id: l.memberId,
+		timestamp: l.date,
+		text: l.description,
+		color:
+			l.type === "loan_request"
+				? "emerald"
+				: l.type === "loan_rejection"
+				? "red"
+				: "blue",
+		memberName: l.memberName,
+		type: l.type,
+	}));
 
 	const markCurrentTabAsRead = () => {
 		let idsToMark: number[] = [];
 		if (activeTab === "admin") idsToMark = notifications.map((n) => n.id);
 		else if (activeTab === "contribution")
 			idsToMark = contributions.map((c) => c.id);
-		else if (activeTab === "loan") idsToMark = loans.map((l: any) => l.id);
+		else if (activeTab === "loan") idsToMark = loans.map((l) => l.id);
 		setReadIds((prev) => new Set([...prev, ...idsToMark]));
 	};
 
 	useEffect(() => {
-		if (!(activeTab in allTabs)) {
-			setActiveTab(defaultTab);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		if (!(activeTab in allTabs)) setActiveTab(defaultTab);
 	}, [user, activeTab, defaultTab]);
 
 	useEffect(() => {
@@ -93,9 +93,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		if (stored) {
 			try {
 				const parsed = JSON.parse(stored);
-				if (Array.isArray(parsed)) {
-					setReadIds(new Set(parsed));
-				}
+				if (Array.isArray(parsed)) setReadIds(new Set(parsed));
 			} catch {
 				console.warn("Failed to parse stored read IDs");
 			}
@@ -124,12 +122,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	}, []);
 
 	useEffect(() => {
-		if (open) {
-			markCurrentTabAsRead();
-		}
+		if (open) markCurrentTabAsRead();
 	}, [open, activeTab]);
 
-	// Filtering helper
 	const filterBySearch = <
 		T extends {
 			text?: string;
@@ -137,7 +132,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			adminName?: string;
 			memberName?: string;
 		}
-	>(items: T[]): T[] => {
+	>(
+		items: T[]
+	): T[] => {
 		return items.filter((item) => {
 			const combined = [
 				item.text,
@@ -150,6 +147,16 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				.toLowerCase();
 			return combined.includes(searchTerm.toLowerCase());
 		});
+	};
+
+	const getContributionColor = (description: string) => {
+		if (description.includes("Added")) return "emerald";
+		if (description.includes("Deleted") || description.includes("Delete"))
+			return "red";
+		if (description.includes("Edited")) return "blue";
+		if (description.includes("Edit Contribution")) return "cyan";
+		if (description.includes("Changed")) return "purple";
+		return "gray";
 	};
 
 	const tabColors: Record<TabKey, string> = {
@@ -188,23 +195,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		loan: {
 			label: "Loan Activities",
 			color: tabColors.loan,
-			items: filterBySearch(
-				[...loans].sort(
-					(a, b) =>
-						new Date(b.timestamp).getTime() -
-						new Date(a.timestamp).getTime()
-				)
-			),
+			items: filterBySearch(loans),
 			unreadCount: loans.filter((n) => !readIds.has(n.id)).length,
 		},
 	};
-	
 
 	const currentTab = allTabs[activeTab];
-
-	// IMPORTANT: Use page number from tabPages state keyed by activeTab
 	const page = tabPages[activeTab] || 1;
-
 	const totalPages = Math.ceil(currentTab.items.length / itemsPerPage);
 
 	const paginatedItems = currentTab.items.slice(
@@ -213,12 +210,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	);
 
 	const changePage = (newPage: number) => {
-		if (newPage < 1 || newPage > totalPages) return; // safety check
+		if (newPage < 1 || newPage > totalPages) return;
 		setTabPages((prev) => ({ ...prev, [activeTab]: newPage }));
 	};
 
 	return (
-		<div className="relative" ref={dropdownRef}>
+		<div className="relative bg-background" ref={dropdownRef}>
 			<button
 				onClick={() => setOpen(!open)}
 				className="relative inline-flex items-center p-2 text-gray-500 hover:text-gray-900 transition-colors"
@@ -231,61 +228,54 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 			<div
 				className={clsx(
-					"absolute right-0 mt-2 w-[28rem] max-w-sm bg-white border border-gray-200 rounded-lg shadow-xl z-50 transition-all duration-200",
+					"absolute right-0 mt-2 w-[28rem] max-w-sm bg-background border border-gray-200 dark:border-gray-900 rounded-lg shadow-xl z-50 transition-all duration-200",
 					open
 						? "opacity-100 scale-100"
 						: "opacity-0 scale-95 pointer-events-none"
 				)}
 			>
-				{/* Header */}
-				<div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-					<div className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
+				<div className="px-4 py-3 border-b border-gray-100 dark:border-gray-900 bg-background">
+					<div className="font-semibold text-gray-700 dark:text-gray-300/80 mb-2 flex items-center justify-between">
 						<span>Notifications</span>
 					</div>
 					<div className="flex gap-1 mb-2">
-						{Object.entries(allTabs).map(([key, tab]) => {
-							const color = tabColors[key as TabKey];
-							return (
-								<button
-									key={key}
-									className={clsx(
-										"px-3 py-1 rounded-full text-xs font-medium transition-colors",
-										activeTab === key
-											? "bg-emerald-600 text-white"
-											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-									)}
-									onClick={() => {
-										setActiveTab(key as TabKey);
-										// Reset search and keep page or reset page for new tab
-										setSearchTerm("");
-										// Optionally reset page to 1 when switching tabs:
-										setTabPages((prev) => ({
-											...prev,
-											[key as TabKey]:
-												prev[key as TabKey] || 1,
-										}));
-									}}
-								>
-									{tab.label}
-									{tab.unreadCount > 0 && (
-										<span className="ml-2 text-xs font-semibold text-red-600">
-											({tab.unreadCount})
-										</span>
-									)}
-								</button>
-							);
-						})}
+						{Object.entries(allTabs).map(([key, tab]) => (
+							<button
+								key={key}
+								className={clsx(
+									"px-3 py-1 rounded-full text-xs font-medium transition-colors",
+									activeTab === key
+										? "bg-emerald-500 dark:bg-emerald-400/5 dark:text-emerald-300/80 text-white"
+										: "bg-background  dark:text-gray-300/80 dark:hover:bg-emerald-400/5 dark:hover:text-emerald-300/80 hover:bg-gray-200/30 hover:text-black"
+								)}
+								onClick={() => {
+									setActiveTab(key as TabKey);
+									setSearchTerm("");
+									setTabPages((prev) => ({
+										...prev,
+										[key as TabKey]:
+											prev[key as TabKey] || 1,
+									}));
+								}}
+							>
+								{tab.label}
+								{tab.unreadCount > 0 && (
+									<span className="ml-2 text-xs font-semibold text-red-600">
+										({tab.unreadCount})
+									</span>
+								)}
+							</button>
+						))}
 					</div>
 					<div className="relative">
 						<Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
 						<input
 							type="text"
 							placeholder="Search..."
-							className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							className="w-full pl-9 pr-3 py-2 border-[2px] text-sm rounded-md border-gray-200 dark:border-gray-900 bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
 							value={searchTerm}
 							onChange={(e) => {
 								setSearchTerm(e.target.value);
-								// Reset page to 1 when search changes
 								setTabPages((prev) => ({
 									...prev,
 									[activeTab]: 1,
@@ -295,10 +285,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 					</div>
 				</div>
 
-				{/* Notifications */}
-				<div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+				<div className="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
 					{paginatedItems.length === 0 ? (
-						<div className="py-12 flex justify-center items-center text-gray-400">
+						<div className="py-12 flex justify-center items-center text-gray-400 dark:text-gray-300/80">
 							<History className="mr-2 w-5 h-5" />
 							<span>No notifications</span>
 						</div>
@@ -310,24 +299,55 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 							const text = item.text || item.description || "";
 							const timestamp = item.timestamp || item.date;
 							const badge = item.type?.replace(/_/g, " ");
-							const color = item.color || tabColors[activeTab];
+							let color = item.color;
+							if (activeTab === "contribution")
+								color = getContributionColor(item.type);
+							else if (activeTab === "loan") color = item.color;
+							else color = item.color || tabColors[activeTab];
 							return (
 								<div
 									key={`notif-${id}`}
-									className="flex gap-3 px-4 py-3 items-start hover:bg-gray-50 text-sm"
+									className={cn(
+										"flex gap-3 px-4 py-3 items-start text-sm transition-colors",
+										color === "emerald" &&
+											"hover:bg-emerald-100/40 dark:hover:bg-emerald-500/5",
+										color === "red" &&
+											"hover:bg-red-100/40 dark:hover:bg-red-500/5",
+										color === "blue" &&
+											"hover:bg-blue-100/40 dark:hover:bg-blue-500/5",
+										color === "indigo" &&
+											"hover:bg-indigo-100/40 dark:hover:bg-indigo-500/5",
+										color === "cyan" &&
+											"hover:bg-cyan-100/40 dark:hover:bg-cyan-500/5",
+										color === "violet" &&
+											"hover:bg-violet-100/40 dark:hover:bg-violet-500/5",
+										color === "purple" &&
+											"hover:bg-purple-100/40 dark:hover:bg-purple-500/5",
+										(color === "gray" ||
+											color === "black") &&
+											"hover:bg-gray-100/40 dark:hover:bg-gray-500/5"
+									)}
 								>
-									<div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center">
+									<div
+										className={`w-10 h-10 rounded-full bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center dark:bg-gradient-to-br dark:from-emerald-400/5 dark:to-blue-400/5`}
+									>
 										<Bell
-											className={`w-5 h-5 text-${color}-500`}
+											className={cn(
+												"w-5 h-5",
+												(
+													colorMap[color] ??
+													colorMap.gray
+												).text
+											)}
 										/>
 									</div>
 									<div className="flex-1 min-w-0">
 										<div className="flex items-center gap-2 mb-1">
-											<span className="font-medium text-gray-900">
+											<span className="font-medium text-gray-900 dark:text-gray-300/80">
 												{title}
 											</span>
 										</div>
-										<p className="text-gray-800 text-[13px]">
+										<p className="text-gray-800 text-[13px] dark:text-gray-400/80">
 											{text}
 										</p>
 										<div className="flex justify-between items-center mt-2 text-xs">
@@ -341,7 +361,17 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 											</span>
 											{badge && (
 												<span
-													className={`px-2 py-0.5 rounded-full capitalize bg-${color}-100 text-${color}-700 text-xs`}
+													className={cn(
+														"px-2 py-0.5 rounded-full capitalize text-xs",
+														(
+															colorMap[color] ??
+															colorMap.gray
+														).bg,
+														(
+															colorMap[color] ??
+															colorMap.gray
+														).text
+													)}
 												>
 													{badge}
 												</span>
@@ -354,9 +384,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 					)}
 				</div>
 
-				{/* Pagination */}
 				{totalPages > 1 && (
-					<div className="flex justify-center py-3 border-t border-gray-100 bg-gray-50">
+					<div className="flex justify-center py-3 border-t border-gray-100 dark:border-gray-900 bg-background">
 						<Pagination>
 							<PaginationContent>
 								<PaginationItem>
@@ -398,6 +427,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 														e.preventDefault();
 														changePage(i + 1);
 													}}
+													className="hover:bg-blue-400/5 text-gray-800 dark:text-gray-300/80"
 												>
 													{i + 1}
 												</PaginationLink>

@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line } from "recharts";
 import { Users, DollarSign, TrendingUp, CreditCard } from "lucide-react";
+import { formatCurrency } from "@/utils/calculations";
 
 interface StatsCardProps {
 	title: string;
@@ -29,17 +30,17 @@ function StatsCard({
 	color,
 }: StatsCardProps) {
 	const textColorMap: Record<StatsCardProps["color"], string> = {
-		blue: "text-blue-600",
-		emerald: "text-emerald-600",
-		indigo: "text-indigo-600",
-		purple: "text-purple-600",
+		blue: "text-blue-600 dark:text-blue-300/80",
+		emerald: "text-emerald-600 dark:text-emerald-300/80",
+		indigo: "text-indigo-600 dark:text-indigo-300/80",
+		purple: "text-purple-600 dark:text-purple-300/80",
 	};
 
 	const bgColorMap: Record<StatsCardProps["color"], string> = {
-		blue: "bg-blue-100",
-		emerald: "bg-emerald-100",
-		indigo: "bg-indigo-100",
-		purple: "bg-purple-100",
+		blue: "bg-blue-100 dark:bg-blue-400/5",
+		emerald: "bg-emerald-100 dark:bg-emerald-300/5",
+		indigo: "bg-indigo-100 dark:bg-indigo-300/5",
+		purple: "bg-purple-100 dark:bg-purple-300/5",
 	};
 
 	const strokeColorMap: Record<StatsCardProps["color"], string> = {
@@ -54,7 +55,7 @@ function StatsCard({
 	const strokeColor = strokeColorMap[color];
 
 	return (
-		<Card className="hover:shadow-md transition-shadow mb-4">
+		<Card className="hover:shadow-md transition-shadow mb-4 dark:border-gray-900">
 			<CardHeader>
 				<div className="flex justify-between items-center">
 					<div>
@@ -139,21 +140,21 @@ export default function AdminStatsCards({
 			/>
 			<StatsCard
 				title="Contributions"
-				value={`${totalContributions.toLocaleString()} XAF`}
+				value={`${formatCurrency(totalContributions)}`}
 				icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
 				chartData={makeData()}
 				color="emerald"
 			/>
 			<StatsCard
 				title="Registration Fees"
-				value={`${totalRegistrationFees.toLocaleString()} XAF`}
+				value={`${formatCurrency(totalRegistrationFees)}`}
 				icon={<TrendingUp className="w-6 h-6 text-indigo-600" />}
 				chartData={makeData()}
 				color="indigo"
 			/>
 			<StatsCard
 				title="Total Funds"
-				value={`${totalFunds.toLocaleString()} XAF`}
+				value={`${formatCurrency(totalFunds)}`}
 				icon={<CreditCard className="w-6 h-6 text-purple-600" />}
 				chartData={makeData()}
 				color="purple"

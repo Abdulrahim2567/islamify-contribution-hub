@@ -18,10 +18,12 @@ interface ContributionRecord extends Contribution {
 }
 
 interface AdminContributionsTableProps {
-	currentUser: Member
+	currentUser: Member;
 }
 
-const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({currentUser}) => {
+const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
+	currentUser,
+}) => {
 	const { members, updateMember } = useMembers();
 	const {
 		contributions,
@@ -29,8 +31,9 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({curren
 		updateMemberContribution,
 		deleteMemberContribution,
 	} = useContributions();
-	const {saveAdminActivity, saveEditContributionActivity} = useRecentActivities()
-	const {settings} = useIslamifySettings()
+	const { saveAdminActivity, saveEditContributionActivity } =
+		useRecentActivities();
+	const { settings } = useIslamifySettings();
 	const { toast } = useToast();
 
 	const [editing, setEditing] = useState<ContributionRecord | null>(null);
@@ -43,8 +46,6 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({curren
 	// Pagination state
 	const PER_PAGE = 10;
 	const [page, setPage] = useState(1);
-
-
 
 	// Pagination derived values
 	const totalPages = Math.ceil(contributions.length / PER_PAGE);
@@ -83,22 +84,18 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({curren
 				(m) => m.id === updatedContribution.memberId
 			);
 
-			let amountDifference = oldRecord.amount - updatedContribution.amount
+			let amountDifference =
+				oldRecord.amount - updatedContribution.amount;
 
-
-
-			if(amountDifference < 0){
+			if (amountDifference < 0) {
 				//this means contribution added
-				amountDifference *= -1
-				member.totalContributions+=amountDifference
-			} else if(amountDifference > 0){
+				amountDifference *= -1;
+				member.totalContributions += amountDifference;
+			} else if (amountDifference > 0) {
 				//then contribution was reduced
-				member.totalContributions-=amountDifference
+				member.totalContributions -= amountDifference;
 			}
-			if (
-				member.totalContributions >=
-				settings.loanEligibilityThreshold
-			)
+			if (member.totalContributions >= settings.loanEligibilityThreshold)
 				member.canApplyForLoan = true;
 			else member.canApplyForLoan = false;
 
@@ -252,20 +249,20 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({curren
 	};
 
 	return (
-		<div className="mx-auto px-4 py-6 ">
+		<div className="mx-auto">
 			<div className="mb-8">
-				<div className="flex items-center gap-4 mb-2">
-					<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-						<Coins className="w-6 h-6 text-white" />
-					</div>
-					<div>
-						<h1 className="text-3xl font-bold text-gray-900">
+				<div>
+					<div className="flex items-center gap-3 mb-2">
+						<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
+							<Coins className="w-6 h-6 text-white" />
+						</div>
+						<h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
 							Manage Contributions
 						</h1>
-						<p className="text-gray-600">
-							Edit or delete individual member contributions
-						</p>
 					</div>
+					<p className="text-gray-600 ml-1 opacity-75">
+						Edit or Delete individual member contributions
+					</p>
 				</div>
 			</div>
 

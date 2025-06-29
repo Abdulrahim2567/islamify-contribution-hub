@@ -1,72 +1,72 @@
-
-import { Calendar, Home, Users, Coins, Settings, LogOut, CreditCard, ChevronDown, ArrowLeft } from "lucide-react";
+import {
+	Home,
+	Users,
+	Coins,
+	Settings,
+	CreditCard,
+	ArrowLeft,
+} from "lucide-react";
 import { useState } from "react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
+	Sidebar,
+	SidebarContent,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarHeader,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Member } from "@/types/types";
 import { useSidebar } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  onLogout: () => void;
-  user: Member;
+	activeTab: string;
+	onTabChange: (tab: string) => void;
+	onLogout: () => void;
+	user: Member;
 }
 
 const navigationItems = [
-  {
-    title: "Dashboard",
-    value: "dashboard",
-    icon: Home,
-  },
-  {
-    title: "Members",
-    value: "members", 
-    icon: Users,
-  },
-  {
-    title: "Contributions",
-    value: "contributions",
-    icon: Coins,
-  },
-  {
-    title: "Loans",
-    value: "loans",
-    icon: CreditCard,
-  },
-  {
-    title: "Settings",
-    value: "settings",
-    icon: Settings,
-  },
+	{
+		title: "Dashboard",
+		value: "dashboard",
+		icon: Home,
+	},
+	{
+		title: "Members",
+		value: "members",
+		icon: Users,
+	},
+	{
+		title: "Contributions",
+		value: "contributions",
+		icon: Coins,
+	},
+	{
+		title: "Loans",
+		value: "loans",
+		icon: CreditCard,
+	}
 ];
 
-export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSidebarProps) {
+export function AppSidebar({
+	activeTab,
+	onTabChange,
+	onLogout,
+	user,
+}: AppSidebarProps) {
+	const { toggleSidebar } = useSidebar();
 
-  const {toggleSidebar}  = useSidebar()
-  
-
-  return (
-		<Sidebar className="fixed top-0 left-0 h-screen">
-			<SidebarHeader className="border-b border-gray-200 p-[42px] overflow-visible">
-				<button className="absolute mt-3 top-3 right-3 text-gray-400 hover:text-gray-600 p-2 rounded-[25px] h-fit w-fit bg-gray-100 hover:bg-gray-200 transition" onClick={toggleSidebar}>
-					<ArrowLeft size={18}/>
+	return (
+		<Sidebar className="fixed top-0 left-0 h-screen text-foreground border-r border-border">
+			<SidebarHeader className="border-b border-border p-[42px] overflow-visible">
+				<button
+					onClick={toggleSidebar}
+					className="absolute mt-3 top-3 right-3 p-2 rounded-full h-fit w-fit transition text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/70"
+				>
+					<ArrowLeft size={18} />
 				</button>
 			</SidebarHeader>
 
@@ -83,17 +83,17 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
                       transition-all duration-300 ease-in-out transform
                       ${
 							activeTab === item.value
-								? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 scale-105 animate-fade-in"
-								: "hover:scale-102 hover:bg-gray-50"
+								? "bg-muted text-foreground hover:bg-muted/80 scale-105"
+								: "hover:scale-102 hover:bg-muted/50"
 						}
                     `}
 									>
-										<button className="w-full">
+										<button className="w-full flex items-center gap-2">
 											<item.icon
 												className={`transition-colors duration-200 ${
 													activeTab === item.value
-														? "text-emerald-600"
-														: ""
+														? "text-primary"
+														: "text-muted-foreground"
 												}`}
 											/>
 											<span className="transition-colors duration-200">
@@ -108,5 +108,5 @@ export function AppSidebar({ activeTab, onTabChange, onLogout, user }: AppSideba
 				</SidebarGroup>
 			</SidebarContent>
 		</Sidebar>
-  );
+	);
 }

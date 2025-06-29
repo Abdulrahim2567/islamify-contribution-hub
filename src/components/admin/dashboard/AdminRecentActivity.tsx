@@ -19,11 +19,15 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AdminActivityLog } from "@/types/types";
+import { colorMap } from "@/utils/colorMap";
 
 interface AdminRecentActivityProps {
 	activities: AdminActivityLog[];
 	defaultItemsPerPage?: number;
 }
+
+// Safe color map for Tailwind colors
+
 
 const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 	activities,
@@ -78,11 +82,11 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 
 	return (
 		<div
-			className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col"
+			className="bg-transparent rounded-xl shadow-sm border border-gray-200 dark:border-gray-900 flex flex-col"
 			style={{ height: "calc(100vh - 200px)" }}
 		>
 			{/* Header */}
-			<div className="p-6 border-b border-gray-200 flex items-center justify-between flex-wrap gap-3">
+			<div className="p-6 border-b border-gray-200 dark:border-gray-900 flex items-center justify-between flex-wrap gap-3">
 				<h2 className="text-sm font-semibold text-gray-500">
 					{activities.length} Admin Activities
 				</h2>
@@ -94,7 +98,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 							className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
 						/>
 						<Input
-							className="pl-9 pr-8 h-9 py-[19px] rounded-md text-sm border border-gray-300 focus-visible:ring-emerald-300 w-full"
+							className="pl-9 pr-8 h-9 py-[19px] rounded-md text-sm border border-gray-300 dark:border-gray-900 focus-visible:ring-emerald-300 w-full"
 							placeholder="Search by admin or type"
 							value={searchTerm}
 							onChange={(e) => {
@@ -105,7 +109,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 						<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
 							{searchStatus === "typing" ? (
 								<svg
-									className="animate-spin h-4 w-4 text-gray-400"
+									className="animate-spin h-4 w-4 text-blue-400"
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 24 24"
@@ -137,7 +141,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 							setDateFormat(val as "default" | "relative")
 						}
 					>
-						<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-semibold tracking-widest w-[130px] hover:bg-blue-100 flex justify-center">
+						<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-blue-300/80 rounded-full font-semibold tracking-widest w-[130px] hover:bg-blue-100 flex justify-center">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent side="top">
@@ -158,76 +162,106 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 						</div>
 					) : (
 						<ol className="flex flex-col">
-							{paginatedActivities.map((act, idx) => (
-								<li
-									key={act.id}
-									className={cn(
-										`flex items-start gap-4 px-6 py-4 animate-fade-in relative group`,
-										idx === 0 && activityPage === 1
-											? "bg-emerald-50/60 border-l-4 border-emerald-500 shadow-md"
-											: "",
-										"hover:bg-emerald-100/40 transition-all"
-									)}
-									style={{
-										animationDelay: `${idx * 50}ms`,
-										animationFillMode: "both",
-									}}
-								>
-									<div className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50">
-										<History
-											size={26}
-											className={`text-${
-												act.color || "gray"
-											}-500`}
-										/>
-									</div>
-									<div className="flex-1 min-w-0">
-										<div className="flex flex-col min-[494px]:flex-row min-[494px]:items-center gap-1 min-[494px]:gap-2 mb-1">
-											<span className="font-bold text-emerald-700 text-base">
-												{act.adminName || "Admin"}
-											</span>
-											<span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-												{act.adminEmail}
-											</span>
+							{paginatedActivities.map((act, idx) => {
+								const color =
+									colorMap[act.color] ?? colorMap["gray"];
+								return (
+									<li
+										key={act.id}
+										className={cn(
+											"flex items-start gap-4 px-6 py-4 animate-fade-in relative group transition-all",
+											idx === 0 && activityPage === 1
+												? `${color.bg} border-l-4 ${color.border} shadow-md`
+												: "",
+											act.color === "emerald" &&
+												"hover:bg-emerald-100/40 dark:hover:bg-emerald-500/5",
+											act.color === "red" &&
+												"hover:bg-red-100/40 dark:hover:bg-red-500/5",
+											act.color === "blue" &&
+												"hover:bg-blue-100/40 dark:hover:bg-blue-500/5",
+											act.color === "indigo" &&
+												"hover:bg-indigo-100/40 dark:hover:bg-indigo-500/5",
+											act.color === "cyan" &&
+												"hover:bg-cyan-100/40 dark:hover:bg-cyan-500/5",
+											act.color === "violet" &&
+												"hover:bg-violet-100/40 dark:hover:bg-violet-500/5",
+											act.color === "purple" &&
+												"hover:bg-purple-100/40 dark:hover:bg-purple-500/5",
+											(act.color === "gray" ||
+												act.color === "black") &&
+												"hover:bg-gray-100/40 dark:hover:bg-gray-500/5"
+										)}
+										style={{
+											animationDelay: `${idx * 50}ms`,
+											animationFillMode: "both",
+										}}
+									>
+										<div className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50 dark:from-emerald-500/10 dark:via-blue-500/10 dark:to-indigo-500/10">
+											<History
+												size={26}
+												className={color.text}
+											/>
 										</div>
-										<div className="text-gray-800 text-[13px] mb-2">
-											{act.text}
-										</div>
-										<div className="flex justify-end items-center gap-x-4 text-xs text-gray-500">
-											<span
-												className={`px-2 py-0.5 rounded-full bg-${
-													act.color || "gray"
-												}-100 text-${
-													act.color || "gray"
-												}-700 capitalize`}
-											>
-												{act.type.replace(/_/g, " ")}
-											</span>
-											<span>
-												{dateFormat === "relative"
-													? formatDistanceToNow(
-															new Date(
+										<div className="flex-1 min-w-0">
+											<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+												<span
+													className={cn(
+														"font-bold text-base",
+														color.text
+													)}
+												>
+													{act.adminName || "Admin"}
+												</span>
+												<span className="text-xs text-gray-500 dark:text-gray-400 rounded-3xl bg-gray-100 dark:bg-gray-500/10 px-2 py-0.5">
+													{act.adminEmail}
+												</span>
+											</div>
+											<div className="text-gray-800 dark:text-gray-200/60 text-[13px] mb-2">
+												{act.text}
+											</div>
+											<div className="flex justify-end items-center gap-x-4 text-xs text-gray-500">
+												<span
+													className={cn(
+														"px-2 py-0.5 rounded-full capitalize",
+														color.bg,
+														color.text
+													)}
+												>
+													{act.type.replace(
+														/_/g,
+														" "
+													)}
+												</span>
+												<span>
+													{dateFormat === "relative"
+														? formatDistanceToNow(
+																new Date(
+																	act.timestamp
+																),
+																{
+																	addSuffix:
+																		true,
+																}
+														  ).replace(
+																/^about\s/,
+																""
+														  )
+														: new Date(
 																act.timestamp
-															),
-															{
-																addSuffix: true,
-															}
-													  ).replace(/^about\s/, "")
-													: new Date(
-															act.timestamp
-													  ).toLocaleString()}
-											</span>
+														  ).toLocaleString()}
+												</span>
+											</div>
 										</div>
-									</div>
-								</li>
-							))}
+									</li>
+								);
+							})}
 						</ol>
 					)}
 				</div>
 
 				{/* Pagination */}
 				{totalPages > 1 && (
-					<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 bg-white/90 flex-shrink-0">
+					<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 dark:border-gray-900 bg-transparent flex-shrink-0">
 						<div className="flex items-center gap-2 text-sm">
 							<span className="text-gray-500">
 								Items per page:
@@ -239,7 +273,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 									setActivityPage(1);
 								}}
 							>
-								<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full uppercase font-semibold tracking-widest w-[110px] hover:bg-blue-100 flex justify-center">
+								<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-blue-300/80 rounded-full capitalize font-semibold tracking-widest w-[150px] hover:bg-blue-100 flex justify-center dark:border-gray-900 dark:focus-visible:border-gray-900">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent side="top">
@@ -247,6 +281,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 										<SelectItem
 											key={value}
 											value={String(value)}
+											className="hover:cursor-pointer text-gray-200 dark:text-gray-300/80"
 										>
 											{value} / page
 										</SelectItem>
@@ -282,6 +317,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 													e.preventDefault();
 													setActivityPage(i + 1);
 												}}
+												className="hover:bg-blue-400/5 text-gray-800 dark:text-gray-300/80"
 											>
 												{i + 1}
 											</PaginationLink>

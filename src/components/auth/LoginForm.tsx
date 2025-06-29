@@ -79,7 +79,7 @@ const LoginForm = ({
 					<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
 						<LogIn className="w-8 h-8 text-white" />
 					</div>
-					<CardTitle className="text-2xl font-bold text-gray-900 mb-1">
+					<CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-300 mb-1">
 						Sign In
 					</CardTitle>
 					<CardDescription>
@@ -87,11 +87,11 @@ const LoginForm = ({
 					</CardDescription>
 				</CardHeader>
 				{/* Info banner */}
-				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mx-6 mb-5 mt-2 text-center">
-					<p className="text-sm text-emerald-800">
+				<div className="bg-emerald-50 border border-emerald-200 border-dashed dark:border-emerald-200/50 dark:bg-emerald-400/5 rounded-lg p-4 mx-6 mb-5 mt-2 text-center">
+					<p className="text-sm text-emerald-800 dark:text-emerald-300/70">
 						Sign in as an admin or member to get started.
 						<br />
-						<span className="text-xs text-emerald-600">
+						<span className="text-xs text-emerald-600 dark:text-emerald-700">
 							Use your email and password. Default users are
 							provided below for demo.
 						</span>
@@ -163,19 +163,19 @@ const LoginForm = ({
 						</Button>
 					</form>
 					{user && !user.isActive && (
-						<div className="mt-5 flex text-center text-sm text-gray-600 rounded-lg border border-dashed border-yellow-100 bg-yellow-50 p-3">
-							<Info/>
-							<p className="font-semibold mb-1 ml-2">
+						<div className="mt-5 flex text-center text-sm rounded-lg border border-dashed border-yellow-100 dark:border-yellow-100/50 bg-yellow-50 dark:bg-yellow-300/5 p-3">
+							<Info className=" dark:text-yellow-400 text-yellow-600" />
+							<p className="font-semibold mb-1 ml-2 dark:text-yellow-300/70 text-yellow-600">
 								Account temporary disabled. Please contact your
 								admin to enable your account.
 							</p>
 						</div>
 					)}
 
-					<div className="mt-5 text-center text-sm text-gray-600 rounded-lg border border-dashed border-blue-100 bg-blue-50 p-3">
+					<div className="mt-5 text-center text-sm text-gray-600 dark:text-gray-300 rounded-lg border border-dashed border-blue-100 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-300/5 p-3">
 						<p className="font-semibold mb-1">Demo credentials:</p>
 						<p>
-							<span className="font-medium text-blue-700">
+							<span className="font-medium text-blue-700 dark:text-blue-700/75">
 								Admin:
 							</span>
 							&nbsp; admin@islamify.org / admin123

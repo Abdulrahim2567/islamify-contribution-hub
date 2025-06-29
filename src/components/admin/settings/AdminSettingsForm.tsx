@@ -1,8 +1,8 @@
 import { Save } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AdminActivityLog, AppSettings, Member } from "@/types/types";
-import { saveAdminRecentActivity } from "@/utils/recentActivitiesStorage";
+import { useRecentActivities } from "@/hooks/useRecentActivities";
 
 interface AdminSettingsFormProps {
 	settings: AppSettings;
@@ -16,10 +16,17 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 	member,
 }) => {
 	const { toast } = useToast();
-	const [adminSettings, setAdminSettings] = useState<AppSettings>()
+	const [adminSettings, setAdminSettings] = useState<AppSettings>(settings);
+	const {saveAdminActivity} =useRecentActivities()
+
+	// Sync adminSettings if parent settings change
+	useEffect(() => {
+		setAdminSettings(settings);
+	}, [settings]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
+
 		const getNowString = () => {
 			const d = new Date();
 			return d.toLocaleString(undefined, {
@@ -27,24 +34,23 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 				timeStyle: "short",
 			});
 		};
+
 		try {
 			updateSettings(adminSettings);
 
-			//activity log
 			const editSettings: AdminActivityLog = {
 				id: Date.now() + Math.random(),
 				timestamp: getNowString(),
-				type: "edit_member",
-				text: `Updated settings for "${settings.associationName}"`,
+				type: "edit_settings",
+				text: `Updated settings for "${adminSettings.associationName}"`,
 				color: "black",
 				adminName: member.name,
 				adminEmail: member.email,
 				adminRole: member.role,
-				memberId: member.id, // Include member ID for reference
+				memberId: member.id,
 			};
 
-			// Save the activity log to localStorage or wherever you store it
-			saveAdminRecentActivity(editSettings);
+			saveAdminActivity(editSettings);
 
 			toast({
 				title: "Settings Saved",
@@ -67,7 +73,7 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 				</label>
 				<input
 					type="text"
-					value={settings.associationName}
+					value={adminSettings.associationName}
 					onChange={(e) =>
 						setAdminSettings((s) => ({
 							...s,
@@ -78,13 +84,14 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					required
 				/>
 			</div>
+
 			<div>
 				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
 					Registration Fee (XAF)
 				</label>
 				<input
 					type="number"
-					value={settings.registrationFee}
+					value={adminSettings.registrationFee}
 					onChange={(e) =>
 						setAdminSettings((s) => ({
 							...s,
@@ -96,13 +103,14 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					min="0"
 				/>
 			</div>
+
 			<div>
 				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
 					Maximum Loan Multiplier
 				</label>
 				<input
 					type="number"
-					value={settings.maxLoanMultiplier}
+					value={adminSettings.maxLoanMultiplier}
 					onChange={(e) =>
 						setAdminSettings((s) => ({
 							...s,
@@ -119,13 +127,14 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					amount
 				</p>
 			</div>
+
 			<div>
 				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
 					Loan Eligibility Threshold
 				</label>
 				<input
 					type="number"
-					value={settings.loanEligibilityThreshold}
+					value={adminSettings.loanEligibilityThreshold}
 					onChange={(e) =>
 						setAdminSettings((s) => ({
 							...s,
@@ -137,9 +146,10 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 					min="0"
 				/>
 			</div>
+
 			<button
 				type="submit"
-				className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all transform hover:scale-105"
+				className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all w-full"
 			>
 				<Save size={20} />
 				<span>Save Settings</span>

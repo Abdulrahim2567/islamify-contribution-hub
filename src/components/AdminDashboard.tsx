@@ -8,6 +8,8 @@ import {
 	CreditCard,
 	Clock,
 	Check,
+	Settings2,
+	Settings2Icon,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
@@ -63,6 +65,8 @@ import { useLoanRequests } from "@/hooks/useLoanRequests";
 import { useRecentActivities } from "@/hooks/useRecentActivities";
 import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 import { Input } from "./ui/input";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { SettingsSidebar } from "./SettingsSidebar";
 
 // Add this type for the new member state
 type NewMember = {
@@ -123,6 +127,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 	const { toast } = useToast();
 	const [showAddContributionStepper, setShowAddContributionStepper] =
 		useState(false);
+	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	// Reset page when search changes
 	useEffect(() => {
@@ -456,7 +461,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 		});
 	};
 
-	const totalPages = Math.ceil(adminActivities.length / perPage);
 
 	// For admin, find "self" as a member record, e.g., by email
 	const thisAdminMember = members.find(
@@ -481,7 +485,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 	return (
 		<SidebarProvider>
-			<div className="min-h-screen flex w-full bg-gray-50">
+			<div className="min-h-screen flex w-full bg-background">
 				<AppSidebar
 					activeTab={activeTab}
 					onTabChange={setActiveTab}
@@ -489,53 +493,65 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 					user={user}
 				/>
 				<SidebarInset>
-					{/* Header */}
-					<div className="bg-white border-b border-gray-200 px-6 py-4">
-						<div className="flex items-center justify-between">
-							{/* LEFT SIDE: Logo + Welcome */}
-							<div className="flex items-center space-x-4">
-								<SidebarTrigger />
-								<div className="flex items-center gap-3">
-									<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center">
-										<User className="w-6 h-6 text-white" />
-									</div>
-									<div>
-										<h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-											{settings.associationName}
-										</h1>
-										<p className="text-sm text-gray-600">
-											Welcome back, {user.name}
-										</p>
+					<>
+						{/* Header */}
+						<div className="bg-background border-b border-gray-200 dark:border-gray-900 px-6 py-4">
+							<div className="flex items-center justify-between">
+								{/* LEFT SIDE: Logo + Welcome */}
+								<div className="flex items-center space-x-4">
+									<SidebarTrigger />
+									<div className="flex items-center gap-3">
+										<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center">
+											<User className="w-6 h-6 text-white" />
+										</div>
+										<div>
+											<h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+												{settings.associationName}
+											</h1>
+											<p className="text-sm text-gray-600">
+												Welcome back, {user.name}
+											</p>
+										</div>
 									</div>
 								</div>
-							</div>
 
-							{/* RIGHT SIDE: User Menu */}
-							<div className="ml-auto relative flex">
-								<UserDropdown user={user} onLogout={onLogout} />
-								<NotificationDropdown
-									notifications={adminActivities}
-									itemsPerPage={10}
-									user={user}
-									memberLoans={memberLoanActivities}
-									contributions={memberContributionActivities}
-								/>
+								{/* RIGHT SIDE: User Menu */}
+								<div className="ml-auto relative flex">
+									<UserDropdown
+										user={user}
+										onLogout={onLogout}
+									/>
+									<NotificationDropdown
+										notifications={adminActivities}
+										itemsPerPage={10}
+										user={user}
+										memberLoans={memberLoanActivities}
+										contributions={
+											memberContributionActivities
+										}
+									/>
+									<button
+										onClick={() => setSettingsOpen(true)}
+										className="ml-2 p-2 text-gray-500 hover:text-gray-700"
+									>
+										<Settings2Icon />
+									</button>
+								</div>
 							</div>
 						</div>
-					</div>
+						<SettingsSidebar
+							open={settingsOpen}
+							onOpenChange={setSettingsOpen}
+							settings={settings}
+							user={thisAdminMember}
+							updateSettings={updateSettings}
+						/>
+					</>
 
 					{/* Content */}
-					<div className="p-6">
+					<div className="p-6 bg-background">
 						{activeTab === "dashboard" && (
 							<>
-								<div className="mb-8">
-									<h1 className="text-3xl font-bold text-gray-900 mb-2">
-										Admin Dashboard
-									</h1>
-									<p className="text-gray-600">
-										Manage your association finances
-									</p>
-								</div>
 								{/* Stats Cards */}
 								<AdminStatsCards
 									totalMembers={totalMembers}
@@ -608,10 +624,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 								{/* Header Section */}
 								<div className="mb-8 flex justify-between items-center">
 									<div>
-										<h1 className="text-3xl font-bold text-gray-900 mb-2">
-											Members Management
-										</h1>
-										<p className="text-gray-600">
+										<div className="flex items-center gap-3 mb-2">
+											<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
+												<User className="w-6 h-6 text-white" />
+											</div>
+											<h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+												Manage Members
+											</h1>
+										</div>
+										<p className="text-gray-600 ml-1 opacity-75">
 											Manage association members and their
 											contributions
 										</p>
@@ -697,7 +718,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 										/>
 										{/* Custom input */}
 										<Input
-											className="pl-9 pr-8 h-9 py-[22px] rounded-md text-sm border-gray-300 focus-visible:ring-emerald-300"
+											className="pl-9 pr-8 h-9 py-[22px] rounded-md text-sm border-gray-300 dark:border-gray-900 focus-visible:ring-emerald-300"
 											placeholder="Search by admin or type"
 											value={searchTerm}
 											onChange={(e) => {
@@ -708,7 +729,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 										<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
 											{searchStatus === "typing" ? (
 												<svg
-													className="animate-spin h-4 w-4 text-gray-400"
+													className="animate-spin h-4 w-4 text-blue-400"
 													xmlns="http://www.w3.org/2000/svg"
 													fill="none"
 													viewBox="0 0 24 24"
@@ -1062,26 +1083,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 						{activeTab === "loans" && (
 							<LoanManagement user={user} />
-						)}
-
-						{activeTab === "settings" && (
-							<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-								<div className="mb-8">
-									<h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-										Settings
-									</h1>
-									<p className="text-gray-600 dark:text-gray-300">
-										Manage association configuration
-									</p>
-								</div>
-								<div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
-									<AdminSettingsForm
-										settings={settings}
-										updateSettings={updateSettings}
-										member={thisAdminMember}
-									/>
-								</div>
-							</div>
 						)}
 					</div>
 

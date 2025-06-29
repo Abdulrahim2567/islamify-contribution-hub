@@ -59,36 +59,38 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 					<VisuallyHidden>Edit Member Dialog</VisuallyHidden>
 					{/* Or use visible: <span>Edit Member</span> */}
 				</DialogTitle>
-				<DialogDescription>
-					Update this member's account information including full
-					name, email, and phone number.
-				</DialogDescription>
+				<DialogDescription></DialogDescription>
 
 				{/* Rest of your component remains unchanged */}
 				<div className="text-center mb-8">
 					<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
 						<Pencil className="w-8 h-8 text-white" />
 					</div>
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">
+					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-300/80 mb-2">
 						Edit Member
 					</h1>
 					<p className="text-sm text-muted-foreground">
-						Update this member's account information.
+						Update{" "}
+						<span className="dark:text-emerald-300/80 text-emerald-800 font-bold">
+							{form.name}
+							{"'s "}
+						</span>
+						account information including phone number and email.
 					</p>
 				</div>
 
-				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-					<p className="text-sm text-emerald-800">
+				<div className="bg-emerald-50 border border-emerald-200 dark:border-emerald-200/50 dark:bg-emerald-400/5 border-dashed rounded-lg p-4 mb-6">
+					<p className="text-sm text-emerald-800 dark:text-emerald-300/70">
 						<strong>Email and phone should be unique.</strong>
 					</p>
-					<p className="text-xs text-emerald-600 mt-1">
+					<p className="text-xs text-emerald-600 dark:text-emerald-700 mt-1">
 						Information will take effect immediately.
 					</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div>
-						<Label className="block text-sm font-medium text-gray-700 mb-2">
+						<Label className="block text-sm font-medium text-gray-700 dark:text-gray-300/80 mb-2">
 							Full Name
 						</Label>
 						<div className="relative">
@@ -108,7 +110,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 						</div>
 					</div>
 					<div>
-						<Label className="block text-sm font-medium text-gray-700 mb-2">
+						<Label className="block text-sm font-medium text-gray-700 dark:text-gray-300/80 mb-2">
 							Email Address
 						</Label>
 						<div className="relative">
@@ -129,7 +131,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 						</div>
 					</div>
 					<div>
-						<Label className="block text-sm font-medium text-gray-700 mb-2">
+						<Label className="block text-sm font-medium text-gray-700 dark:text-gray-300/80 mb-2">
 							Phone Number
 						</Label>
 						<div className="relative">
@@ -152,17 +154,22 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 						<Button
 							type="button"
 							variant="outline"
-							className="flex-1"
+							className="flex-1 dark:hover:bg-blue-400/5"
 							onClick={() => onOpenChange(false)}
 						>
-							Cancel
+							<span className="dark:text-gray-50/80">Cancel</span>
 						</Button>
 						<Button
 							type="submit"
 							className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 flex items-center justify-center gap-2"
 						>
-							<Check size={18} className="mr-1" />
-							Save Changes
+							<Check
+								size={18}
+								className="mr-1 dark:text-gray-50/80"
+							/>
+							<span className="dark:text-gray-50/80">
+								Save Changes
+							</span>
 						</Button>
 					</div>
 				</form>

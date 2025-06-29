@@ -26,6 +26,7 @@ import {
 	PaginationPrevious,
 	PaginationNext,
 } from "@/components/ui/pagination";
+import { formatCurrency } from "@/utils/calculations";
 
 interface MemberTableProps {
 	members: Member[];
@@ -86,59 +87,72 @@ const MemberTable: React.FC<MemberTableProps> = ({
 	};
 
 	return (
-		<div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+		<div className="bg-background rounded-xl shadow-sm border border-gray-200 dark:border-gray-900 overflow-hidden flex flex-col">
 			<div className="overflow-x-auto">
 				<table className="w-full">
-					<thead className="bg-gray-50 border-b border-gray-200">
+					<thead className="bg-background border-b border-gray-200 dark:border-gray-900">
 						<tr>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Member
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Role
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Contributions
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Max Loan
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Status
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Loan Eligible
 							</th>
-							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
 								Actions
 							</th>
 						</tr>
 					</thead>
-					<tbody className="bg-white divide-y divide-gray-200">
+					<tbody className="bg-background divide-y divide-gray-200 dark:divide-gray-900">
 						{paginatedMembers.map((member, idx) => {
 							const maxLoanAmount = member.totalContributions * 3;
 
 							return (
 								<tr
 									key={member.id}
-									className="hover:bg-gray-50 animate-fade-in"
+									className="hover:bg-gray-50 dark:hover:bg-blue-400/5 animate-fade-in"
 									style={{
 										animationDelay: `${idx * 50}ms`,
 										animationFillMode: "both",
 									}}
 								>
-									<td className="px-6 py-4 whitespace-nowrap">
-										<div>
-											<div className="text-sm font-medium text-gray-900">
-												{member.name}
+									<td className="px-6 py-4 whitespace-nowrap flex ">
+										<>
+											{member.role === "admin" ? (
+												<Shield
+													size={25}
+													className="my-auto mr-3 text-gray-900/60 dark:text-gray-300/70"
+												/>
+											) : (
+												<User
+													size={25}
+													className="my-auto mr-3 text-gray-900/60 dark:text-gray-300/70"
+												/>
+											)}
+											<div>
+												<div className="text-sm font-medium text-gray-900 dark:text-gray-300/90">
+													{member.name}
+												</div>
+												<div className="text-sm text-gray-500 dark:text-gray-300/50">
+													{member.email}
+												</div>
+												<div className="text-sm text-gray-500 dark:text-gray-300/50">
+													{member.phone}
+												</div>
 											</div>
-											<div className="text-sm text-gray-500">
-												{member.email}
-											</div>
-											<div className="text-sm text-gray-500">
-												{member.phone}
-											</div>
-										</div>
+										</>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<Select
@@ -153,7 +167,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 											}
 										>
 											<SelectTrigger
-												className={`px-2 py-1 w-[110px] bg-blue-50 text-blue-800 rounded-full font-semibold text-xs hover:bg-blue-100`}
+												className={`px-2 py-1 w-[110px] bg-blue-50 dark:bg-blue-400/5 text-blue-800 dark:text-blue-300/80 rounded-full font-semibold text-xs hover:bg-blue-100 dark:hover:bg-blue-500/10`}
 											>
 												<div className="flex items-center gap-1">
 													{member.role === "admin" ? (
@@ -180,12 +194,13 @@ const MemberTable: React.FC<MemberTableProps> = ({
 											</SelectContent>
 										</Select>
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-										{member.totalContributions.toLocaleString()}{" "}
-										XAF
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300/80">
+										{formatCurrency(
+											member.totalContributions
+										)}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-										{maxLoanAmount.toLocaleString()} XAF
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300/80">
+										{formatCurrency(maxLoanAmount)}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<button
@@ -195,15 +210,15 @@ const MemberTable: React.FC<MemberTableProps> = ({
 											className="flex items-center space-x-1"
 										>
 											{member.isActive ? (
-												<ToggleRight className="w-5 h-5 text-green-600" />
+												<ToggleRight className="w-5 h-5 text-emerald-600 dark:text-emerald-600/80" />
 											) : (
-												<ToggleLeft className="w-5 h-5 text-red-600" />
+												<ToggleLeft className="w-5 h-5 text-red-600 dark:text-red-500/80" />
 											)}
 											<span
 												className={`text-xs ${
 													member.isActive
-														? "text-green-600"
-														: "text-red-600"
+														? "text-green-600 dark:text-emerald-600/80"
+														: "text-red-600 dark:text-red-500/80"
 												}`}
 											>
 												{member.isActive

@@ -203,16 +203,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 			case "dashboard":
 				return (
 					<div className="container mx-auto px-4 py-8">
-						{/* Admin Notice */}
-						{user.role === "admin" && (
-							<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-								<p className="text-blue-800 font-medium">
-									👑 Admin View: You're viewing your personal
-									member data. Your admin privileges are
-									maintained.
-								</p>
-							</div>
-						)}
 
 						{/* Stats Cards */}
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
