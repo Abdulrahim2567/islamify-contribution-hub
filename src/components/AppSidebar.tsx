@@ -48,7 +48,7 @@ const navigationItems = [
 		title: "Loans",
 		value: "loans",
 		icon: CreditCard,
-	}
+	},
 ];
 
 export function AppSidebar({
@@ -60,7 +60,7 @@ export function AppSidebar({
 	const { toggleSidebar } = useSidebar();
 
 	return (
-		<Sidebar className="fixed top-0 left-0 h-screen text-foreground border-r border-border">
+		<Sidebar className="fixed top-0 left-0 h-screen text-foreground border-r border-border bg-background">
 			<SidebarHeader className="border-b border-border p-[42px] overflow-visible">
 				<button
 					onClick={toggleSidebar}
@@ -80,13 +80,13 @@ export function AppSidebar({
 										asChild
 										onClick={() => onTabChange(item.value)}
 										className={`
-                      transition-all duration-300 ease-in-out transform
-                      ${
-							activeTab === item.value
-								? "bg-muted text-foreground hover:bg-muted/80 scale-105"
-								: "hover:scale-102 hover:bg-muted/50"
-						}
-                    `}
+										transition-all duration-300 ease-in-out transform mt-2 !rounded-none
+										${
+												activeTab === item.value
+													? "bg-muted text-foreground hover:bg-muted/80"
+													: "hover:scale-10 hover:bg-muted/50"
+											}
+										`}
 									>
 										<button className="w-full flex items-center gap-2">
 											<item.icon

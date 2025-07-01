@@ -5,6 +5,7 @@ import {
 	DialogContent,
 	DialogTitle,
 	DialogDescription,
+	DialogOverlay,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,17 +63,18 @@ const EditContributionDialog: React.FC<EditContributionDialogProps> = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogOverlay/>
 			<DialogContent
-				className="max-w-md"
+				className="max-w-md dark:bg-background/50 dark:backdrop-blur"
 				aria-describedby="edit-contribution-description"
 			>
-				<DialogTitle className="text-center mb-4 text-2xl font-bold text-gray-900">
+				<DialogTitle className="text-center mb-4 text-2xl font-bold text-gray-900 dark:text-gray-300/80">
 					Edit Contribution
 				</DialogTitle>
 				<DialogDescription
 					className="text-center mb-6 text-sm text-muted-foreground"
 				>
-					Update contribution details below.
+					Update contribution details below for <strong className="text-emerald-500 dark:text-emerald-400/80">{record.memberName}</strong>.
 				</DialogDescription>
 
 				<div className="text-center mb-8">
@@ -80,12 +82,12 @@ const EditContributionDialog: React.FC<EditContributionDialogProps> = ({
 						<Coins className="w-8 h-8 text-white" />
 					</div>
 				</div>
-				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-					<p className="text-sm text-emerald-800">
+				<div className="bg-emerald-50 dark:bg-emerald-400/5 border border-emerald-200 dark:border-emerald-300/10 border-dashed rounded-lg p-4 mb-6">
+					<p className="text-sm text-emerald-800 dark:text-emerald-300/80 text-center">
 						Only the amount and description{" "}
-						<strong>can be edited.</strong>
+						<strong className="mx-auto">can be edited.</strong>
 					</p>
-					<p className="text-xs text-emerald-600 mt-1">
+					<p className="text-xs text-emerald-600 dark:text-emerald-500/80 text-center mt-1">
 						All changes are saved immediately.
 					</p>
 				</div>

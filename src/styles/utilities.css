@@ -1,33 +1,55 @@
-
 /* Custom Utility Classes (hover, gradients, etc) */
 @tailwind components;
-@tailwind utilities;   /* So tailwind's utilities are still available */
+@tailwind utilities; /* So tailwind's utilities are still available */
 
 @layer utilities {
-  /* Hover effects */
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
+	/* Hover effects */
+	.hover-lift {
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
 
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+	.hover-lift:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
 
-  /* Gradient backgrounds */
-  .gradient-primary {
-    background: linear-gradient(135deg, #2563eb 0%, #16a34a 100%);
-  }
+	/* Gradient backgrounds */
+	.gradient-primary {
+		background: linear-gradient(135deg, #2563eb 0%, #16a34a 100%);
+	}
 
-  .gradient-secondary {
-    background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
-  }
+	.gradient-secondary {
+		background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+	}
 
-  /* Input icon visibility fix */
-  .input-icon {
-    z-index: 10;
-    background: transparent;
-    pointer-events: none;
-  }
+	/* Input icon visibility fix */
+	.input-icon {
+		z-index: 10;
+		background: transparent;
+		pointer-events: none;
+	}
+	.animate-spin-slow {
+		animation: spin-slow 4s linear infinite;
+	}
+	.animate-spin-slower {
+		animation: spin-slower 12s linear infinite;
+	}
+
+	@keyframes spin-slow {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes spin-slower {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
 }
-

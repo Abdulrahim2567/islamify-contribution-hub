@@ -56,4 +56,16 @@ export const colorMap: Record<
 		border: "border-red-500",
 		hover: "hover:bg-red-100/40 dark:hover:bg-red-500/5 ",
 	},
+	lime: {
+		bg: "bg-lime-100 dark:bg-lime-400/5",
+		text: "text-lime-700 dark:text-lime-500/80",
+		border: "border-lime-500",
+		hover: "hover:bg-lime-100/40 dark:hover:bg-lime-500/5 ",
+	},
+	orange: {
+		bg: "bg-orange-100 dark:bg-orange-400/5",
+		text: "text-orange-700 dark:text-orange-500/80",
+		border: "border-orange-500",
+		hover: "hover:bg-orange-100/40 dark:hover:bg-orange-500/5 ",
+	}
 };

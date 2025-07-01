@@ -115,5 +115,6 @@ export interface AppSettings {
   associationName: string;
   registrationFee: number;
   maxLoanMultiplier: number;
+  minimumContributionAmount: number,
   loanEligibilityThreshold: number; // Optional, can be added later
 }

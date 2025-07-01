@@ -76,14 +76,14 @@ const ChangePasswordForm = ({
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
+		<div className="min-h-screen flex items-center justify-center bg-background p-4">
 			<Card className="w-full max-w-md shadow-lg animate-fade-in">
 				<CardHeader className="text-center pb-2">
 					<div className="flex flex-col items-center mb-3">
 						<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-3">
 							<ShieldCheck className="w-8 h-8 text-white" />
 						</div>
-						<CardTitle className="text-2xl font-bold text-gray-900 mb-1">
+						<CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-300/80 mb-1">
 							Set New Password
 						</CardTitle>
 						<CardDescription>
@@ -91,8 +91,8 @@ const ChangePasswordForm = ({
 						</CardDescription>
 					</div>
 				</CardHeader>
-				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mx-6 mb-5 mt-2">
-					<p className="text-sm text-emerald-800">
+				<div className="bg-emerald-50 dark:bg-emerald-300/5 border border-emerald-200 dark:border-emerald-300/80 border-dashed rounded-lg p-4 mx-6 mb-5 mt-2">
+					<p className="text-sm text-emerald-800 dark:text-emerald-300/80 text-center">
 						<strong>Password requirements:</strong> Minimum 6
 						characters.
 						<br />
@@ -106,7 +106,7 @@ const ChangePasswordForm = ({
 					<form onSubmit={handleSubmit} className="space-y-6 mt-2">
 						<div>
 							<Label
-								className="block text-sm font-medium text-gray-700 mb-2"
+								className="block text-sm font-medium text-gray-700 dark:text-gray-300/80 mb-2"
 								htmlFor="newPassword"
 							>
 								New Password
@@ -128,7 +128,7 @@ const ChangePasswordForm = ({
 						</div>
 						<div>
 							<Label
-								className="block text-sm font-medium text-gray-700 mb-2"
+								className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300/80"
 								htmlFor="confirmPassword"
 							>
 								Confirm Password
@@ -150,16 +150,16 @@ const ChangePasswordForm = ({
 						{(passwordError ||
 							passwordMismatch ||
 							passwordTooShort) && (
-							<div className="bg-red-50 border border-red-200 rounded-lg p-4 mx-6 mb-5 mt-2 w-full ml-0">
-								<p className="text-sm text-red-800 text-center">
+							<div className="bg-red-50 dark:bg-red-300/5 border border-red-200 dark:border-red-300/60 rounded-lg p-4 mx-6 mb-5 mt-2 w-full ml-0">
+								<p className="text-sm text-red-800 dark:text-red-300/80 text-center">
 									{passwordError ||
 										(passwordMismatch && (
-											<span className="text-xs text-red-600">
+											<span className="text-xs text-red-600 dark:text-red-300/80">
 												Passwords do not match
 											</span>
 										)) ||
 										(passwordTooShort && (
-											<span className="text-xs text-red-600">
+											<span className="text-xs text-red-600 dark:text-red-300/80">
 												Password must be at least 6
 												characters long
 											</span>

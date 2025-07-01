@@ -129,7 +129,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 									></path>
 								</svg>
 							) : searchStatus === "done" ? (
-								<Check size={16} className="text-emerald-600" />
+								<Check size={16} className="text-blue-600" />
 							) : null}
 						</div>
 					</div>

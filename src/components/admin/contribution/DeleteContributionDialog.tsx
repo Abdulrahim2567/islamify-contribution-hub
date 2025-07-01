@@ -13,6 +13,7 @@ import {
   AlertDialogPortal,
 } from "@/components/ui/alert-dialog";
 import { X, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/utils/calculations";
 
 interface DeleteContributionDialogProps {
   open: boolean;
@@ -36,7 +37,7 @@ const DeleteContributionDialog: React.FC<DeleteContributionDialogProps> = ({
         className={
           "max-w-sm p-4 sm:p-5 relative " +
           "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 " +
-          "bg-background shadow-lg animate-fade-in"
+          "bg-background dark:bg-background/50 backdrop-blur shadow-lg animate-fade-in"
         }
         style={{ position: "fixed" }}
       >
@@ -54,11 +55,11 @@ const DeleteContributionDialog: React.FC<DeleteContributionDialogProps> = ({
           <div className="w-14 h-14 bg-gradient-to-r from-red-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow">
             <Trash2 className="w-8 h-8 text-white" />
           </div>
-          <AlertDialogTitle>Delete contribution</AlertDialogTitle>
+          <AlertDialogTitle className="mx-auto">Delete contribution</AlertDialogTitle>
         </AlertDialogHeader>
-        <AlertDialogDescription className="mb-4">
+        <AlertDialogDescription className="mb-4 text-center">
           Are you sure you want to delete
-          <span className="font-semibold text-red-600"> {amount.toLocaleString()} XAF </span>
+          <span className="font-semibold text-red-600"> {formatCurrency(amount).concat(" ")}</span>
           from <span className="font-semibold">{memberName}</span>? This action cannot be undone.
         </AlertDialogDescription>
         <AlertDialogFooter className="flex flex-col gap-2">

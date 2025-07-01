@@ -75,6 +75,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		type: l.type,
 	}));
 
+	
+
 	const markCurrentTabAsRead = () => {
 		let idsToMark: number[] = [];
 		if (activeTab === "admin") idsToMark = notifications.map((n) => n.id);
@@ -121,9 +123,15 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
+
+	
+
 	useEffect(() => {
-		if (open) markCurrentTabAsRead();
-	}, [open, activeTab]);
+		if (!(activeTab in allTabs)) {
+			setActiveTab(defaultTab);
+		}
+	}, [user, activeTab, defaultTab]);
+	
 
 	const filterBySearch = <
 		T extends {
@@ -199,21 +207,26 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			unreadCount: loans.filter((n) => !readIds.has(n.id)).length,
 		},
 	};
+	
+
 
 	const currentTab = allTabs[activeTab];
+	if (!currentTab) return null;
 	const page = tabPages[activeTab] || 1;
-	const totalPages = Math.ceil(currentTab.items.length / itemsPerPage);
+	const totalPages = Math.ceil(currentTab?.items.length / itemsPerPage);
 
-	const paginatedItems = currentTab.items.slice(
-		(page - 1) * itemsPerPage,
-		page * itemsPerPage
-	);
+	const paginatedItems =
+		currentTab?.items.slice(
+			(page - 1) * itemsPerPage,
+			page * itemsPerPage
+		) || [];
+
 
 	const changePage = (newPage: number) => {
 		if (newPage < 1 || newPage > totalPages) return;
 		setTabPages((prev) => ({ ...prev, [activeTab]: newPage }));
 	};
-
+	
 	return (
 		<div className="relative bg-background" ref={dropdownRef}>
 			<button

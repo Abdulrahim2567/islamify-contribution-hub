@@ -22,6 +22,9 @@ import {
 
 import { useLoanRequests } from "@/hooks/useLoanRequests";
 import { useRecentActivities } from "@/hooks/useRecentActivities";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { AnimatedClockIcon } from "@/components/ui/AnimatedClock";
 
 interface LoanRequest_ extends LoanRequest {
 	adminNotes?: string;
@@ -33,7 +36,7 @@ interface LoanManagementProps {
 }
 
 const LoanManagement = ({ user }: LoanManagementProps) => {
-	const {saveLoanActivity, saveAdminActivity} = useRecentActivities()
+	const { saveLoanActivity, saveAdminActivity } = useRecentActivities();
 	const { loanRequests, updateLoanRequest } = useLoanRequests();
 	const { toast } = useToast();
 
@@ -125,7 +128,6 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
 
 		// Save member activity
 		saveLoanActivity(memberActivity);
-
 	};
 
 	const pendingRequests = loanRequests.filter(
@@ -141,26 +143,26 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case "pending":
-				return <Clock className="w-4 h-4" />;
+				return <AnimatedClockIcon/>;
 			case "approved":
 				return <CheckCircle className="w-4 h-4" />;
 			case "rejected":
 				return <XCircle className="w-4 h-4" />;
 			default:
-				return <Clock className="w-4 h-4" />;
+				return<AnimatedClockIcon/>;
 		}
 	};
 
-	const getStatusColor = (status: string) => {
+	const getStatusColor = (status) => {
 		switch (status) {
 			case "pending":
-				return "bg-yellow-100 text-yellow-800 border-yellow-200";
+				return "bg-yellow-100 dark:bg-yellow-400/5 text-yellow-800 dark:text-yellow-300/80 border-yellow-200 dark:border-yellow-300/80";
 			case "approved":
-				return "bg-green-100 text-green-800 border-green-200";
+				return "bg-green-100 text-green-800 border-green-200 dark:bg-green-400/5 text-green-800 dark:text-green-300/80 dark:border-green-300/80";
 			case "rejected":
-				return "bg-red-100 text-red-800 border-red-200";
+				return "bg-red-100 text-red-800 border-red-200 dark:bg-red-400/5 dark:text-red-300/80 dark:border-red-300/80";
 			default:
-				return "bg-gray-100 text-gray-800 border-gray-200";
+				return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-400/5 dark:text-gray-300/80 dark:border-gray-300/80";
 		}
 	};
 
@@ -171,81 +173,82 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
 		loan: LoanRequest;
 		showActions?: boolean;
 	}) => (
-		<Card className="animate-fade-in hover:shadow-lg transition-all duration-300 border-l-4 border-l-emerald-500">
-			<CardHeader className="pb-3">
-				<div className="flex items-center justify-between">
-					<CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-						<User className="w-5 h-5 text-emerald-600" />
-						{loan.memberName}
-					</CardTitle>
-					<Badge
-						className={`flex items-center gap-1 ${getStatusColor(
-							loan.status
-						)}`}
-					>
-						{getStatusIcon(loan.status)}
-						{loan.status.charAt(0).toUpperCase() +
-							loan.status.slice(1)}
-					</Badge>
-				</div>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<div className="grid grid-cols-2 gap-4">
-					<div className="flex items-center gap-2">
-						<DollarSign className="w-4 h-4 text-green-600" />
+		<Card className="border border-gray-200 dark:border-gray-900 rounded-xl shadow-sm w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] flex flex-col min-w-[270px] md:max-w-[320px] animate-fade-in">
+			<CardContent className="flex flex-col justify-between h-full p-4 space-y-4">
+				{/* Section 1: Summary */}
+				<div className="bg-gray-50 dark:bg-blue-400/5 p-4 rounded-xl">
+					<div className="flex justify-between items-start">
 						<div>
-							<p className="text-sm text-gray-600">Amount</p>
-							<p className="font-semibold text-lg text-green-600">
+							<h3 className="text-sm font-semibold text-gray-500 dark:text-gray-300/80 mb-4 flex items-center gap-2">
+								<User className="w-4 h-4 text-emerald-600" />
+								{loan.memberName}
+							</h3>
+							<p className="text-lg font-bold text-gray-700 dark:text-gray-300/80">
 								{formatCurrency(loan.amount)}
 							</p>
 						</div>
-					</div>
-					<div className="flex items-center gap-2">
-						<Calendar className="w-4 h-4 text-blue-600" />
-						<div>
-							<p className="text-sm text-gray-600">
-								Request Date
-							</p>
-							<p className="font-medium">
-								{new Date(
-									loan.requestDate
-								).toLocaleDateString()}
+						<div className="flex flex-col items-end gap-1">
+							<Badge
+								className={`text-xs flex items-center gap-1 ${getStatusColor(
+									loan.status
+								)}`}
+							>
+								{getStatusIcon(loan.status)}
+								{loan.status.charAt(0).toUpperCase() +
+									loan.status.slice(1)}
+							</Badge>
+							<p className="text-xs text-gray-500 dark:text-gray-300/70 whitespace-nowrap mr-2">
+								{formatDistanceToNow(
+									new Date(loan.requestDate),
+									{ addSuffix: true }
+								).replace(/^about\s/, "")}
 							</p>
 						</div>
 					</div>
 				</div>
 
-				<div>
-					<p className="text-sm text-gray-600 mb-1">Purpose</p>
-					<p className="text-gray-800 bg-gray-50 p-2 rounded-md">
+				{/* Section 2: Details */}
+				<div className="bg-gray-50 dark:bg-blue-400/5 p-4 rounded-xl space-y-2">
+					<p className="text-[12px] font-medium text-gray-600 dark:text-gray-400/60">
+						Purpose:
+					</p>
+					<p className="text-[12px] text-gray-800 dark:text-gray-300/80 opacity-80 mb-3">
 						{loan.purpose}
 					</p>
+
+					{loan.processedDate && (
+						<p className="text-[12px] text-gray-700 dark:text-gray-300/80">
+							<span className="font-medium text-gray-600 dark:text-gray-400/60">
+								Processed on:
+							</span>{" "}
+							{new Date(loan.processedDate).toLocaleDateString()}{" "}
+							by{" "}
+							<span className="opacity-80">
+								{loan.processedBy}
+							</span>
+						</p>
+					)}
 				</div>
 
-				{loan.processedDate && (
-					<div className="text-sm text-gray-600">
-						Processed on{" "}
-						{new Date(loan.processedDate).toLocaleDateString()} by{" "}
-						{loan.processedBy}
-					</div>
-				)}
-
+				{/* Section 3: Actions */}
 				{showActions && loan.status === "pending" && (
-					<div className="flex gap-2 pt-2">
+					<div className="flex gap-2 pt-2 mt-auto">
 						<Button
-							onClick={() => handleApprove(loan.id)}
-							className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white flex-1 animate-scale-in"
+							size="sm"
+							variant="destructive"
+							className="text-xs flex-1 flex items-center gap-1"
+							onClick={() => handleReject?.(loan.id)}
 						>
-							<CheckCircle className="w-4 h-4 mr-2" />
-							Approve
+							<XCircle className="w-3 h-3" />
+							Reject
 						</Button>
 						<Button
-							onClick={() => handleReject(loan.id)}
-							variant="destructive"
-							className="flex-1 animate-scale-in"
+							size="sm"
+							className="text-xs flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white flex items-center gap-1"
+							onClick={() => handleApprove?.(loan.id)}
 						>
-							<XCircle className="w-4 h-4 mr-2" />
-							Reject
+							<CheckCircle className="w-3 h-3" />
+							Approve
 						</Button>
 					</div>
 				)}
@@ -256,10 +259,10 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
 	const EmptyState = ({ type }: { type: string }) => (
 		<div className="text-center py-12 animate-fade-in">
 			<CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-			<h3 className="text-lg font-medium text-gray-900 mb-2">
+			<h3 className="text-lg font-medium text-gray-900 dark:text-gray-300/80 mb-2">
 				No {type} loans
 			</h3>
-			<p className="text-gray-500">
+			<p className="text-gray-500 dark:text-gray-200/80 opacity-70">
 				{type === "pending" &&
 					"No loan requests are waiting for approval."}
 				{type === "approved" && "No loans have been approved yet."}
@@ -336,28 +339,37 @@ const LoanManagement = ({ user }: LoanManagementProps) => {
 			</div>
 
 			{/* Loan Requests Tabs */}
-			<Tabs defaultValue="requests" className="w-full">
-				<TabsList className="grid w-full grid-cols-3 mb-6">
+			<Tabs defaultValue="requests" className="w-full bg-background">
+				<TabsList className="grid w-full grid-cols-3 mb-6 dark:bg-blue-400/5 rounded-full">
 					<TabsTrigger
 						value="requests"
-						className="flex items-center gap-2"
-						color="yellow"
+						className={cn(
+							"rounded-md text-center flex items-center gap-2",
+							"dark:data-[state=active]:bg-yellow-400/20 data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-600/90",
+							"transition-colors"
+						)}
 					>
 						<Clock className="w-4 h-4" />
 						Requests ({pendingRequests.length})
 					</TabsTrigger>
 					<TabsTrigger
 						value="approved"
-						className="flex items-center gap-2"
-						color="green"
+						className={cn(
+							"rounded-md text-center flex items-center gap-2",
+							"dark:data-[state=active]:bg-emerald-400/20 data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-600/90",
+							"transition-colors"
+						)}
 					>
 						<CheckCircle className="w-4 h-4" />
 						Approved ({approvedRequests.length})
 					</TabsTrigger>
 					<TabsTrigger
 						value="rejected"
-						className="flex items-center gap-2"
-						color="red"
+						className={cn(
+							"rounded-md text-center flex items-center gap-2",
+							"dark:data-[state=active]:bg-red-400/20 data-[state=active]:bg-red-100 data-[state=active]:text-red-600/90",
+							"transition-colors"
+						)}
 					>
 						<XCircle className="w-4 h-4" />
 						Rejected ({rejectedRequests.length})

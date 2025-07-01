@@ -31,7 +31,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 				{/* View */}
 				<button
 					onClick={() => onView(member)}
-					className="flex flex-col items-center justify-center hover:bg-emerald-100 text-emerald-600 hover:text-emerald-900 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
+					className="flex flex-col items-center justify-center hover:bg-emerald-100 text-emerald-600 dark:hover:bg-emerald-300/5 dark:hover:text-emerald-400/80 hover:text-emerald-900 rounded py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
 					title="View details"
 					tabIndex={0}
 					type="button"
@@ -45,9 +45,9 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 						{/* Toggle Loan */}
 						<button
 							onClick={() => onLoanToggle(member.id)}
-							className={`flex flex-col items-center justify-center hover:bg-indigo-100 rounded-lg py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
-                ${member.loanEligible ? "text-indigo-600" : "text-gray-400"}
-              `}
+							className={`flex flex-col items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-300/5 dark:hover:text-indigo-400/80 rounded py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
+								${member.loanEligible ? "text-indigo-600" : "text-gray-400"}
+							`}
 							title={
 								member.loanEligible
 									? "Disable Loan"
@@ -73,7 +73,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 							<>
 								<button
 									onClick={() => setShowDelete(true)}
-									className="flex flex-col items-center justify-center rounded-lg hover:bg-red-100 text-red-600 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
+									className="flex flex-col items-center justify-center rounded hover:bg-red-100 dark:hover:bg-red-300/5 dark:hover:text-red-400/80 text-red-600 py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button"
 									title="Delete member"
 									tabIndex={0}
 									type="button"

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { CreditCard, TrendingUp, User, History, RefreshCw } from "lucide-react";
+import { CreditCard, TrendingUp, User, History, RefreshCw, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ContributionRecordActivity } from "@/types/types";
-import {
-	getAllContributionsActivitiesForMember,
-	getMemberContributionActivities,
-} from "@/utils/recentActivitiesStorage";
+import { formatCurrency } from "@/utils/calculations";
+import { useRecentActivities } from "@/hooks/useRecentActivities";
 
 const ACTIVITY_LOCALSTORAGE_KEY = "islamify_recent_activities_contributions";
 const PER_PAGE = 10;
@@ -25,15 +23,15 @@ const MemberContributionHistory = ({
 	const [activities, setActivities] = useState<Activity[]>([]);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
+	const { getAllContributionsActivitiesForMember} = useRecentActivities()
+	
 
 	// Load activities from localStorage
 	const loadActivities = (memberId: number) => {
 		setIsLoading(true);
 		try {
 			const stored = getAllContributionsActivitiesForMember(memberId);
-			console.log("Loading activities from localStorage:", stored);
 			if (stored) {
-				console.log("Parsed activities:", stored);
 				setActivities(stored);
 			} else {
 				setActivities([]);
@@ -75,7 +73,7 @@ const MemberContributionHistory = ({
 
 	// Responsive and modern UI like admin recent activities
 	return (
-		<div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden animate-fade-in">
+		<div className="bg-background rounded-xl shadow-md border border-gray-100 dark:border-gray-900 overflow-hidden animate-fade-in">
 			<div className="flex items-center px-6 pt-5 pb-2 gap-2">
 				<History className="w-6 h-6 text-green-700" />
 				<h2 className="font-bold text-lg text-gray-800">
@@ -83,32 +81,32 @@ const MemberContributionHistory = ({
 				</h2>
 				<button
 					onClick={() => loadActivities(memberId)}
-					className="ml-auto p-1 hover:bg-gray-100 rounded-full transition-colors"
+					className="ml-auto p-1 hover:bg-gray-100 dark:hover:bg-blue-400/5 rounded-full transition-colors"
 					title="Refresh contributions"
 				>
 					<RefreshCw
-						className={`w-4 h-4 text-gray-500 ${
+						className={`w-4 h-4 text-gray-500 dark:text-gray-300/80 ${
 							isLoading ? "animate-spin" : ""
 						}`}
 					/>
 				</button>
-				<span className="text-xs text-gray-500">
+				<span className="text-xs text-gray-500 dark:text-gray-300/80">
 					{totalCount} entr{totalCount === 1 ? "y" : "ies"}
 				</span>
 			</div>
-			<div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+			<div className="divide-y divide-gray-100 dark:divide-gray-900 max-h-96 overflow-y-auto">
 				{isLoading ? (
-					<div className="flex flex-col items-center justify-center py-10 text-gray-400">
+					<div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-300/80">
 						<RefreshCw className="w-8 h-8 mb-2 animate-spin" />
 						<div className="text-sm">Loading contributions...</div>
 					</div>
 				) : paginated.length === 0 ? (
-					<div className="flex flex-col items-center justify-center py-10 text-gray-400">
+					<div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-300/80">
 						<TrendingUp className="w-12 h-12 mb-2" />
 						<div className="text-base font-semibold">
 							No contributions yet
 						</div>
-						<div className="text-sm">
+						<div className="text-sm dark:text-gray-500/80">
 							Your contribution activities added by the admin will
 							show here.
 						</div>
@@ -118,27 +116,27 @@ const MemberContributionHistory = ({
 						<div
 							className={`flex items-center gap-4 px-6 py-4 group transition-colors ${
 								idx === 0 && currentPage === 1
-									? "bg-emerald-50/50"
-									: "hover:bg-gray-50"
+									? "bg-emerald-50/50 dark:bg-emerald-300/5"
+									: "hover:bg-gray-50 dark:hover:bg-emerald-400/5"
 							}`}
 							key={activity.date + idx}
 						>
-							<div className="rounded-full bg-emerald-100 w-11 h-11 flex items-center justify-center shadow">
-								<CreditCard className="w-5 h-5 text-emerald-600" />
+							<div className="rounded-full bg-emerald-100 dark:bg-emerald-400/5 w-11 h-11 flex items-center justify-center shadow">
+								<CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-300/80" />
 							</div>
 							<div className="flex-1 min-w-0">
 								<div className="flex gap-2 items-center">
-									<span className="font-semibold text-gray-800 truncate">
+									<span className="font-semibold text-gray-800 dark:text-gray-500/80 truncate">
 										Admin added contribution
 									</span>
 									<Badge
 										variant="outline"
-										className="text-green-700 border-green-400 bg-green-50 ml-2"
+										className="text-green-700 dark:text-green-500/80 border-green-400 dark:border-green/500/80 bg-green-50 dark:bg-green-400/5 ml-2"
 									>
-										+{activity.amount?.toLocaleString()} XAF
+										+{formatCurrency(activity.amount)}
 									</Badge>
 								</div>
-								<div className="text-xs text-gray-500 mt-0.5 truncate">
+								<div className="text-xs text-gray-500 dark:text-gray-400/80 mt-0.5 truncate">
 									{activity.description
 										? activity.description + " • "
 										: ""}
@@ -151,8 +149,8 @@ const MemberContributionHistory = ({
 									)}
 								</div>
 								{activity.addedBy && (
-									<div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-										<User className="w-3.5 h-3.5 text-gray-400" />
+									<div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-600/80 mt-1">
+										<Shield className="w-3.5 h-3.5 text-gray-400 dark:text-gray-300/80" />
 										By{" "}
 										<span className="font-medium ml-0.5">
 											{activity.addedBy || "Admin"}
@@ -165,13 +163,13 @@ const MemberContributionHistory = ({
 				)}
 			</div>
 			{maxPage > 1 && (
-				<div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-100">
+				<div className="flex items-center justify-between px-6 py-3 bg-background border-t border-gray-100 dark:border-gray-900">
 					<button
 						disabled={currentPage === 1}
 						className={`px-2 py-1 rounded text-sm font-medium ${
 							currentPage === 1
-								? "text-gray-300 bg-gray-100 cursor-not-allowed"
-								: "text-green-700 hover:bg-emerald-50"
+								? "text-muted bg-background cursor-not-allowed"
+								: "text-green-700 dark:text-green-300/80 hover:bg-emerald-50 dark:hover:bg-emerald-400/5"
 						} transition`}
 						onClick={() =>
 							setCurrentPage((prev) => Math.max(1, prev - 1))
@@ -179,15 +177,15 @@ const MemberContributionHistory = ({
 					>
 						Previous
 					</button>
-					<span className="text-xs text-gray-500">
+					<span className="text-xs text-gray-500 dark:text-gray-300/80">
 						Page {currentPage} of {maxPage}
 					</span>
 					<button
 						disabled={currentPage === maxPage}
 						className={`px-2 py-1 rounded text-sm font-medium ${
 							currentPage === maxPage
-								? "text-gray-300 bg-gray-100 cursor-not-allowed"
-								: "text-green-700 hover:bg-emerald-50"
+								? "text-muted bg-background cursor-not-allowed"
+								: "text-green-700 dark:text-green-300/80 hover:bg-emerald-50 dark:hover:bg-emerald-400/5"
 						} transition`}
 						onClick={() =>
 							setCurrentPage((prev) =>

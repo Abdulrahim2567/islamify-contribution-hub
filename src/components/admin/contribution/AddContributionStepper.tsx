@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import {
-	X,
-	Check,
-	ChevronLeft,
-	ChevronRight,
-	ArrowRight,
-	ArrowLeft,
-	Plus,
-} from "lucide-react";
+import { X, Check, ArrowRight, ArrowLeft, Plus } from "lucide-react";
 import { Member } from "../../../types/types";
 import { readMembersFromStorage } from "../../../utils/membersStorage";
 import MemberSelectStep from "./AddContributionStepper/MemberSelectStep";
 import ContributionFormStep from "./AddContributionStepper/ContributionFormStep";
 import { getNowString } from "@/utils/calculations";
+import { useIslamifySettings } from "@/hooks/useIslamifySettings";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 
 interface AddContributionStepperProps {
 	open: boolean;
@@ -29,51 +28,23 @@ interface AddContributionStepperProps {
 
 const PAGE_SIZE = 6;
 
-const DEMO_ADMIN_EMAIL = "admin@islamify.org";
 
 const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 	open,
 	onOpenChange,
-	members: _propMembers, // ignore propMembers
+	members,
 	onSubmit,
+	
 }) => {
+	const { settings } = useIslamifySettings();
 	const [step, setStep] = useState<1 | 2>(1);
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 	const [page, setPage] = useState(0);
 	const [formData, setFormData] = useState({ amount: "", description: "" });
-	const [localMembers, setLocalMembers] = useState<Member[]>([]);
-
-	useEffect(() => {
-		if (open) {
-			// Only get members from localStorage. If empty, insert only demo admin.
-			const freshMembers = readMembersFromStorage();
-			// Only demo admin user if no other persisted members
-			if (!freshMembers || freshMembers.length === 0) {
-				setLocalMembers([
-					{
-						id: 1,
-						name: "Admin User",
-						email: DEMO_ADMIN_EMAIL,
-						phone: "",
-						registrationFee: 0,
-						totalContributions: 0,
-						isActive: true,
-						loanEligible: false,
-						joinDate: getNowString(),
-						role: "admin",
-						password: "",
-						needsPasswordChange: false,
-						canApplyForLoan: false,
-					},
-				]);
-			} else {
-				setLocalMembers(freshMembers);
-			}
-		}
-	}, [open]);
+	
 
 	// Only non-admins selectable for contributions
-	const nonAdminMembers = localMembers.filter((m) => m.role !== "admin");
+	const nonAdminMembers = members.filter((m) => m.role !== "admin");
 	const totalPages = Math.ceil(nonAdminMembers.length / PAGE_SIZE);
 
 	const handleSelectMember = (member: Member) => {
@@ -125,9 +96,9 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 	if (!open) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+		<div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center p-4 z-50   border">
 			<div
-				className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col relative overflow-hidden"
+				className="dark:bg-[#020817] rounded-xl border dark:border-gray-800 shadow-xl w-full max-w-md animate-fade-in flex flex-col relative overflow-hidden"
 				style={{ height: "600px" }}
 			>
 				{/* Close Button */}
@@ -141,7 +112,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 				</button>
 
 				{/* Header with Stepper Progress Indicator */}
-				<div className="flex flex-col items-center pt-8 pb-4 px-6 border-b border-gray-100">
+				<div className="flex flex-col items-center pt-8 pb-4 px-6 border-b border-gray-100 dark:border-gray-900">
 					<div className="w-full flex flex-col items-center">
 						{/* Stepper Indicator */}
 						<div
@@ -155,10 +126,10 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                     rounded-full z-10 flex items-center justify-center font-bold border-2 transition-colors w-10 h-10
                     ${
 						step === 1
-							? "bg-white border-emerald-500 text-emerald-600 shadow"
+							? "bg-background border-emerald-500 dark:border-emerald-400/80 text-emerald-600 dark:text-emerald-300/80 shadow"
 							: step === 2
-							? "bg-emerald-50 border-emerald-400 text-emerald-500 shadow"
-							: "bg-white border-gray-200 text-gray-400"
+							? "bg-emerald-50 dark:bg-emerald-400/5 border-emerald-400 dark:border-emerald-400/80 text-emerald-500 dark:text-emerald-300/80 shadow"
+							: "bg-background border-gray-200 dark:border-gray-900 text-gray-400 dark:text-gray-300/80"
 					}
                   `}
 								>
@@ -166,7 +137,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 								</div>
 								{/* Connector Line */}
 								<div className="flex-1 h-1 relative">
-									<div className="w-full h-1 rounded bg-gray-200 overflow-hidden">
+									<div className="w-full h-1 rounded bg-gray-200 dark:bg-gray-300/5 overflow-hidden">
 										<div
 											className={`h-1 rounded transition-all duration-300`}
 											style={{
@@ -188,8 +159,8 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
                     rounded-full z-10 flex items-center justify-center font-bold border-2 transition-colors w-10 h-10
                     ${
 						step === 2
-							? "bg-white border-emerald-500 text-emerald-600 shadow"
-							: "bg-white border-gray-200 text-gray-400"
+							? "bg-background border-emerald-500 dark:border-emerald-400/80 text-emerald-600 dark:text-emerald-300/80 shadow"
+							: "bg-background border-gray-200 dark:border-gray-900 text-gray-400 dark:text-gray-300/80"
 					}
                   `}
 								>
@@ -202,8 +173,8 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 							<span
 								className={`transition-colors ${
 									step === 1
-										? "text-emerald-600"
-										: "text-gray-400"
+										? "text-emerald-600 dark:text-emerald-300/80"
+										: "text-gray-400 dark:text-gray-300/80"
 								}`}
 							>
 								Select Member
@@ -211,8 +182,8 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 							<span
 								className={`transition-colors ${
 									step === 2
-										? "text-emerald-600"
-										: "text-gray-400"
+										? "text-emerald-600 dark:text-emerald-300/80"
+										: "text-gray-400 dark:text-gray-300/80"
 								}`}
 							>
 								Contribution
@@ -259,7 +230,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 				</div>
 
 				{/* Footer with Controls */}
-				<div className="border-t border-gray-100 p-4 bg-gray-50">
+				<div className="border-t border-gray-100 p-4 bg-background dark:border-gray-900">
 					{step === 1 && (
 						<div className="flex flex-col space-y-4">
 							{/* Next Button */}
@@ -279,18 +250,25 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 							<button
 								type="button"
 								onClick={handleBack}
-								className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-full font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+								className="flex-1 text-gray-700 dark:text-gray-300/80 py-3 px-4 rounded-full font-medium hover:bg-gray-200 dark:hover:bg-blue-400/5 dark:border-blue-300/60 border border-gray-200 transition-colors flex items-center justify-center gap-2"
 							>
-								<ArrowLeft size={16} />
+								<ArrowLeft size={16} className="mt-[3px]" />
 								Back
 							</button>
+
 							<button
 								type="button"
 								onClick={handleSubmit}
-								className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2"
+								disabled={
+									!formData.amount ||
+									isNaN(Number(formData.amount)) ||
+									Number(formData.amount) <
+										settings.minimumContributionAmount
+								}
+								className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-full font-medium hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Add Contribution
-								<Plus size={16} />
+								<Plus size={16} className="mt-[3px]" />
 							</button>
 						</div>
 					)}

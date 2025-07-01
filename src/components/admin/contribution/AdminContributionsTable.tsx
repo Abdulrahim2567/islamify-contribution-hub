@@ -167,12 +167,10 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 				description: `All contributions for ${updatedContribution.memberName} updated.`,
 			});
 		} else {
-			console.log(
-				"[edit] Could not find editing record when saving, idx:",
-				idx,
-				"editing:",
-				editing
-			);
+			toast({
+				title: "No Editing Record Found",
+				description: `Could not find editing record when saving, idx: ${idx} Editing: ${editing}`,
+			});
 		}
 		setEditOpen(false);
 		setEditing(null);

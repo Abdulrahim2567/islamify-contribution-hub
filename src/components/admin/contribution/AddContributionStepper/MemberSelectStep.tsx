@@ -74,11 +74,11 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
       `}
 			style={{ minHeight: 300 }}
 		>
-			<h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+			<h2 className="text-xl font-semibold text-gray-900 dark:text-emerald-300/80 mb-4 text-center">
 				Select Member
 			</h2>
 			{hasNoMembers ? (
-				<div className="flex flex-col items-center justify-center h-40 text-center text-gray-500">
+				<div className="flex flex-col items-center justify-center h-40 text-center text-gray-500 dark:text-emerald-300/80">
 					<Users className="mx-auto mb-2" size={36} />
 					<p className="mb-2">
 						No members are available to select.
@@ -92,22 +92,22 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
 						{pageMembers.map((member) => (
 							<button
 								key={member.id}
-								className={`flex flex-col items-center gap-2 border rounded-xl bg-white shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 max-w-[140px] ${
+								className={`flex flex-col items-center gap-2 border rounded-xl bg-background dark:hover:bg-emerald-400/5 shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 max-w-[140px] ${
 									selectedMember?.id === member.id
-										? "border-emerald-500 ring-2 ring-emerald-200"
-										: "border-gray-200"
+										? "border-emerald-500 dark:border-emerald-300/80 ring-2 ring-emerald-200 dark:ring-emerald-300/80 dark:bg-emerald-300/5"
+										: "border-gray-200 dark:border-gray-900"
 								}`}
 								onClick={() => onSelect(member)}
 								type="button"
 								tabIndex={0}
 							>
-								<span className="bg-emerald-100 rounded-full w-11 h-11 flex items-center justify-center transition-all">
+								<span className="bg-emerald-100 dark:bg-emerald-400/5 rounded-full w-11 h-11 flex items-center justify-center transition-all">
 									<User
-										className="text-emerald-500"
+										className="text-emerald-500 dark:text-emerald-300/80"
 										size={24}
 									/>
 								</span>
-								<span className="font-medium text-gray-900 truncate text-base">
+								<span className="font-medium text-gray-900 dark:text-gray-300/80 truncate text-base">
 									{member.name}
 								</span>
 							</button>
@@ -120,7 +120,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
 							<button
 								onClick={() => setPage(Math.max(0, page - 1))}
 								disabled={page === 0}
-								className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+								className="p-2 rounded-full bg-background border-gray-200 dark:border-blue-500/80 dark:hover:bg-blue-400/5 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								<ChevronLeft size={16} />
 							</button>
@@ -132,7 +132,7 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
 									setPage(Math.min(totalPages - 1, page + 1))
 								}
 								disabled={page === totalPages - 1}
-								className="p-2 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+								className="p-2 rounded-full bg-background border-gray-200 dark:border-blue-500/80 dark:hover:bg-blue-400/5 hover:bg-gray-200 disabled:opacity-50disabled:cursor-not-allowed"
 							>
 								<ChevronRight size={16} />
 							</button>

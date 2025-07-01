@@ -130,6 +130,25 @@ const AdminSettingsForm: React.FC<AdminSettingsFormProps> = ({
 
 			<div>
 				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+					Minimum Contribution Amount
+				</label>
+				<input
+					type="number"
+					value={adminSettings.minimumContributionAmount}
+					onChange={(e) =>
+						setAdminSettings((s) => ({
+							...s,
+							minimumContributionAmount: Number(e.target.value),
+						}))
+					}
+					className="w-full p-3 border border-gray-300 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-transparent dark:bg-gray-950 text-gray-900 dark:text-white"
+					required
+					min="0"
+				/>
+			</div>
+
+			<div>
+				<label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
 					Loan Eligibility Threshold
 				</label>
 				<input

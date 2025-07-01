@@ -24,9 +24,9 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 		"&background=10b981&color=fff&size=128";
 
 	return (
-		<div className="fixed  bg-background/80 inset-0 bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in border border-gray-900">
+		<div className="fixed  bg-black/80 inset-0 backdrop-blur flex items-center justify-center p-4 z-50 animate-in border border-gray-900">
 			<div
-				className="bg-background dark:bg-blue-600/5 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col
+				className="bg-background dark:bg-blue-600/5  rounded-2xl shadow-2xl max-w-md w-full p-0 sm:p-0 relative overflow-visible max-h-[95vh] flex flex-col
         animate-scale-in"
 				// The modal can be animated by adding scale/fade transition utilities
 			>

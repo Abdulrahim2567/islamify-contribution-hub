@@ -10,6 +10,7 @@ import {
 	Calendar,
 	DollarSign,
 	User,
+	Settings2Icon,
 } from "lucide-react";
 import {
 	SidebarProvider,
@@ -23,7 +24,7 @@ import MemberContributionHistory from "./member/MemberContributionHistory";
 import LoanApplication from "./member/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
 
-import { LoanRequest, Member } from "@/types/types";
+import { AppSettings, LoanRequest, Member } from "@/types/types";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -35,6 +36,11 @@ import { useMembers } from "@/hooks/useMembers";
 import { useRecentActivities } from "@/hooks/useRecentActivities";
 import { useLoanRequests } from "@/hooks/useLoanRequests";
 import { useIslamifySettings } from "@/hooks/useIslamifySettings";
+import { SettingsSidebar } from "./SettingsSidebar";
+import { cn } from "@/lib/utils";
+import { AnimatedClockIcon } from "./ui/AnimatedClock";
+import MemberStatsCards from "./member/MemberStatsCards";
+import MemberLoans from "./member/MemberLoans";
 
 interface MemberDashboardProps {
 	user: Member;
@@ -66,6 +72,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
 	// Find current member record for up-to-date fields
 	const thisMember = members.find((m) => m.id === user.id);
+	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	// Fetch member's real contributions from localStorage recent activities
 
@@ -109,11 +116,11 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
 	const EmptyState = ({ type }: { type: string }) => (
 		<div className="text-center py-12 animate-fade-in">
-			<CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-			<h3 className="text-lg font-medium text-gray-900 mb-2">
+			<CreditCard className="w-16 h-16 text-gray-300 dark:text-gray-300/80 mx-auto mb-4" />
+			<h3 className="text-lg font-medium text-gray-900 dark:text-gray-400/80 mb-2">
 				No {type} loans
 			</h3>
-			<p className="text-gray-500">
+			<p className="text-gray-500 dark:text-gray-300/80">
 				{type === "pending" &&
 					"No loan requests are waiting for approval."}
 				{type === "approved" && "No loans have been approved yet."}
@@ -126,8 +133,8 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 		<Card className="animate-fade-in hover:shadow-lg transition-all duration-300 border-l-4 border-l-emerald-500">
 			<CardHeader className="pb-3">
 				<div className="flex items-center justify-between">
-					<CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-						<User className="w-5 h-5 text-emerald-600" />
+					<CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-500/80 flex items-center gap-2">
+						<User className="w-5 h-5 text-emerald-600 dark:text-emerald-400/80" />
 						{loan.memberName}
 					</CardTitle>
 					<Badge
@@ -144,18 +151,20 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 			<CardContent className="space-y-4">
 				<div className="grid grid-cols-2 gap-4">
 					<div className="flex items-center gap-2">
-						<DollarSign className="w-4 h-4 text-green-600" />
+						<DollarSign className="w-4 h-4 text-green-600 dark:text-green-300/80" />
 						<div>
-							<p className="text-sm text-gray-600">Amount</p>
+							<p className="text-sm text-gray-600 dark:text-gray-300/80">
+								Amount
+							</p>
 							<p className="font-semibold text-lg text-green-600">
 								{formatCurrency(loan.amount)}
 							</p>
 						</div>
 					</div>
 					<div className="flex items-center gap-2">
-						<Calendar className="w-4 h-4 text-blue-600" />
+						<Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400/80" />
 						<div>
-							<p className="text-sm text-gray-600">
+							<p className="text-sm text-gray-600 dark:text-gray-300/80">
 								Request Date
 							</p>
 							<p className="font-medium">
@@ -168,14 +177,16 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 				</div>
 
 				<div>
-					<p className="text-sm text-gray-600 mb-1">Purpose</p>
-					<p className="text-gray-800 bg-gray-50 p-2 rounded-md">
+					<p className="text-sm text-gray-600 dark:text-gray-300/80 mb-1">
+						Purpose
+					</p>
+					<p className="text-gray-800 dark:text-gray-300/80 bg-background p-2 rounded-md">
 						{loan.purpose}
 					</p>
 				</div>
 
 				{loan.processedDate && (
-					<div className="text-sm text-gray-600">
+					<div className="text-sm text-gray-600 dark:text-gray-300/80">
 						Processed on{" "}
 						{new Date(loan.processedDate).toLocaleDateString()} by{" "}
 						{loan.processedBy}
@@ -188,13 +199,13 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	const getStatusColor = (status) => {
 		switch (status) {
 			case "pending":
-				return "bg-yellow-100 text-yellow-800 border-yellow-200";
+				return "bg-yellow-100 dark:bg-yellow-400/5 text-yellow-800 dark:text-yellow-300/80 border-yellow-200 dark:border-yellow-300/80";
 			case "approved":
-				return "bg-green-100 text-green-800 border-green-200";
+				return "bg-green-100 text-green-800 border-green-200 dark:bg-green-400/5 text-green-800 dark:text-green-300/80 dark:border-green-300/80";
 			case "rejected":
-				return "bg-red-100 text-red-800 border-red-200";
+				return "bg-red-100 text-red-800 border-red-200 dark:bg-red-400/5 dark:text-red-300/80 dark:border-red-300/80";
 			default:
-				return "bg-gray-100 text-gray-800 border-gray-200";
+				return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-400/5 dark:text-gray-300/80 dark:border-gray-300/80";
 		}
 	};
 
@@ -203,75 +214,13 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 			case "dashboard":
 				return (
 					<div className="container mx-auto px-4 py-8">
-
 						{/* Stats Cards */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-							<Card className="animate-fade-in">
-								<CardContent className="p-6">
-									<div className="flex items-center justify-between">
-										<div>
-											<p className="text-sm font-medium text-gray-600">
-												Total Contributions
-											</p>
-											<p className="text-3xl font-bold text-blue-600">
-												{formatCurrency(
-													totalContributions
-												)}
-											</p>
-										</div>
-										<TrendingUp className="w-8 h-8 text-blue-600" />
-									</div>
-								</CardContent>
-							</Card>
-
-							<Card className="animate-fade-in">
-								<CardContent className="p-6">
-									<div className="flex items-center justify-between">
-										<div>
-											<p className="text-sm font-medium text-gray-600">
-												Max Loan Amount
-											</p>
-											<p className="text-3xl font-bold text-green-600">
-												{formatCurrency(maxLoanAmount)}
-											</p>
-											<p className="text-xs text-gray-500 mt-1">
-												{settings.maxLoanMultiplier}×
-												your contributions
-											</p>
-										</div>
-										<CreditCard className="w-8 h-8 text-green-600" />
-									</div>
-								</CardContent>
-							</Card>
-
-							<Card className="animate-fade-in">
-								<CardContent className="p-6">
-									<div className="flex items-center justify-between">
-										<div>
-											<p className="text-sm font-medium text-gray-600">
-												Registration Fee
-											</p>
-											<p className="text-3xl font-bold text-purple-600">
-												{formatCurrency(
-													registrationFee
-												)}
-											</p>
-											<Badge
-												variant="outline"
-												className="mt-2 text-green-600 border-green-600"
-											>
-												✓ Paid
-											</Badge>
-										</div>
-										<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-											<span className="text-purple-600 font-bold">
-												₣
-											</span>
-										</div>
-									</div>
-								</CardContent>
-							</Card>
-						</div>
+						<MemberStatsCards
+							totalContributions={totalContributions}
+							maxLoanAmount={maxLoanAmount}
+							settings={settings}
+							registrationFee={registrationFee}
+						/>
 
 						{canApplyForLoan && !hasPendingLoan && (
 							<div className="flex justify-end mb-6">
@@ -287,22 +236,23 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
 						{hasPendingLoan && (
 							<div className="flex justify-end mb-6">
-								<div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-6 py-3 rounded-[25px] font-medium flex items-center gap-2">
-									<Clock className="w-5 h-5" />
-									Loan Application Pending
+								<div className="bg-yellow-100 dark:bg-yellow-400/5 border border-yellow-300 dark:border-yellow-400/80 text-yellow-800 dark:text-yellow-300/80 px-6 py-3 rounded-[25px] font-medium flex items-center gap-2">
+									<AnimatedClockIcon /> Loan Application
+									Pending
 								</div>
 							</div>
 						)}
 
 						{showLoanModal && (
 							<LoanApplication
+								open={showLoanModal}
+								onOpenChange={setShowLoanModal}
 								memberId={user.id.toString()}
 								memberName={user.name}
 								memberEmail={user.email}
 								maxAmount={maxLoanAmount}
 								maxLoanMultiplier={settings.maxLoanMultiplier}
 								onSubmit={(data) => {
-									setShowLoanModal(false);
 									toast({
 										title: "Loan Application Submitted",
 										description: `Your application for ${formatCurrency(
@@ -310,7 +260,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 										)} is pending.`,
 									});
 								}}
-								onCancel={() => setShowLoanModal(false)}
 							/>
 						)}
 
@@ -325,123 +274,12 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 				);
 			case "loans":
 				return (
-					<div className="container mx-auto px-4 py-8">
-						<div className="max-w-6xl mx-auto px-4 py-8">
-							<h1 className="text-3xl font-bold text-gray-900 mb-2">
-								My Loan Applications
-							</h1>
-							<p className="text-gray-600">
-								Track your loan application status
-							</p>
-						</div>
-
-						{memberLoans.length === 0 ? (
-							<div className="text-center py-12">
-								<CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-								<h3 className="text-lg font-medium text-gray-900 mb-2">
-									No loan applications
-								</h3>
-								<p className="text-gray-500">
-									You haven't applied for any loans yet.
-								</p>
-							</div>
-						) : (
-							<div className="space-y-6">
-								{memberLoans.map((loan) => (
-									<div className="max-w-6xl mx-auto px-4 py-8">
-										<Tabs
-											defaultValue="requests"
-											className="w-full"
-										>
-											<TabsList className="grid w-full grid-cols-3 mb-6">
-												<TabsTrigger
-													value="requests"
-													className="flex items-center gap-2"
-													color="yellow"
-												>
-													<Clock className="w-4 h-4" />
-													Requests (
-													{pendingRequests.length})
-												</TabsTrigger>
-												<TabsTrigger
-													value="approved"
-													className="flex items-center gap-2"
-													color="green"
-												>
-													<CheckCircle className="w-4 h-4" />
-													Approved (
-													{approvedRequests.length})
-												</TabsTrigger>
-												<TabsTrigger
-													value="rejected"
-													className="flex items-center gap-2"
-													color="red"
-												>
-													<XCircle className="w-4 h-4" />
-													Rejected (
-													{rejectedRequests.length})
-												</TabsTrigger>
-											</TabsList>
-
-											<TabsContent
-												value="requests"
-												className="space-y-4"
-											>
-												{pendingRequests.length > 0 ? (
-													pendingRequests.map(
-														(loan) => (
-															<LoanCard
-																key={loan.id}
-																loan={loan}
-															/>
-														)
-													)
-												) : (
-													<EmptyState type="pending" />
-												)}
-											</TabsContent>
-
-											<TabsContent
-												value="approved"
-												className="space-y-4"
-											>
-												{approvedRequests.length > 0 ? (
-													approvedRequests.map(
-														(loan) => (
-															<LoanCard
-																key={loan.id}
-																loan={loan}
-															/>
-														)
-													)
-												) : (
-													<EmptyState type="approved" />
-												)}
-											</TabsContent>
-
-											<TabsContent
-												value="rejected"
-												className="space-y-4"
-											>
-												{rejectedRequests.length > 0 ? (
-													rejectedRequests.map(
-														(loan) => (
-															<LoanCard
-																key={loan.id}
-																loan={loan}
-															/>
-														)
-													)
-												) : (
-													<EmptyState type="rejected" />
-												)}
-											</TabsContent>
-										</Tabs>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
+					<MemberLoans
+						memberLoans={memberLoans}
+						pendingRequests={pendingRequests}
+						approvedRequests={approvedRequests}
+						rejectedRequests={rejectedRequests}
+					/>
 				);
 			case "members":
 				return <MembersPage currentUser={user} />;
@@ -452,7 +290,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
 	return (
 		<SidebarProvider>
-			<div className="min-h-screen flex w-full bg-gray-50">
+			<div className="min-h-screen flex w-full bg-background">
 				<AppSidebar
 					activeTab={activeTab}
 					onTabChange={setActiveTab}
@@ -462,7 +300,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 				<SidebarInset>
 					<div className="min-h-screen">
 						{/* Header */}
-						<div className="bg-white border-b border-gray-200 px-6 py-4">
+						<div className="sticky top-0 z-50 bg-background/50 border-b border-gray-200 dark:border-gray-900 px-6 py-4 backdrop-blur">
 							<div className="flex items-center justify-between">
 								{/* LEFT SIDE: Logo + Welcome */}
 								<div className="flex items-center space-x-4">
@@ -475,7 +313,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 											<h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
 												{settings.associationName}
 											</h1>
-											<p className="text-sm text-gray-600">
+											<p className="text-sm text-gray-600 dark:text-gray-300/80">
 												Welcome back, {user.name}
 											</p>
 										</div>
@@ -497,8 +335,21 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 										user={user}
 										notifications={[]}
 									/>
+									<button
+										onClick={() => setSettingsOpen(true)}
+										className="ml-2 p-2 text-gray-500 hover:text-gray-700"
+									>
+										<Settings2Icon />
+									</button>
 								</div>
 							</div>
+							<SettingsSidebar
+								open={settingsOpen}
+								onOpenChange={setSettingsOpen}
+								settings={settings}
+								user={user}
+								updateSettings={() => {}}
+							/>
 						</div>
 						{renderContent()}
 					</div>

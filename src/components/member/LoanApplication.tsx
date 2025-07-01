@@ -1,3 +1,4 @@
+// LoanApplication.tsx
 import React, { useState } from "react";
 import { Check, CreditCard, X } from "lucide-react";
 import { formatCurrency, getNowString } from "../../utils/calculations";
@@ -12,32 +13,39 @@ import {
 	saveMemberLoanActivity,
 } from "@/utils/recentActivitiesStorage";
 import { useLoanRequests } from "@/hooks/useLoanRequests";
+import { Input } from "../ui/input";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "../ui/textarea";
 
 interface LoanApplicationProps {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 	memberId: string;
 	memberName: string;
-	memberEmail?: string; // Optional, can be set later
+	memberEmail?: string;
 	maxAmount: number;
 	maxLoanMultiplier?: number;
 	onSubmit: (data: { amount: number; purpose: string }) => void;
-	onCancel: () => void;
 }
 
 const LoanApplication: React.FC<LoanApplicationProps> = ({
+	open,
+	onOpenChange,
 	memberId,
 	memberName,
 	memberEmail,
 	maxAmount,
 	maxLoanMultiplier,
 	onSubmit,
-	onCancel,
 }) => {
 	const { toast } = useToast();
 	const { addLoanRequest } = useLoanRequests();
-	const [formData, setFormData] = useState({
-		amount: "",
-		reason: "",
-	});
+	const [formData, setFormData] = useState({ amount: "", reason: "" });
 
 	const amount = parseFloat(formData.amount) || 0;
 
@@ -47,7 +55,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 		if (amount <= 0 || amount > maxAmount) {
 			toast({
 				title: "Invalid Amount",
-				description: `Please enter an amount between 1 and ${formatCurrency(
+				description: `Enter an amount between 1 and ${formatCurrency(
 					maxAmount
 				)}`,
 				variant: "destructive",
@@ -55,117 +63,102 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 			return;
 		}
 
-		// Create loan request object
 		const loanRequest: LoanRequest = {
 			id: Date.now().toString(),
-			dueDate: undefined, // Optional, can be set later
-			paymentInterval: undefined, // Optional, can be set later
-			paymentIntervalAmount: undefined, // Optional, can be set later
-			nextPaymentDate: undefined, // Optional, can be set later
-			nextPaymentAmount: undefined, // Optional, can be set later
+			dueDate: undefined,
+			paymentInterval: undefined,
+			paymentIntervalAmount: undefined,
+			nextPaymentDate: undefined,
+			nextPaymentAmount: undefined,
 			memberId: parseInt(memberId),
 			memberName,
 			amount,
 			purpose: formData.reason,
 			requestDate: getNowString(),
-			status: "pending" as const,
+			status: "pending",
 		};
 
-		// Save to localStorage
 		addLoanRequest(loanRequest);
 
-		// Add to member activities
-		try {
-			const memberActivity: MemberLoanActivity = {
-				type: "loan_request",
-				amount,
-				memberId: parseInt(memberId),
-				memberName,
-				date: getNowString(),
-				performedBy: memberName,
-				description: formData.reason,
-			};
+		const memberActivity: MemberLoanActivity = {
+			type: "loan_request",
+			amount,
+			memberId: parseInt(memberId),
+			memberName,
+			date: getNowString(),
+			performedBy: memberName,
+			description: formData.reason,
+		};
 
-			saveMemberLoanActivity(memberActivity);
-			// Optionally, you can also save the activity to the admin activities
-			const adminActivity: AdminActivityLog = {
-				id: Date.now() + Math.random(),
-				timestamp: getNowString(),
-				type: "loan_request",
-				text: `Loan request of ${formatCurrency(
-					amount
-				)} XAF submitted by ${memberName}.`,
-				color: "blue",
-				adminName: memberName,
-				adminEmail: memberEmail,
-				adminRole: "member",
-				memberId: parseInt(memberId),
-			};
-			saveAdminRecentActivity(adminActivity);
+		const adminActivity: AdminActivityLog = {
+			id: Date.now() + Math.random(),
+			timestamp: getNowString(),
+			type: "loan_request",
+			text: `Loan request of ${formatCurrency(
+				amount
+			)} submitted by ${memberName}.`,
+			color: "blue",
+			adminName: memberName,
+			adminEmail: memberEmail,
+			adminRole: "member",
+			memberId: parseInt(memberId),
+		};
 
-			toast({
-				title: "Loan Request Submitted",
-				description: `Your loan request of ${formatCurrency(
-					amount
-				)} XAF has been submitted successfully.`,
-				variant: "default",
-			});
-		} catch (error) {
-			toast({
-				title: "Error",
-				description:
-					"Failed to submit your loan request. Please try again.",
-				variant: "destructive",
-			});
-			return;
-		}
+		saveMemberLoanActivity(memberActivity);
+		saveAdminRecentActivity(adminActivity);
+
+		toast({
+			title: "Loan Request Submitted",
+			description: `Your loan request of ${formatCurrency(
+				amount
+			)} has been submitted successfully.`,
+		});
 
 		onSubmit({ amount, purpose: formData.reason });
+		onOpenChange(false);
 		setFormData({ amount: "", reason: "" });
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-			<div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in relative">
-				<button
-					onClick={onCancel}
-					className="absolute right-5 top-5 text-gray-400 hover:text-gray-600"
-				>
-					<X size={24} />
-				</button>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-md">
+				<DialogHeader>
+					<DialogTitle className="text-center">
+						<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+							<CreditCard className="w-8 h-8 text-white" />
+						</div>
+						<h2 className="text-2xl font-bold text-gray-900 dark:text-gray-300/80">
+							Apply For Loan
+						</h2>
+						<p className="text-gray-500 dark:text-gray-400/80 text-sm">
+							Submit your loan request to the association
+						</p>
+					</DialogTitle>
+				</DialogHeader>
 
-				<div className="text-center mb-8">
-					<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-						<CreditCard className="w-8 h-8 text-white" />
-					</div>
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">
-						Apply For Loan
-					</h2>
-					<div className="text-gray-500 text-sm">
-						Submit your loan request to the association
-					</div>
-				</div>
-				<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-					<p className="text-sm text-emerald-800">
+				<div className="bg-emerald-50 dark:bg-emerald-400/5 border border-emerald-200 dark:border-emerald-500/80 border-dashed rounded-lg p-4 mb-6">
+					<p className="text-sm text-emerald-800 dark:text-emerald-300/80 text-center">
 						<strong>Maximum loan amount:</strong>{" "}
 						{formatCurrency(maxAmount)}
 					</p>
-					<p className="text-xs text-emerald-600 mt-1">
-						{`Based on ${maxLoanMultiplier}× your current savings`}
-					</p>
+					{maxLoanMultiplier && (
+						<p className="text-xs text-emerald-600 dark:text-emerald-400/80 text-center mt-1">
+							Based on {maxLoanMultiplier}× your current savings
+						</p>
+					)}
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-400/80 mb-2">
 							Loan Amount (XAF)
 						</label>
 						<div className="relative">
 							<CreditCard
-								className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 input-icon"
+								className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300/80 pointer-events-none input-icon"
 								size={20}
 							/>
-							<input
+							<Input
 								type="number"
 								value={formData.amount}
 								onChange={(e) =>
@@ -174,7 +167,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 										amount: e.target.value,
 									}))
 								}
-								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+								className="w-full pl-10 focus-visible:ring-1 focus-visible:ring-emerald-500"
 								placeholder="Enter loan amount"
 								required
 								min="1"
@@ -182,11 +175,12 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 							/>
 						</div>
 					</div>
+
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-400/80 mb-2">
 							Purpose of Loan
 						</label>
-						<textarea
+						<Textarea
 							value={formData.reason}
 							onChange={(e) =>
 								setFormData((prev) => ({
@@ -194,31 +188,33 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 									reason: e.target.value,
 								}))
 							}
-							className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+							className="w-full"
 							placeholder="Describe why you need this loan..."
 							rows={4}
 							required
 						/>
 					</div>
-					<div className="flex space-x-4">
+
+					<div className="flex justify-center gap-3">
 						<button
 							type="button"
-							onClick={onCancel}
-							className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+							onClick={() => onOpenChange(false)}
+							className="px-4 py-2 rounded-lg w-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-blue-400/5 transition"
 						>
+							<X className="inline mr-1 -mt-1" size={16} />
 							Cancel
 						</button>
 						<button
 							type="submit"
-							className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition-all"
+							className="bg-gradient-to-r w-full from-emerald-500 to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-blue-600 transition"
 						>
-							Submit Application
-							<Check size={20} />
+							<Check className="inline mr-1 -mt-1" size={16} />
+							Submit
 						</button>
 					</div>
 				</form>
-			</div>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 };
 

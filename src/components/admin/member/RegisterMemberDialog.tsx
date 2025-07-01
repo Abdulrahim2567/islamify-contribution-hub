@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogOverlay } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, UserPlus, Shield, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,8 @@ const RegisterMemberDialog: React.FC<RegisterMemberDialogProps> = ({
 				<span>Add Member</span>
 			</button>
 		</DialogTrigger>
-		<DialogContent className="max-w-md">
+		<DialogOverlay/>
+		<DialogContent className="max-w-md dark:bg-background/30 dark:backdrop-blur">
 			<div className="text-center mb-8">
 				<div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
 					<UserPlus className="w-8 h-8 text-white" />

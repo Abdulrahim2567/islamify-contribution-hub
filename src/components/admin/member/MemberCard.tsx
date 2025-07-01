@@ -58,7 +58,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 			onKeyDown={handleKeyDown}
 		>
 			{/* Top section: Avatar, name, role (as SELECT or text), status */}
-			<div className="relative pt-6 pb-4 px-4 flex flex-col items-center bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 ">
+			<div className="relative pt-6 pb-4 px-4 flex flex-col items-center bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600 dark:from-emerald-300/5 dark:via-emerald-400/5 dark:to-emerald-500/5 ">
 				{/* Edit Button in top left */}
 				{onEdit && !readOnly && (
 					<>

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Search, Grid, List, Users, User, Shield } from "lucide-react";
+import { Search, Grid, List, Users, User, Shield, Check } from "lucide-react";
 import MemberCard from "../admin/member/MemberCard";
 import { Member } from "../../types/types";
 import MemberDetailModal from "../admin/member/MemberDetailModal";
-import { readMembersFromStorage } from "../../utils/membersStorage";
 import {
 	Select,
 	SelectContent,
@@ -20,17 +19,16 @@ import {
 	PaginationPrevious,
 	PaginationNext,
 } from "@/components/ui/pagination";
+import { Input } from "../ui/input";
+import MemberTable from "../admin/member/MemberTable";
+import { useMembers } from "@/hooks/useMembers";
 
 interface MembersPageProps {
 	currentUser: Member;
 }
 
 const MembersPage = ({ currentUser }: MembersPageProps) => {
-	const [members, setMembers] = useState<Member[]>([]);
-
-	useEffect(() => {
-		setMembers(readMembersFromStorage());
-	}, []);
+	const { members } = useMembers();
 
 	const [viewMode, setViewMode] = useState<"card" | "table">("table");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +36,9 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 	const [cardsShouldAnimate, setCardsShouldAnimate] = useState(false);
 	const [membersPage, setMembersPage] = useState(1);
 	const [membersPerPage, setMembersPerPage] = useState(12);
+	const [searchStatus, setSearchStatus] = useState<
+		"idle" | "typing" | "done"
+	>("idle");
 
 	// Filter out demo admin
 	const filtered = members.filter(
@@ -65,6 +66,16 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 		setMembersPage(1);
 	}, [searchTerm, membersPerPage]);
 
+	useEffect(() => {
+		if (searchTerm === "") {
+			setSearchStatus("idle");
+			return;
+		}
+		setSearchStatus("typing");
+		const timeout = setTimeout(() => setSearchStatus("done"), 600);
+		return () => clearTimeout(timeout);
+	}, [searchTerm]);
+
 	const handleView = (member: Member) => {
 		setSelectedMember(member);
 	};
@@ -76,7 +87,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 			<div className="mb-7 flex justify-between items-center">
 				<div className="flex items-center gap-3 px-3">
 					<Users className="w-8 h-8 text-emerald-600" />
-					<h1 className="text-2xl font-bold text-gray-900">
+					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-300/80">
 						Members Directory
 					</h1>
 				</div>
@@ -86,9 +97,9 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 							setViewMode("table");
 							setCardsShouldAnimate(false);
 						}}
-						className={`p-2 rounded-lg ${
+						className={`p-2 rounded-lg transition-all ${
 							viewMode === "table"
-								? "bg-emerald-100 text-emerald-600"
+								? "bg-emerald-100 text-emerald-600 dark:bg-blue-400/5 dark:text-blue-300/80"
 								: "text-gray-400 hover:text-gray-600"
 						}`}
 						aria-label="Table view"
@@ -101,9 +112,9 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 							setCardsShouldAnimate(true);
 							setTimeout(() => setCardsShouldAnimate(false), 700);
 						}}
-						className={`p-2 rounded-lg ${
+						className={`p-2 rounded-lg  transition-all ${
 							viewMode === "card"
-								? "bg-emerald-100 text-emerald-600"
+								? "bg-emerald-100 text-emerald-600 dark:bg-blue-400/5 dark:text-blue-300/80"
 								: "text-gray-400 hover:text-gray-600"
 						}`}
 						aria-label="Card view"
@@ -117,56 +128,44 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 			<div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center px-2">
 				<div className="relative flex-1 max-w-md">
 					<Search
-						className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-						size={20}
+						size={16}
+						className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
 					/>
-					<input
+					<Input
 						type="text"
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+						className="w-full pl-10 pr-4 py-3 bg-background dark:border-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
 						placeholder="Search members..."
 					/>
-				</div>
-				<div className="flex items-center gap-4">
-					<div className="flex items-center gap-2">
-						<Label
-							htmlFor="members-per-page"
-							className="text-sm text-gray-600"
-						>
-							Per page:
-						</Label>
-						<Select
-							value={membersPerPage.toString()}
-							onValueChange={(value) =>
-								setMembersPerPage(Number(value))
-							}
-						>
-							<SelectTrigger className="w-20">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="6">6</SelectItem>
-								<SelectItem value="12">12</SelectItem>
-								<SelectItem value="24">24</SelectItem>
-								<SelectItem value="48">48</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="text-sm text-gray-600">
-						Showing{" "}
-						{Math.min(
-							(membersPage - 1) * membersPerPage + 1,
-							filtered.length
-						)}
-						-
-						{Math.min(
-							membersPage * membersPerPage,
-							filtered.length
-						)}{" "}
-						of {filtered.length} members
+					<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+						{searchStatus === "typing" ? (
+							<svg
+								className="animate-spin h-4 w-4 text-blue-400"
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<circle
+									className="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									strokeWidth="4"
+								></circle>
+								<path
+									className="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+								></path>
+							</svg>
+						) : searchStatus === "done" ? (
+							<Check size={16} className="text-blue-600" />
+						) : null}
 					</div>
 				</div>
+			
 			</div>
 
 			{viewMode === "card" ? (
@@ -231,7 +230,9 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 									)}
 
 									{Array.from(
-										{ length: totalMembersPages },
+										{
+											length: totalMembersPages,
+										},
 										(_, i) => i + 1
 									).map((page) => (
 										<PaginationItem key={page}>
@@ -287,10 +288,15 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 			) : (
 				<>
 					<div className="min-h-[400px]">
-						<MembersTableReadOnly
-							members={paginatedMembers}
+						<MemberTable
+							members={members}
+							currentUser={currentUser}
 							onView={handleView}
-							searchTerm={searchTerm}
+							onStatusToggle={noop}
+							onLoanToggle={noop}
+							onDelete={noop}
+							searchTerm={""}
+							onRoleChange={noop}
 						/>
 					</div>
 
@@ -357,7 +363,6 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 				<MemberDetailModal
 					member={selectedMember}
 					onClose={() => {
-						console.log("[MembersPage] Closing modal");
 						setSelectedMember(null);
 					}}
 				/>
@@ -373,77 +378,90 @@ interface MTROProps {
 	searchTerm: string;
 }
 
-const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
-	<div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-		<div className="overflow-x-auto">
-			<table className="w-full">
-				<thead className="bg-gray-50 border-b border-gray-200">
-					<tr>
-						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Member
-						</th>
-						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Role
-						</th>
-						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Phone
-						</th>
-						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Joined
-						</th>
-					</tr>
-				</thead>
-				<tbody className="bg-white divide-y divide-gray-200">
-					{members.map((member, idx) => (
-						<tr
-							key={member.id}
-							className="hover:bg-gray-50 cursor-pointer animate-fade-in"
-							onClick={() => {
-								console.log(
-									"[MembersTableReadOnly] Row clicked, calling onView with:",
-									member
-								);
-								onView(member);
-							}}
-							tabIndex={0}
-							role="button"
-							style={{
-								animationDelay: `${idx * 50}ms`,
-								animationFillMode: "both",
-							}}
-						>
-							<td className="px-6 py-4 whitespace-nowrap">
-								<div>
-									<div className="text-sm font-medium text-gray-900">
-										{member.name}
-									</div>
-									<div className="text-sm text-gray-500">
-										{member.email}
-									</div>
-								</div>
-							</td>
-							<td className="px-6 py-4 whitespace-nowrap">
-								<div className="flex items-center gap-1 text-xs text-gray-700 font-semibold">
-									{member.role === "admin" ? (
-										<Shield size={12} />
-									) : (
-										<User size={12} />
-									)}
-									{member.role}
-								</div>
-							</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-								{member.phone}
-							</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-								{member.joinDate}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
-	</div>
-);
+// const MembersTableReadOnly = ({ members, onView }: MTROProps) => (
+// 	<div className="bg-background rounded-xl shadow-sm border border-gray-200 dark:border-gray-900 overflow-hidden">
+// 		<div className="overflow-x-auto">
+// 			<table className="w-full">
+// 				<thead className="bg-background border-b border-gray-200 dark:border-gray-900">
+// 					<tr>
+// 						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
+// 							Member
+// 						</th>
+// 						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
+// 							Role
+// 						</th>
+// 						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
+// 							Phone
+// 						</th>
+// 						<th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300/80 uppercase tracking-wider">
+// 							Joined
+// 						</th>
+// 					</tr>
+// 				</thead>
+// 				<tbody className="bg-background divide-y divide-gray-200 dark:divide-gray-900">
+// 					{members.map((member, idx) => (
+// 						<tr
+// 							key={member.id}
+// 							className="hover:bg-background cursor-pointer animate-fade-in"
+// 							onClick={() => {
+// 								onView(member);
+// 							}}
+// 							tabIndex={0}
+// 							role="button"
+// 							style={{
+// 								animationDelay: `${idx * 50}ms`,
+// 								animationFillMode: "both",
+// 							}}
+// 						>
+// 							<td className="px-6 py-4 whitespace-nowrap flex">
+// 								<>
+// 									{member.role === "admin" ? (
+// 										<Shield
+// 											size={25}
+// 											className="my-auto mr-3 text-gray-900/60 dark:text-gray-300/70"
+// 										/>
+// 									) : (
+// 										<User
+// 											size={25}
+// 											className="my-auto mr-3 text-gray-900/60 dark:text-gray-300/70"
+// 										/>
+// 									)}
+// 									<div>
+// 										<div className="text-sm font-medium text-gray-900 dark:text-gray-300/90">
+// 											{member.name}
+// 										</div>
+// 										<div className="text-sm text-gray-500 dark:text-gray-300/50">
+// 											{member.email}
+// 										</div>
+// 										<div className="text-sm text-gray-500 dark:text-gray-300/50">
+// 											{member.phone}
+// 										</div>
+// 									</div>
+// 								</>
+// 							</td>
+// 							<td className="px-6 py-4 whitespace-nowrap">
+// 								<div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300/80 font-semibold">
+// 									{member.role === "admin" ? (
+// 										<Shield size={12} />
+// 									) : (
+// 										<User size={12} />
+// 									)}
+// 									{member.role}
+// 								</div>
+// 							</td>
+// 							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-500/80">
+// 								{member.phone}
+// 							</td>
+// 							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-500/80">
+// 								{member.joinDate}
+// 							</td>
+// 						</tr>
+// 					))}
+// 				</tbody>
+// 			</table>
+
+// 		</div>
+// 	</div>
+// );
 
 export default MembersPage;

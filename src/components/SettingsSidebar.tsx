@@ -119,13 +119,19 @@ function ThemeButton({ mode, active, onClick }: ThemeButtonProps) {
 	return (
 		<Button
 			onClick={onClick}
-			variant={active ? "default" : "outline"}
-			className={cn("flex-1 flex flex-col gap-1 items-center py-6", {
-				"border-primary": active,
-			})}
+			variant="outline" // keep consistent style
+			className={cn(
+				"flex-1 flex flex-col gap-1 items-center py-6 transition-colors border",
+				{
+					"bg-gradient-to-br from-emerald-500 to-blue-500 text-white border-transparent":
+						active,
+					"hover:bg-muted": !active,
+				}
+			)}
 		>
 			{icons[mode]}
 			<span className="text-xs">{labels[mode]}</span>
 		</Button>
 	);
 }
+

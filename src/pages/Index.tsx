@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, Settings2Icon, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,21 +11,42 @@ import { Member } from "@/types/types";
 import { useMembers } from "@/hooks/useMembers";
 import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
-import { SettingsSidebar } from "@/components/SettingsSidebar"; // <--- import your sidebar
+import { SettingsSidebar } from "@/components/SettingsSidebar";
+
+// Hydration check hook
+function useHydrated() {
+	const [hydrated, setHydrated] = useState(false);
+	useEffect(() => {
+		setHydrated(true);
+	}, []);
+	return hydrated;
+}
 
 const Index = () => {
+	const hydrated = useHydrated();
 	const { members, updateMember } = useMembers();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [currentUser, setCurrentUser] = useState<Member | null>(null);
 	const [showPasswordChange, setShowPasswordChange] = useState(false);
 	const { settings } = useIslamifySettings();
-
 	const { toast } = useToast();
-
-	// Sidebar open state
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+	useEffect(() => {
+		const stored = localStorage.getItem("islamify_logged_in_user");
+		if (stored) {
+			try {
+				const parsed = JSON.parse(stored);
+				setCurrentUser(parsed);
+				setIsLoggedIn(true);
+			} catch {
+				localStorage.removeItem("islamify_logged_in_user");
+			}
+		}
+	}, []);
+
 	const handleLogout = () => {
+		localStorage.removeItem("islamify_logged_in_user");
 		setIsLoggedIn(false);
 		setCurrentUser(null);
 		setShowPasswordChange(false);
@@ -41,9 +62,9 @@ const Index = () => {
 	};
 
 	const handleLogin = (user: Member) => {
+		localStorage.setItem("islamify_logged_in_user", JSON.stringify(user));
 		setCurrentUser(user);
 		setIsLoggedIn(true);
-
 		setTimeout(() => {
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		}, 0);
@@ -55,6 +76,10 @@ const Index = () => {
 	};
 
 	const handleOnSuccess = (updatedUser: Member) => {
+		localStorage.setItem(
+			"islamify_logged_in_user",
+			JSON.stringify(updatedUser)
+		);
 		setCurrentUser(updatedUser);
 		setIsLoggedIn(true);
 		setShowPasswordChange(false);
@@ -64,24 +89,20 @@ const Index = () => {
 		});
 	};
 
-	if (showPasswordChange && currentUser) {
-		return (
+	if (!hydrated) return null;
+
+	if (isLoggedIn && currentUser) {
+		return showPasswordChange ? (
 			<ChangePasswordForm
 				member={currentUser}
-				onSuccess={(updatedUser) => {
-					handleOnSuccess(updatedUser);
-				}}
+				onSuccess={handleOnSuccess}
 				onCancel={() => {
 					setShowPasswordChange(false);
 					setIsLoggedIn(false);
 				}}
 				updateMember={updateMember}
 			/>
-		);
-	}
-
-	if (isLoggedIn && currentUser) {
-		return currentUser.role === "admin" ? (
+		) : currentUser.role === "admin" ? (
 			<AdminDashboard
 				user={currentUser}
 				onLogout={handleLogout}
@@ -94,13 +115,9 @@ const Index = () => {
 
 	return (
 		<div className="min-h-screen bg-background">
-			{/* Header */}
 			<div className="sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-900">
 				<div className="mx-auto py-6 flex items-center justify-between px-4">
-					{/* Left placeholder for centering */}
 					<div className="w-10 h-10" aria-hidden="true" />
-
-					{/* Center content */}
 					<div className="flex flex-col items-center">
 						<div className="flex items-center space-x-3">
 							<div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
@@ -114,8 +131,6 @@ const Index = () => {
 							Association Management System
 						</p>
 					</div>
-
-					{/* Settings button */}
 					<button
 						onClick={() => setIsSettingsOpen(true)}
 						className="flex mr-3 items-end space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
@@ -126,16 +141,14 @@ const Index = () => {
 				</div>
 			</div>
 
-			{/* Include Settings Sidebar */}
 			<SettingsSidebar
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}
 				settings={settings}
-				user={currentUser} // pass a dummy member if null
-				updateSettings={() => {}} // You can hook your updateSettings function here if you want
+				user={currentUser || members[0]}
+				updateSettings={() => {}}
 			/>
 
-			{/* Hero Section */}
 			<div className="mx-auto px-4 py-12 bg-background">
 				<div className="text-center mb-12">
 					<h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-4">
@@ -147,8 +160,7 @@ const Index = () => {
 					</p>
 				</div>
 
-				{/* Features */}
-				<div className="grid md:grid-cols-3 gap-8 mb-12">
+				<div className="grid md:grid-cols-3 gap-8 mb-12 max-w-7xl mx-auto">
 					<Card className="hover:shadow-lg transition-all duration-300 hover:scale-105">
 						<CardHeader className="text-center">
 							<Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
@@ -193,7 +205,6 @@ const Index = () => {
 					</Card>
 				</div>
 
-				{/* Login Form */}
 				<LoginForm
 					users={members}
 					onLogin={handleLogin}
