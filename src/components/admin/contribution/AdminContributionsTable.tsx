@@ -3,7 +3,7 @@ import { Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DeleteContributionDialog from "./DeleteContributionDialog";
 import EditContributionDialog from "./EditContributionDialog";
-import ContributionsTable from "./ContributionsTable";
+import ContributionsTable from "../../common/ContributionsTable";
 import { AdminActivityLog, Contribution, Member } from "@/types/types";
 
 import { formatCurrency, getNowString } from "@/utils/calculations";
@@ -27,7 +27,6 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 	const { members, updateMember } = useMembers();
 	const {
 		contributions,
-		getTotalContributionsByMember,
 		updateMemberContribution,
 		deleteMemberContribution,
 	} = useContributions();
@@ -248,23 +247,8 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 
 	return (
 		<div className="mx-auto">
-			<div className="mb-8">
-				<div>
-					<div className="flex items-center gap-3 mb-2">
-						<div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
-							<Coins className="w-6 h-6 text-white" />
-						</div>
-						<h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-							Manage Contributions
-						</h1>
-					</div>
-					<p className="text-gray-600 ml-1 opacity-75">
-						Edit or Delete individual member contributions
-					</p>
-				</div>
-			</div>
-
 			<ContributionsTable
+				readOnly={false}
 				data={paginatedContributions}
 				page={page}
 				totalPages={totalPages}

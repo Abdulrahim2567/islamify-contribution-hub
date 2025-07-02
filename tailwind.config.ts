@@ -8,6 +8,16 @@ export default {
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
 	],
+	// ✅ Safelist custom and conditionally used classes
+	safelist: [
+		"max-h-[100px]",
+		"opacity-0",
+		"opacity-100",
+		"transition-all",
+		"duration-300",
+		"ease-in-out",
+	],
+
 	prefix: "",
 	theme: {
 		container: {
@@ -84,11 +94,36 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				scaleFadeIn: {
+					'0%': { transform: 'scale(0.5)', opacity: '0' },
+					'60%': { transform: 'scale(1.1)', opacity: '0.7' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'error-expand': {
+					'0%': { maxHeight: '0', opacity: '0' },
+					'100%': { maxHeight: '100px', opacity: '1' },
+				},
+				'error-collapse': {
+					'0%': { maxHeight: '100px', opacity: '1' },
+					'100%': { maxHeight: '0', opacity: '0' },
+				},
+				shake: {
+					'0%, 100%': { transform: 'translateX(0)' },
+					'20%': { transform: 'translateX(-4px)' },
+					'40%': { transform: 'translateX(4px)' },
+					'60%': { transform: 'translateX(-4px)' },
+					'80%': { transform: 'translateX(4px)' },
+				},
 			},
+			
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'scale-fade-in': 'scaleFadeIn 300ms ease-out',
+				'error-expand': 'error-expand 0.3s ease-out forwards',
+				'error-collapse': 'error-collapse 0.2s ease-in forwards',
+				shake: 'shake 0.6s ease-in-out',
 			}
 		}
 	},

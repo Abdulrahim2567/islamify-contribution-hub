@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { Search, Grid, List, Users, User, Shield, Check } from "lucide-react";
-import MemberCard from "../admin/member/MemberCard";
+import MemberCard from "../common/MemberCard";
 import { Member } from "../../types/types";
-import MemberDetailModal from "../admin/member/MemberDetailModal";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import MemberDetailModal from "../common/MemberDetailModal";
+
 import {
 	Pagination,
 	PaginationContent,
@@ -20,7 +13,7 @@ import {
 	PaginationNext,
 } from "@/components/ui/pagination";
 import { Input } from "../ui/input";
-import MemberTable from "../admin/member/MemberTable";
+import MemberTable from "../common/MemberTable";
 import { useMembers } from "@/hooks/useMembers";
 
 interface MembersPageProps {
@@ -165,7 +158,6 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 						) : null}
 					</div>
 				</div>
-			
 			</div>
 
 			{viewMode === "card" ? (

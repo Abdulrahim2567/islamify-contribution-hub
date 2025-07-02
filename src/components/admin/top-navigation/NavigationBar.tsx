@@ -1,7 +1,8 @@
 import { SettingsSidebar } from "@/components/SettingsSidebar";
-import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserDropdown } from "@/components/ui/UserDropdown";
+import { UserDropdown } from "@/components/user-dropdown/UserDropdown";
+import { useMembers } from "@/hooks/useMembers";
 import {
 	AdminActivityLog,
 	AppSettings,
@@ -32,6 +33,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 	onLogout,
 }) => {
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const { updateMember } = useMembers();
 	return (
 		<>
 			{/* Header */}
@@ -64,6 +66,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 							user={user}
 							memberLoans={memberLoanActivities}
 							contributions={memberContributionActivities}
+							onUpdateReadNotifications={updateMember}
 						/>
 						<button
 							onClick={() => setSettingsOpen(true)}

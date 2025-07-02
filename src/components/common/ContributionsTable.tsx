@@ -6,10 +6,19 @@ import {
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
-} from "../../ui/pagination";
-import { Card, CardContent } from "../../ui/card";
-import { Button } from "../../ui/button";
-import { Coins, Pencil, Trash2, Search, Check, List, Grid } from "lucide-react";
+} from "../ui/pagination";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import {
+	Coins,
+	Pencil,
+	Trash2,
+	Search,
+	Check,
+	List,
+	Grid,
+	User2Icon,
+} from "lucide-react";
 import {
 	Table,
 	TableBody,
@@ -17,7 +26,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "../../ui/table";
+} from "../ui/table";
 import { Contribution } from "@/types/types";
 import {
 	Select,
@@ -25,16 +34,18 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "../../ui/select";
-import { Input } from "../../ui/input";
+} from "../ui/select";
+import { Input } from "../ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { formatCurrency } from "@/utils/calculations";
+import { formatWithOrdinal } from "@/lib/utils";
 
 interface ContributionRecord extends Contribution {
 	memberName: string;
 }
 
 interface ContributionsTableProps {
+	readOnly: boolean;
 	data: ContributionRecord[];
 	page: number;
 	totalPages: number;
@@ -44,6 +55,7 @@ interface ContributionsTableProps {
 }
 
 const ContributionsTable: React.FC<ContributionsTableProps> = ({
+	readOnly,
 	data,
 	page: externalPage,
 	totalPages: _externalTotalPages,
@@ -61,6 +73,9 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 		"relative"
 	);
 	const [viewMode, setViewMode] = useState<"table" | "card">("table");
+
+	const [sortBy, setSortBy] = useState<keyof ContributionRecord | null>(null);
+	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 	useEffect(() => {
 		if (searchTerm === "") {
@@ -91,12 +106,49 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 		});
 	}, [data, searchTerm]);
 
+	const sortedData = useMemo(() => {
+		const sorted = [...filteredData];
+		if (sortBy) {
+			sorted.sort((a, b) => {
+				const aVal: any = a[sortBy];
+				const bVal: any = b[sortBy];
+
+				if (aVal == null) return 1;
+				if (bVal == null) return -1;
+
+				if (typeof aVal === "number" && typeof bVal === "number") {
+					return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+				}
+
+				if (aVal instanceof Date && bVal instanceof Date) {
+					return sortDirection === "asc"
+						? aVal.getTime() - bVal.getTime()
+						: bVal.getTime() - aVal.getTime();
+				}
+
+				return sortDirection === "asc"
+					? String(aVal).localeCompare(String(bVal))
+					: String(bVal).localeCompare(String(aVal));
+			});
+		}
+		return sorted;
+	}, [filteredData, sortBy, sortDirection]);
+
 	const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
 	const paginatedData = useMemo(() => {
 		const startIdx = (currentPage - 1) * itemsPerPage;
-		return filteredData.slice(startIdx, startIdx + itemsPerPage);
-	}, [filteredData, currentPage, itemsPerPage]);
+		return sortedData.slice(startIdx, startIdx + itemsPerPage);
+	}, [sortedData, currentPage, itemsPerPage]);
+
+	const handleSort = (column: keyof ContributionRecord) => {
+		if (sortBy === column) {
+			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+		} else {
+			setSortBy(column);
+			setSortDirection("asc");
+		}
+	};
 
 	const handlePageChange = (newPage: number) => {
 		setCurrentPage(newPage);
@@ -159,21 +211,6 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 					</div>
 				</div>
 
-				<Select
-					value={dateFormat}
-					onValueChange={(val) =>
-						setDateFormat(val as "default" | "relative")
-					}
-				>
-					<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-blue-300/80 rounded-full font-semibold tracking-widest w-[130px] hover:bg-blue-100 flex justify-center">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent side="top">
-						<SelectItem value="default">Default</SelectItem>
-						<SelectItem value="relative">Relative</SelectItem>
-					</SelectContent>
-				</Select>
-
 				<div className="flex items-center space-x-2">
 					<button
 						onClick={() => setViewMode("table")}
@@ -196,6 +233,20 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 						<Grid size={20} />
 					</button>
 				</div>
+				<Select
+					value={dateFormat}
+					onValueChange={(val) =>
+						setDateFormat(val as "default" | "relative")
+					}
+				>
+					<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-blue-300/80 rounded-full font-semibold tracking-widest w-[130px] hover:bg-blue-100 flex justify-center">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent side="top">
+						<SelectItem value="default">Default</SelectItem>
+						<SelectItem value="relative">Relative</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 
 			{/* Table View */}
@@ -205,13 +256,43 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 						<Table>
 							<TableHeader>
 								<TableRow className="bg-background">
-									<TableHead>Member</TableHead>
-									<TableHead>Amount (XAF)</TableHead>
-									<TableHead>Date</TableHead>
+									<TableHead
+										onClick={() => handleSort("memberName")}
+										className="cursor-pointer select-none"
+									>
+										Member{" "}
+										{sortBy === "memberName" &&
+											(sortDirection === "asc"
+												? "↑"
+												: "↓")}
+									</TableHead>
+									<TableHead
+										onClick={() => handleSort("amount")}
+										className="cursor-pointer select-none"
+									>
+										Amount{" XAF "}
+										{sortBy === "amount" &&
+											(sortDirection === "asc"
+												? "↑"
+												: "↓")}
+									</TableHead>
+									<TableHead
+										onClick={() => handleSort("date")}
+										className="cursor-pointer select-none"
+									>
+										Date{" "}
+										{sortBy === "date" &&
+											(sortDirection === "asc"
+												? "↑"
+												: "↓")}
+									</TableHead>
+
 									<TableHead>Description</TableHead>
 									<TableHead>Added By</TableHead>
 									<TableHead>Edited By</TableHead>
-									<TableHead>Actions</TableHead>
+									{!readOnly && (
+										<TableHead>Actions</TableHead>
+									)}
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -233,17 +314,29 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 									paginatedData.map((rec, idx) => (
 										<TableRow
 											key={idx}
-											className="hover:bg-gray-50 dark:hover:bg-blue-400/5 animate-fade-in"
+											className="hover:bg-gray-50 dark:hover:bg-blue-400/5 animate-fade-in dark:text-gray-300/80"
 											style={{
 												animationDelay: `${idx * 50}ms`,
 												animationFillMode: "both",
 											}}
 										>
-											<TableCell>
+											<TableCell className="flex">
+												<User2Icon
+													size={18}
+													className="mr-2"
+												/>
 												{rec.memberName}
 											</TableCell>
 											<TableCell>
-												{rec.amount.toLocaleString()}
+												<p className="flex">
+													<Coins
+														size={18}
+														className="mr-2"
+													/>
+													{formatCurrency(
+														rec.amount
+													).replace(" XAF", "")}
+												</p>
 											</TableCell>
 											<TableCell>
 												{dateFormat === "relative"
@@ -253,9 +346,9 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 																addSuffix: true,
 															}
 													  ).replace(/^about\s/, "")
-													: new Date(
-															rec.date
-													  ).toLocaleDateString()}
+													: formatWithOrdinal(
+															new Date(rec.date)
+													  )}
 											</TableCell>
 											<TableCell>
 												{rec.description || "-"}
@@ -265,30 +358,32 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 												{rec.editedBy || "Not Edited"}
 											</TableCell>
 											<TableCell>
-												<div className="flex gap-2">
-													<Button
-														size="sm"
-														variant="outline"
-														onClick={() =>
-															onEdit(rec)
-														}
-														className="text-xs flex items-center gap-1"
-													>
-														<Pencil className="w-3 h-3" />
-														Edit
-													</Button>
-													<Button
-														size="sm"
-														variant="destructive"
-														onClick={() =>
-															onDelete(rec)
-														}
-														className="text-xs flex items-center gap-1"
-													>
-														<Trash2 className="w-3 h-3" />
-														Delete
-													</Button>
-												</div>
+												{!readOnly && (
+													<div className="flex gap-2">
+														<Button
+															size="sm"
+															variant="outline"
+															onClick={() =>
+																onEdit(rec)
+															}
+															className="text-xs flex items-center gap-1"
+														>
+															<Pencil className="w-3 h-3" />{" "}
+															Edit
+														</Button>
+														<Button
+															size="sm"
+															variant="destructive"
+															onClick={() =>
+																onDelete(rec)
+															}
+															className="text-xs flex items-center gap-1"
+														>
+															<Trash2 className="w-3 h-3" />{" "}
+															Delete
+														</Button>
+													</div>
+												)}
 											</TableCell>
 										</TableRow>
 									))
@@ -320,10 +415,18 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 									<div className="bg-gray-50 dark:bg-blue-400/5 p-4 rounded-xl">
 										<div className="flex justify-between items-start">
 											<div>
-												<h3 className="text-sm font-semibold text-gray-500 dark:text-gray-300/80 mb-5">
+												<h3 className="text-sm font-semibold text-gray-500 dark:text-gray-300/80 mb-5 flex">
+													<User2Icon
+														size={18}
+														className="mr-2"
+													/>
 													{rec.memberName}
 												</h3>
-												<p className="text-lg font-bold text-gray-700 dark:text-gray-300/80">
+												<p className="font-bold text-lg text-gray-700 dark:text-gray-300/80 flex">
+													<Coins
+														size={18}
+														className="mt-1 mr-2"
+													/>
 													{formatCurrency(rec.amount)}
 												</p>
 											</div>
@@ -335,9 +438,9 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 																addSuffix: true,
 															}
 													  ).replace(/^about\s/, "")
-													: new Date(
-															rec.date
-													  ).toLocaleDateString()}
+													: formatWithOrdinal(
+															new Date(rec.date)
+													  )}
 											</p>
 										</div>
 									</div>
@@ -373,25 +476,28 @@ const ContributionsTable: React.FC<ContributionsTableProps> = ({
 									</div>
 
 									{/* Footer - aligned at bottom */}
-									<div className="flex gap-2 pt-2 mt-auto">
-										<Button
-											size="sm"
-											variant="outline"
-											className="text-xs flex-1 flex items-center gap-1 dark:text-gray-300/80"
-											onClick={() => onEdit(rec)}
-										>
-											<Pencil className="w-3 h-3" /> Edit
-										</Button>
-										<Button
-											size="sm"
-											variant="destructive"
-											className="text-xs flex-1 flex items-center gap-1 dark:text-gray-300/80"
-											onClick={() => onDelete(rec)}
-										>
-											<Trash2 className="w-3 h-3" />{" "}
-											Delete
-										</Button>
-									</div>
+									{!readOnly && (
+										<div className="flex gap-2 pt-2 mt-auto">
+											<Button
+												size="sm"
+												variant="outline"
+												className="text-xs flex-1 flex items-center gap-1 dark:text-gray-300/80"
+												onClick={() => onEdit(rec)}
+											>
+												<Pencil className="w-3 h-3" />{" "}
+												Edit
+											</Button>
+											<Button
+												size="sm"
+												variant="destructive"
+												className="text-xs flex-1 flex items-center gap-1 dark:text-gray-300/80"
+												onClick={() => onDelete(rec)}
+											>
+												<Trash2 className="w-3 h-3" />{" "}
+												Delete
+											</Button>
+										</div>
+									)}
 								</CardContent>
 							</Card>
 						))

@@ -1,5 +1,5 @@
 import React from "react";
-import { Member } from "../../../types/types";
+import { Member } from "../../types/types";
 import { User, Mail, Phone, X, Shield } from "lucide-react"; // Only these icons are allowed
 import { CreditCard } from "lucide-react";
 import { formatCurrency } from "@/utils/calculations";

@@ -28,7 +28,6 @@ interface AdminRecentActivityProps {
 
 // Safe color map for Tailwind colors
 
-
 const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 	activities,
 	defaultItemsPerPage = 10,
@@ -81,10 +80,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 	}, [filteredAndSortedActivities, activityPage, itemsPerPage]);
 
 	return (
-		<div
-			className="bg-transparent rounded-xl shadow-sm border border-gray-200 dark:border-gray-900 flex flex-col"
-			style={{ height: "calc(100vh - 200px)" }}
-		>
+		<div className="rounded-xl shadow-sm border border-gray-200 dark:border-gray-900 flex flex-col max-h-[calc(100dvh-180px)]">
 			{/* Header */}
 			<div className="p-6 border-b border-gray-200 dark:border-gray-900 flex items-center justify-between flex-wrap gap-3">
 				<h2 className="text-sm font-semibold text-gray-500">
@@ -154,7 +150,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 
 			{/* Activity List */}
 			<div className="flex-1 flex flex-col min-h-0">
-				<div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+				<div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100">
 					{filteredAndSortedActivities.length === 0 ? (
 						<div className="py-12 flex justify-center items-center text-gray-400">
 							<History className="mr-2 w-6 h-6" />
@@ -187,6 +183,8 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 												"hover:bg-violet-100/40 dark:hover:bg-violet-500/5",
 											act.color === "purple" &&
 												"hover:bg-purple-100/40 dark:hover:bg-purple-500/5",
+											act.color === "lime" &&
+												"hover:bg-lime-100/40 dark:hover:bg-lime-500/5",
 											(act.color === "gray" ||
 												act.color === "black") &&
 												"hover:bg-gray-100/40 dark:hover:bg-gray-500/5"
@@ -262,6 +260,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 				{/* Pagination */}
 				{totalPages > 1 && (
 					<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 dark:border-gray-900 bg-transparent flex-shrink-0">
+						{" "}
 						<div className="flex items-center gap-2 text-sm">
 							<span className="text-gray-500">
 								Items per page:
@@ -289,7 +288,6 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 								</SelectContent>
 							</Select>
 						</div>
-
 						<Pagination>
 							<PaginationContent>
 								<PaginationItem>

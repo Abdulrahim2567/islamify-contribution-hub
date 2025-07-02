@@ -12,7 +12,7 @@ import { useRecentActivities } from "@/hooks/useRecentActivities";
 import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
 import Members from "./admin/tabs/Members";
-import NavigationBar from "./admin/TopNavigationBar/NavigationBar";
+import NavigationBar from "./admin/top-navigation/NavigationBar";
 import Dashboard from "./admin/tabs/Dashboard";
 import Loan from "./admin/tabs/Loan";
 import Contributions from "./admin/tabs/Contributions";
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
 							/>
 						)}
 						{activeTab === "contributions" && (
-							<Contributions thisAdminMember={thisAdminMember} />
+							<Contributions thisMember={thisAdminMember} />
 						)}
 
 						{activeTab === "loans" && <Loan user={thisAdminMember} />}

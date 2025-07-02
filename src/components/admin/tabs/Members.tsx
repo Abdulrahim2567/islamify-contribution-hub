@@ -17,8 +17,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import MemberCard from "../member/MemberCard";
-import MemberTable from "../member/MemberTable";
+import MemberCard from "../../common/MemberCard";
+import MemberTable from "../../common/MemberTable";
 import {
 	AdminActivityLog,
 	AppSettings,
@@ -34,7 +34,7 @@ import { useLoanRequests } from "@/hooks/useLoanRequests";
 import { useMembers } from "@/hooks/useMembers";
 import { useToast } from "@/hooks/use-toast";
 import SuccessModal from "../member/SuccessModal";
-import MemberDetailModal from "../member/MemberDetailModal";
+import MemberDetailModal from "../../common/MemberDetailModal";
 
 // Add this type for the new member state
 type NewMember = {
@@ -46,8 +46,8 @@ type NewMember = {
 
 interface MemberProps {
 	user: Member;
-    settings: AppSettings,
-    members: Member[]
+	settings: AppSettings;
+	members: Member[];
 }
 
 const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
@@ -58,10 +58,8 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		deleteAllMemberContributions,
 	} = useContributions();
 	const { getLoanRequestsByMemberId } = useLoanRequests();
-	const {
-		saveAdminActivity,
-		saveContributionActivity,
-	} = useRecentActivities();
+	const { saveAdminActivity, saveContributionActivity } =
+		useRecentActivities();
 	const [searchTerm, setSearchTerm] = useState("");
 	const [searchStatus, setSearchStatus] = useState<
 		"idle" | "typing" | "done"
@@ -361,7 +359,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		const member = members.find((m) => m.id === memberId);
 		member.role = newRole;
 		updateMember(member.id, member);
-	
+
 		// 💡 If the changed member is the logged-in user, update their localStorage too
 		const loggedInUser = JSON.parse(
 			localStorage.getItem("islamify_logged_in_user") || "{}"
@@ -376,7 +374,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 				JSON.stringify(updatedUser)
 			);
 		}
-	
+
 		// Log the activity
 		const roleChangeActivity: AdminActivityLog = {
 			id: Date.now() + Math.random(),
@@ -390,13 +388,12 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			memberId: member.id,
 		};
 		saveAdminActivity(roleChangeActivity);
-	
+
 		toast({
 			title: "Role Updated",
 			description: `Member role changed to ${newRole}`,
 		});
 	};
-	
 
 	// Edit member handler
 	const handleEditMember = (
@@ -433,7 +430,6 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 	// For loan, use sum of admin's contributions (like member dashboard logic)
 	const adminMemberId = thisAdminMember?.id ?? user.id;
-
 
 	return (
 		<>

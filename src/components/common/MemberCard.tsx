@@ -1,12 +1,12 @@
 import React from "react";
 import { Edit, User, Shield } from "lucide-react";
-import { Member } from "../../../types/types";
-import EditMemberDialog from "./EditMemberDialog";
-import MemberAvatar from "./MemberAvatar";
-import RoleSelect from "./RoleSelect";
-import StatusBadge from "./StatusBadge";
-import MemberInfoSection from "./MemberInfoSection";
-import MemberActionFooter from "./MemberActionFooter";
+import { Member } from "../../types/types";
+import EditMemberDialog from "../admin/member/EditMemberDialog";
+import MemberAvatar from "../admin/member/MemberAvatar";
+import RoleSelect from "../admin/member/RoleSelect";
+import StatusBadge from "../admin/member/StatusBadge";
+import MemberInfoSection from "../admin/member/MemberInfoSection";
+import MemberActionFooter from "../admin/member/MemberActionFooter";
 
 // ADDED: Accept currentUser as a prop
 interface MemberCardProps {

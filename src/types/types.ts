@@ -13,6 +13,7 @@ export interface Member {
   canApplyForLoan: boolean; // Indicates if the member can apply for a loan
   joinDate: string;
   role: "member" | "admin";
+  readNotifications?: number[];
 }
 
 export interface AdminActivityLog {

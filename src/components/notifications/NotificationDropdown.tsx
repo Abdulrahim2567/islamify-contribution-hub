@@ -20,8 +20,6 @@ import { formatDistanceToNow } from "date-fns";
 import { colorMap } from "@/utils/colorMap";
 import { cn } from "@/lib/utils";
 
-const READ_IDS_STORAGE_KEY = "NOTIFICATION_READ_IDS";
-
 type TabKey = "admin" | "contribution" | "loan";
 
 type LoanActivityItem = {
@@ -39,6 +37,10 @@ interface NotificationDropdownProps {
 	contributions?: ContributionRecordActivity[];
 	memberLoans?: MemberLoanActivity[];
 	user: Member;
+	onUpdateReadNotifications: (
+		memberId: number,
+		updatedInfo: Partial<Member>
+	) => void;
 	itemsPerPage?: number;
 }
 
@@ -47,18 +49,29 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 	contributions = [],
 	memberLoans = [],
 	user,
+	onUpdateReadNotifications,
 	itemsPerPage = 5,
 }) => {
 	const [open, setOpen] = useState(false);
 	const defaultTab: TabKey = user.role === "admin" ? "admin" : "contribution";
-	const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
+	const [activeTab, setActiveTab] = useState<TabKey>(() => {
+		const saved = localStorage.getItem("notification_active_tab");
+		if (saved === "admin" || saved === "contribution" || saved === "loan")
+			return saved;
+		return defaultTab;
+	});
+
 	const [tabPages, setTabPages] = useState<Record<TabKey, number>>({
 		admin: 1,
 		contribution: 1,
 		loan: 1,
 	});
 	const [searchTerm, setSearchTerm] = useState("");
-	const [readIds, setReadIds] = useState<Set<number>>(new Set());
+	const [readIds, setReadIds] = useState<Set<number>>(
+		new Set(user.readNotifications || [])
+	);
+
+	const [shouldShake, setShouldShake] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const loans: LoanActivityItem[] = memberLoans.map((l) => ({
@@ -74,40 +87,33 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		memberName: l.memberName,
 		type: l.type,
 	}));
-
-	
-
 	const markCurrentTabAsRead = () => {
 		let idsToMark: number[] = [];
+
 		if (activeTab === "admin") idsToMark = notifications.map((n) => n.id);
 		else if (activeTab === "contribution")
 			idsToMark = contributions.map((c) => c.id);
 		else if (activeTab === "loan") idsToMark = loans.map((l) => l.id);
-		setReadIds((prev) => new Set([...prev, ...idsToMark]));
+
+		const currentRead = new Set(readIds); // Use current local state
+		const newUnread = idsToMark.filter((id) => !currentRead.has(id));
+
+		if (newUnread.length > 0) {
+			const updated = new Set([...currentRead, ...newUnread]);
+
+			// ✅ Update state immediately
+			setReadIds(updated);
+
+			// ✅ Persist just the new unread
+			onUpdateReadNotifications(user.id, {
+				readNotifications: newUnread,
+			});
+		}
 	};
 
 	useEffect(() => {
 		if (!(activeTab in allTabs)) setActiveTab(defaultTab);
 	}, [user, activeTab, defaultTab]);
-
-	useEffect(() => {
-		const stored = localStorage.getItem(READ_IDS_STORAGE_KEY);
-		if (stored) {
-			try {
-				const parsed = JSON.parse(stored);
-				if (Array.isArray(parsed)) setReadIds(new Set(parsed));
-			} catch {
-				console.warn("Failed to parse stored read IDs");
-			}
-		}
-	}, []);
-
-	useEffect(() => {
-		localStorage.setItem(
-			READ_IDS_STORAGE_KEY,
-			JSON.stringify([...readIds])
-		);
-	}, [readIds]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -123,15 +129,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-
-	
-
 	useEffect(() => {
 		if (!(activeTab in allTabs)) {
 			setActiveTab(defaultTab);
 		}
 	}, [user, activeTab, defaultTab]);
-	
 
 	const filterBySearch = <
 		T extends {
@@ -207,8 +209,22 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			unreadCount: loans.filter((n) => !readIds.has(n.id)).length,
 		},
 	};
-	
+	useEffect(() => {
+		if (Object.values(allTabs).some((tab) => tab.unreadCount > 0)) {
+			const interval = setInterval(() => {
+				setShouldShake(true);
+				setTimeout(() => setShouldShake(false), 600); // Duration matches animation
+			}, 6000); // Every 6 seconds
 
+			return () => clearInterval(interval);
+		}
+	}, []);
+
+	useEffect(() => {
+		if (open) {
+			markCurrentTabAsRead();
+		}
+	}, [open]);
 
 	const currentTab = allTabs[activeTab];
 	if (!currentTab) return null;
@@ -221,21 +237,26 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			page * itemsPerPage
 		) || [];
 
-
 	const changePage = (newPage: number) => {
 		if (newPage < 1 || newPage > totalPages) return;
 		setTabPages((prev) => ({ ...prev, [activeTab]: newPage }));
 	};
-	
+
 	return (
-		<div className="relative bg-background" ref={dropdownRef}>
+		<div className="relative " ref={dropdownRef}>
 			<button
 				onClick={() => setOpen(!open)}
-				className="relative inline-flex items-center p-2 text-gray-500 hover:text-gray-900 transition-colors"
+				className="relative inline-flex items-center p-2 text-gray-500 hover:text-gray-900 dark:text-gray-300/80 dark:hover:text-gray-600/80 transition-colors"
 			>
-				<Bell className="w-5 h-5 mt-2" />
+				<Bell
+					className={clsx(
+						"w-5 h-5 mt-2",
+						shouldShake && "animate-shake"
+					)}
+				/>
+
 				{Object.values(allTabs).some((tab) => tab.unreadCount > 0) && (
-					<span className="absolute -top-1 right-0 w-2.5 h-2.5 mt-3 bg-red-500 border-2 border-white rounded-full" />
+					<span className="absolute top-0 right-0 w-2.5 h-2.5 mt-3 bg-blue-500 border-2 animate-pulse rounded-full" />
 				)}
 			</button>
 
@@ -258,11 +279,16 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 								className={clsx(
 									"px-3 py-1 rounded-full text-xs font-medium transition-colors",
 									activeTab === key
-										? "bg-emerald-500 dark:bg-emerald-400/5 dark:text-emerald-300/80 text-white"
+										? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white dark:bg-emerald-400/5 dark:text-emerald-300/80"
 										: "bg-background  dark:text-gray-300/80 dark:hover:bg-emerald-400/5 dark:hover:text-emerald-300/80 hover:bg-gray-200/30 hover:text-black"
 								)}
 								onClick={() => {
+									markCurrentTabAsRead();
 									setActiveTab(key as TabKey);
+									localStorage.setItem(
+										"notification_active_tab",
+										key
+									);
 									setSearchTerm("");
 									setTabPages((prev) => ({
 										...prev,
@@ -336,6 +362,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 											"hover:bg-violet-100/40 dark:hover:bg-violet-500/5",
 										color === "purple" &&
 											"hover:bg-purple-100/40 dark:hover:bg-purple-500/5",
+										color === "lime" &&
+											"hover:bg-lime-100/40 dark:hover:bg-lime-500/5",
 										(color === "gray" ||
 											color === "black") &&
 											"hover:bg-gray-100/40 dark:hover:bg-gray-500/5"

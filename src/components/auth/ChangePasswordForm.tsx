@@ -10,14 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck } from "lucide-react";
+import { Info, ShieldCheck, Lock, Check } from "lucide-react";
 import { Member } from "@/types/types";
 
 interface ChangePasswordFormProps {
 	member: Member;
-	updateMember: (id:number, member: Member) => void;
+	updateMember: (id: number, member: Member) => void;
 	onSuccess: (updatedMember: Member) => void;
 	onCancel: () => void;
+	onLogout: () => void;
 }
 
 const ChangePasswordForm = ({
@@ -25,6 +26,7 @@ const ChangePasswordForm = ({
 	updateMember,
 	onSuccess,
 	onCancel,
+	onLogout,
 }: ChangePasswordFormProps) => {
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,6 +38,9 @@ const ChangePasswordForm = ({
 	const passwordTooShort = newPassword.length > 0 && newPassword.length < 6;
 	const canUpdate =
 		newPassword.length >= 6 && newPassword === confirmPassword;
+
+	const passwordsMatch =
+		newPassword === confirmPassword && confirmPassword.length > 1;
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -76,7 +81,7 @@ const ChangePasswordForm = ({
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background p-4">
+		<div className="min-h-screen flex items-center justify-center bg-background/10 p-4">
 			<Card className="w-full max-w-md shadow-lg animate-fade-in">
 				<CardHeader className="text-center pb-2">
 					<div className="flex flex-col items-center mb-3">
@@ -111,20 +116,25 @@ const ChangePasswordForm = ({
 							>
 								New Password
 							</Label>
-							<Input
-								id="newPassword"
-								type="password"
-								className="pl-3"
-								value={newPassword}
-								onChange={(e) => {
-									setNewPassword(e.target.value);
-									setPasswordError("");
-								}}
-								placeholder="Enter new password"
-								required
-								minLength={6}
-								autoFocus
-							/>
+							<div className="relative">
+								<span className="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-500">
+									<Lock className="w-5 h-5 input-icon" />
+								</span>
+								<Input
+									id="newPassword"
+									type="password"
+									className="pl-10"
+									value={newPassword}
+									onChange={(e) => {
+										setNewPassword(e.target.value);
+										setPasswordError("");
+									}}
+									placeholder="Enter new password"
+									required
+									minLength={6}
+									autoFocus
+								/>
+							</div>
 						</div>
 						<div>
 							<Label
@@ -133,46 +143,60 @@ const ChangePasswordForm = ({
 							>
 								Confirm Password
 							</Label>
-							<Input
-								id="confirmPassword"
-								type="password"
-								className="pl-3"
-								value={confirmPassword}
-								onChange={(e) => {
-									setConfirmPassword(e.target.value);
-									setPasswordError("");
-								}}
-								placeholder="Re-enter new password"
-								required
-								minLength={6}
-							/>
+							<div className="relative">
+								<span className="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-500">
+									<Lock className="w-5 h-5 input-icon" />
+								</span>
+								<Input
+									id="confirmPassword"
+									type="password"
+									className="pl-10"
+									value={confirmPassword}
+									onChange={(e) => {
+										setConfirmPassword(e.target.value);
+										setPasswordError("");
+									}}
+									placeholder="Re-enter new password"
+									required
+									minLength={6}
+								/>
+								{passwordsMatch && (
+									<span className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-500 animate-scale-fade-in">
+										<Check className="w-5 h-5 input-icon" />
+									</span>
+								)}
+							</div>
 						</div>
-						{(passwordError ||
-							passwordMismatch ||
-							passwordTooShort) && (
-							<div className="bg-red-50 dark:bg-red-300/5 border border-red-200 dark:border-red-300/60 rounded-lg p-4 mx-6 mb-5 mt-2 w-full ml-0">
-								<p className="text-sm text-red-800 dark:text-red-300/80 text-center">
+						<div
+							className={`overflow-hidden transition-all ${
+								passwordError ||
+								passwordMismatch ||
+								passwordTooShort
+									? "animate-error-expand"
+									: "animate-error-collapse"
+							}`}
+						>
+							<div className="bg-red-50 dark:bg-red-300/5 border border-red-200 dark:border-red-300/60 rounded-lg p-3 w-full flex items-center space-x-2">
+								<Info className="text-red-600 dark:text-red-400 w-4 h-4" />
+								<p className="text-xs text-red-600 dark:text-red-300/80 justify-self-center">
 									{passwordError ||
-										(passwordMismatch && (
-											<span className="text-xs text-red-600 dark:text-red-300/80">
-												Passwords do not match
-											</span>
-										)) ||
-										(passwordTooShort && (
-											<span className="text-xs text-red-600 dark:text-red-300/80">
-												Password must be at least 6
-												characters long
-											</span>
-										))}
+										(passwordMismatch &&
+											"Passwords do not match") ||
+										(passwordTooShort &&
+											"Password must be at least 6 characters long")}
 								</p>
 							</div>
-						)}
+						</div>
+
 						<div className="flex space-x-4">
 							<Button
 								type="button"
 								variant="outline"
 								className="flex-1"
-								onClick={onCancel}
+								onClick={() => {
+									onLogout();
+									onCancel();
+								}}
 							>
 								Cancel
 							</Button>

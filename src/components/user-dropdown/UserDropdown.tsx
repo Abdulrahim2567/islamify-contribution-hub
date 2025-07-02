@@ -7,6 +7,7 @@ import {
 	CheckCircle,
 } from "lucide-react";
 import type { Member } from "@/types/types";
+import { formatWithOrdinal } from "@/lib/utils";
 
 interface UserDropdownProps {
 	user: Member;
@@ -105,7 +106,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
 						</div>
 						<p className="text-xs text-gray-400">
 							Joined on{" "}
-							{new Date(user.joinDate).toLocaleDateString()}
+							{formatWithOrdinal(new Date(user.joinDate))}
 						</p>
 
 						{canApply && (

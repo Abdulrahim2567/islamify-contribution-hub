@@ -86,12 +86,33 @@ export const MemberProvider = ({
 	};
 
 	const updateMember = (id: number, updatedInfo: Partial<Member>) => {
-		const updated = members.map((m) =>
-			m.id === id ? { ...m, ...updatedInfo } : m
-		);
+		const updated = members.map((m) => {
+			if (m.id !== id) return m;
+
+			// Special merge for readNotifications to avoid overwriting
+			if (
+				Array.isArray(updatedInfo.readNotifications) &&
+				Array.isArray(m.readNotifications)
+			) {
+				const mergedSet = new Set([
+					...m.readNotifications,
+					...updatedInfo.readNotifications,
+				]);
+
+				return {
+					...m,
+					...updatedInfo,
+					readNotifications: Array.from(mergedSet),
+				};
+			}
+
+			return { ...m, ...updatedInfo };
+		});
+
 		setMembers(updated);
 		writeMembersToStorage(updated);
 	};
+	
 
 	const setRole = (id: number, role: "admin" | "member") => {
 		updateMember(id, { role });

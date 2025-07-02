@@ -8,9 +8,9 @@ import {
 	User,
 	Shield,
 } from "lucide-react";
-import { Member } from "../../../types/types";
-import DeleteMemberDialog from "./DeleteMemberDialog";
-import EditMemberDialog from "./EditMemberDialog";
+import { Member } from "../../types/types";
+import DeleteMemberDialog from "../admin/member/DeleteMemberDialog";
+import EditMemberDialog from "../admin/member/EditMemberDialog";
 import {
 	Select,
 	SelectTrigger,

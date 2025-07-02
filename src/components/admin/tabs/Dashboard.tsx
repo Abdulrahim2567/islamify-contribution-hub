@@ -116,6 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
 			{/* Recent Activity */}
 			{thisAdminMember.role === "admin" ? (
+				
 				<AdminRecentActivity activities={adminActivities} />
 			) : (
 				<MemberContributionHistory

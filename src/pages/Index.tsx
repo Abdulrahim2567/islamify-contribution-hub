@@ -13,6 +13,14 @@ import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
 import { SettingsSidebar } from "@/components/SettingsSidebar";
 
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+
+
 // Hydration check hook
 function useHydrated() {
 	const [hydrated, setHydrated] = useState(false);
@@ -31,12 +39,19 @@ const Index = () => {
 	const { settings } = useIslamifySettings();
 	const { toast } = useToast();
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
 	useEffect(() => {
 		const stored = localStorage.getItem("islamify_logged_in_user");
 		if (stored) {
 			try {
-				const parsed = JSON.parse(stored);
+				const parsed: Member = JSON.parse(stored);
+
+				if (parsed.needsPasswordChange) {
+					// Don't auto-login if password change is required
+					setCurrentUser(parsed);
+					setShowPasswordChange(true);
+					return;
+				}
+
 				setCurrentUser(parsed);
 				setIsLoggedIn(true);
 			} catch {
@@ -44,6 +59,7 @@ const Index = () => {
 			}
 		}
 	}, []);
+	
 
 	const handleLogout = () => {
 		localStorage.removeItem("islamify_logged_in_user");
@@ -71,8 +87,12 @@ const Index = () => {
 	};
 
 	const requirePasswordChange = (user: Member) => {
+		console.log("here");
+		
 		setCurrentUser(user);
 		setShowPasswordChange(true);
+		console.log(showPasswordChange);
+		
 	};
 
 	const handleOnSuccess = (updatedUser: Member) => {
@@ -91,7 +111,7 @@ const Index = () => {
 
 	if (!hydrated) return null;
 
-	if (isLoggedIn && currentUser) {
+	if ((isLoggedIn || showPasswordChange) && currentUser) {
 		return showPasswordChange ? (
 			<ChangePasswordForm
 				member={currentUser}
@@ -101,17 +121,15 @@ const Index = () => {
 					setIsLoggedIn(false);
 				}}
 				updateMember={updateMember}
+				onLogout={handleLogout}
 			/>
 		) : currentUser.role === "admin" ? (
-			<AdminDashboard
-				user={currentUser}
-				onLogout={handleLogout}
-				users={members}
-			/>
+			<AdminDashboard user={currentUser} onLogout={handleLogout} />
 		) : (
 			<MemberDashboard user={currentUser} onLogout={handleLogout} />
 		);
 	}
+	
 
 	return (
 		<div className="min-h-screen bg-background">
