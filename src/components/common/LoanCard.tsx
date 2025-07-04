@@ -46,7 +46,7 @@ const LoanCard: React.FC<LoanCardProps> = ({
 								loan.status.slice(1)}
 						</Badge>
 						<p className="text-xs text-gray-500 dark:text-gray-300/70 whitespace-nowrap mr-2">
-							{formatDistanceToNow(new Date(loan.requestDate), {
+							{formatDistanceToNow(new Date(loan.createdAt), {
 								addSuffix: true,
 							}).replace(/^about\s/, "")}
 						</p>
@@ -81,7 +81,7 @@ const LoanCard: React.FC<LoanCardProps> = ({
 						size="sm"
 						variant="destructive"
 						className="text-xs flex-1 flex items-center gap-1"
-						onClick={() => handleReject?.(loan.id)}
+						onClick={() => handleReject?.(loan._id)}
 					>
 						<XCircle className="w-3 h-3" />
 						Reject
@@ -89,7 +89,7 @@ const LoanCard: React.FC<LoanCardProps> = ({
 					<Button
 						size="sm"
 						className="text-xs flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white flex items-center gap-1"
-						onClick={() => handleApprove?.(loan.id)}
+						onClick={() => handleApprove?.(loan._id)}
 					>
 						<CheckCircle className="w-3 h-3" />
 						Approve

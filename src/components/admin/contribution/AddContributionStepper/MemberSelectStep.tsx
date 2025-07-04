@@ -91,9 +91,9 @@ const MemberSelectStep: React.FC<MemberSelectStepProps> = ({
 					<div className="grid grid-cols-2 justify-center gap-4 mx-auto">
 						{pageMembers.map((member) => (
 							<button
-								key={member.id}
+								key={member._id}
 								className={`flex flex-col items-center gap-2 border rounded-xl bg-background dark:hover:bg-emerald-400/5 shadow hover:bg-emerald-50 transition-all group w-full py-3 px-2 max-w-[140px] ${
-									selectedMember?.id === member.id
+									selectedMember?._id === member._id
 										? "border-emerald-500 dark:border-emerald-300/80 ring-2 ring-emerald-200 dark:ring-emerald-300/80 dark:bg-emerald-300/5"
 										: "border-gray-200 dark:border-gray-900"
 								}`}

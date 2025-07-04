@@ -89,7 +89,7 @@ const MemberLoans: React.FC<MemberLoansProps> = ({
 									{pendingRequests.length > 0 ? (
 										pendingRequests.map((loan) => (
 											<LoanCard
-												key={loan.id}
+												key={loan._id}
 												loan={loan}
 												showActions={false}
 												handleApprove={() => {}}
@@ -108,7 +108,7 @@ const MemberLoans: React.FC<MemberLoansProps> = ({
 									{approvedRequests.length > 0 ? (
 										approvedRequests.map((loan) => (
 											<LoanCard
-												key={loan.id}
+												key={loan._id}
 												loan={loan}
 												showActions={false}
 												handleApprove={() => {}}
@@ -127,7 +127,7 @@ const MemberLoans: React.FC<MemberLoansProps> = ({
 									{rejectedRequests.length > 0 ? (
 										rejectedRequests.map((loan) => (
 											<LoanCard
-												key={loan.id}
+												key={loan._id}
 												loan={loan}
 												showActions={false}
 												handleApprove={() => {}}

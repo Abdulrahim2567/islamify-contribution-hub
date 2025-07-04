@@ -8,17 +8,10 @@ import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import LoginForm from "@/components/auth/LoginForm";
 
 import { Member } from "@/types/types";
-import { useMembers } from "@/hooks/useMembers";
 import { useIslamifySettings } from "@/hooks/useIslamifySettings";
 
 import { SettingsSidebar } from "@/components/SettingsSidebar";
 
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 
 
 // Hydration check hook
@@ -32,15 +25,17 @@ function useHydrated() {
 
 const Index = () => {
 	const hydrated = useHydrated();
-	const { members, updateMember } = useMembers();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [currentUser, setCurrentUser] = useState<Member | null>(null);
 	const [showPasswordChange, setShowPasswordChange] = useState(false);
 	const { settings } = useIslamifySettings();
 	const { toast } = useToast();
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+	
 	useEffect(() => {
 		const stored = localStorage.getItem("islamify_logged_in_user");
+		console.log("Stored user:", stored);
 		if (stored) {
 			try {
 				const parsed: Member = JSON.parse(stored);
@@ -120,12 +115,11 @@ const Index = () => {
 					setShowPasswordChange(false);
 					setIsLoggedIn(false);
 				}}
-				updateMember={updateMember}
 				onLogout={handleLogout}
 			/>
-		) : currentUser.role === "admin" ? (
+		) : currentUser && currentUser.role === "admin" ? (
 			<AdminDashboard user={currentUser} onLogout={handleLogout} />
-		) : (
+		) : currentUser && (
 			<MemberDashboard user={currentUser} onLogout={handleLogout} />
 		);
 	}
@@ -163,7 +157,7 @@ const Index = () => {
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}
 				settings={settings}
-				user={currentUser || members[0]}
+				user={currentUser }
 				updateSettings={() => {}}
 			/>
 
@@ -224,7 +218,6 @@ const Index = () => {
 				</div>
 
 				<LoginForm
-					users={members}
 					onLogin={handleLogin}
 					onRequirePasswordChange={requirePasswordChange}
 					toast={toast}

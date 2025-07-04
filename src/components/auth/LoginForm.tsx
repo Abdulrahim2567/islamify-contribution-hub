@@ -11,10 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Info } from "lucide-react";
 import { Member } from "@/types/types";
-import { readMembersFromStorage } from "@/utils/membersStorage";
 
 interface LoginFormProps {
-	users: Member[];
 	onLogin: (user: Member) => void;
 	onRequirePasswordChange: (user: Member) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,8 +21,11 @@ interface LoginFormProps {
 
 const LOCAL_STORAGE_KEY = "islamify_logged_in_user";
 
+const BASE_URL = "http://localhost:9000";
+
+const API_BASE = BASE_URL.concat("/api/v1/auth/login"); // Adjust this if your backend URL is different
+
 const LoginForm = ({
-	users,
 	onLogin,
 	onRequirePasswordChange,
 	toast,
@@ -37,14 +38,8 @@ const LoginForm = ({
 		const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
 		if (stored) {
 			try {
-				const parsed: Member = JSON.parse(stored);
+				const validUser: Member = JSON.parse(stored);
 				// Revalidate against current members
-				const members = readMembersFromStorage();
-				const validUser = members.find(
-					(u) =>
-						u.email === parsed.email &&
-						u.password === parsed.password
-				);
 				if (validUser) {
 					setUser(validUser);
 					onLogin(validUser);
@@ -61,15 +56,19 @@ const LoginForm = ({
 		}
 	}, []);
 
-	const handleLogin = (e: React.FormEvent) => {
+	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const members: Member[] = readMembersFromStorage();
 
-		const foundUser = members.find(
-			(u) =>
-				u.email === loginForm.email && u.password === loginForm.password
-		);
-
+		const res = await fetch(API_BASE, {
+			method: "POST",
+			body: JSON.stringify(loginForm),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		if (!res.ok) throw new Error("Failed to fetch members");
+		const data = await res.json();
+		const foundUser:Member = data.data
 		if (!foundUser) {
 			toast({
 				title: "Login Failed",
@@ -81,6 +80,9 @@ const LoginForm = ({
 		}
 
 		setUser(foundUser);
+
+		console.log("Found user:", foundUser);
+		
 
 		if (!foundUser.isActive) return;
 

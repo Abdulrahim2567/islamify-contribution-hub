@@ -6,8 +6,8 @@ import type { Member } from "../../../types/types";
 interface MemberActionFooterProps {
 	member: Member;
 	onView: (member: Member) => void;
-	onLoanToggle: (id: number) => void;
-	onDelete: (id: number) => void;
+	onLoanToggle: (id: string) => void;
+	onDelete: (id: string) => void;
 	readOnly?: boolean;
 }
 
@@ -44,7 +44,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 					<>
 						{/* Toggle Loan */}
 						<button
-							onClick={() => onLoanToggle(member.id)}
+							onClick={() => onLoanToggle(member._id)}
 							className={`flex flex-col items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-300/5 dark:hover:text-indigo-400/80 rounded py-1.5 px-2 text-xs font-semibold transition focus:outline-none outline-none group/button
 								${member.loanEligible ? "text-indigo-600" : "text-gray-400"}
 							`}
@@ -89,7 +89,7 @@ const MemberActionFooter: React.FC<MemberActionFooterProps> = ({
 									memberName={member.name}
 									onConfirm={() => {
 										setShowDelete(false);
-										onDelete(member.id);
+										onDelete(member._id);
 									}}
 								/>
 							</>

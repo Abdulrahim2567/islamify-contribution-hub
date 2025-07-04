@@ -1,6 +1,6 @@
 
 export interface Member {
-  id: number;
+  _id?: string; // Unique identifier for the member
   name: string;
   email: string;
   phone: string;
@@ -11,21 +11,24 @@ export interface Member {
   isActive: boolean;
   loanEligible: boolean;
   canApplyForLoan: boolean; // Indicates if the member can apply for a loan
-  joinDate: string;
+  createdAt?: string;
+  updatedAt?: string;
   role: "member" | "admin";
-  readNotifications?: number[];
+  readNotifications?: string[];
+  avatar?: string; // Optional avatar URL for the member
 }
 
 export interface AdminActivityLog {
-  id: number;
-  timestamp: string;
+  _id?: string;
+  createdAt?: string;
+  updatedAt?: string;
   type: string;
   text: string;
   color: string;
   adminName: string;
   adminEmail: string;
   adminRole: "member" | "admin";
-  memberId?: number; // Optional for actions not related to a specific member
+  memberId?: string; // Optional for actions not related to a specific member
   isRead?:boolean
 }
 
@@ -42,10 +45,11 @@ export interface AdminDashboardData {
 }
 
 export interface Contribution {
-  id: number
-  memberId: number;
+  _id?: string
+  memberId: string
   amount: number;
-  date: string;
+  createdAt?: string;
+  updatedAt?: string;
   lastEdited: string; // Timestamp of the last edit
   description: string;
   addedBy: string; // Admin or member who added the contribution
@@ -62,17 +66,19 @@ export interface ContributionRecordActivity extends Contribution {
 export interface MemberLoanActivity {
   type: "loan_request" | "loan_approval" | "loan_rejection";
   amount: number;
-  memberId: number;
+  memberId: string;
   memberName: string;
-  date: string; // ISO date string
+  createdAt?: string;
+  updatedAt?: string;
   performedBy: string; // Name of the person who performed the action
   description?: string; // Optional description for contributions or loan requests
 }
 
 export interface Loan {
-  memberId: number;
+  memberId: string;
   amount: number;
-  date: string;
+  createdAt?: string;
+  updatedAt?: string;
   description?: string;
 }
 
@@ -83,25 +89,27 @@ export interface LoanRecord extends Loan {
 }
 
 export interface LoanRequest {
-  id: string; // Unique identifier for the loan request
+  _id?: string; // Unique identifier for the loan request
   dueDate?: string; // Optional due date for the loan
   paymentInterval?: string; // Optional payment interval
   paymentIntervalAmount?: number; // Optional amount per payment interval
   nextPaymentDate?: string; // Optional next payment date
   nextPaymentAmount?: number; // Optional amount for the next payment
-  memberId: number; // ID of the member requesting the loan
+  memberId: string; // ID of the member requesting the loan
   memberName: string; // Name of the member
   amount: number; // Amount requested
   purpose: string; // Purpose of the loan
-  requestDate: string; // Date of the request
+  createdAt?: string;
+  updatedAt?: string;
   status: "pending" | "approved" | "rejected"; // Status of the loan request
   processedBy?: string; // Optional, name of the admin who processed the request
   processedDate?: string; // Optional, date when the request was processed
 }
 
 export interface AdminLoanActivity {
-  id: number;
-  timestamp: string;
+  _id: string;
+  createdAt?: string;
+  updatedAt?: string;
   type: "loan_request" | "loan_approval" | "loan_rejection";
   text: string;
   color: string;

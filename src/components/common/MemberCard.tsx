@@ -13,12 +13,12 @@ interface MemberCardProps {
 	member: Member;
 	currentUser: Member;
 	onView: (member: Member) => void;
-	onStatusToggle: (id: number) => void;
-	onLoanToggle: (id: number) => void;
-	onDelete: (id: number) => void;
-	onRoleChange: (id: number, newRole: "member" | "admin") => void;
+	onStatusToggle: (id: string) => void;
+	onLoanToggle: (id: string) => void;
+	onDelete: (id: string) => void;
+	onRoleChange: (id: string, newRole: "member" | "admin") => void;
 	onEdit?: (
-		id: number,
+		id: string,
 		data: { name: string; email: string; phone: string }
 	) => void;
 	readOnly?: boolean;

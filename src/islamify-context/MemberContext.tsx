@@ -1,21 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Member } from "../types/types";
+import { MemberContext } from "@/hooks/useMembers";
 import {
 	readMembersFromStorage,
 	writeMembersToStorage,
-	addMemberToStorage,
-	deleteMemberFromStorage,
-	updateMemberInfo,
-	updateMemberRole,
-	updateMemberActiveStatus,
-	updateMemberLoanEligibility,
 	clearMembersFromStorage,
 } from "@/utils/membersStorage";
-import { MemberContext } from "@/hooks/useMembers";
-import { getNowString } from "@/utils/calculations";
+
+const BASE_URL = "http://localhost:9000";
+const API_BASE = BASE_URL.concat("/api/v1/member");
 
 const DEMO_ADMIN: Member = {
-	id: 1,
 	email: "admin@islamify.org",
 	password: "admin123",
 	role: "admin",
@@ -27,22 +22,20 @@ const DEMO_ADMIN: Member = {
 	isActive: true,
 	loanEligible: false,
 	canApplyForLoan: false,
-	joinDate: getNowString(),
 };
 
 export interface MemberContextProps {
 	members: Member[];
-	addMember: (member: Member) => void;
-	deleteMember: (id: number) => void;
-	updateMember: (id: number, updatedInfo: Partial<Member>) => void;
-	setRole: (id: number, role: "admin" | "member") => void;
-	setActiveStatus: (id: number, isActive: boolean) => void;
-	setLoanEligibility: (id: number, eligible: boolean) => void;
-	refreshMembers: () => void;
+	addMember: (member: Member) => Promise<Member>;
+	deleteMember: (id: string) => Promise<boolean>;
+	updateMember: (
+		id: string,
+		updatedInfo: Partial<Member>
+	) => Promise<string>;
+	refreshMembers: () => Promise<void>;
 	clearMembers: () => void;
 
-	// Derived utilities (optional)
-	getMemberById: (id: number) => Member | undefined;
+	getMemberById: (id: string) => Member | undefined;
 	getAdmins: () => Member[];
 	getActiveMembers: () => Member[];
 	getInactiveMembers: () => Member[];
@@ -56,83 +49,93 @@ export const MemberProvider = ({
 	const [members, setMembers] = useState<Member[]>([]);
 
 	useEffect(() => {
-		const allMembers = readMembersFromStorage()
-		if(allMembers.length < 1){
-			addMember(DEMO_ADMIN)
-			allMembers.push(DEMO_ADMIN)
-		}
-		setMembers(allMembers);
+		refreshMembers();
 	}, []);
 
-	const refreshMembers = () => {
-		const allMembers = readMembersFromStorage();
-		if (allMembers.length < 1) {
-			addMember(DEMO_ADMIN);
-			allMembers.push(DEMO_ADMIN);
-		}
-		setMembers(allMembers);
-	};
-
-	const addMember = (member: Member) => {
-		const updated = [...members, member];
-		setMembers(updated);
-		writeMembersToStorage(updated);
-	};
-
-	const deleteMember = (id: number) => {
-		const updated = members.filter((m) => m.id !== id);
-		setMembers(updated);
-		writeMembersToStorage(updated);
-	};
-
-	const updateMember = (id: number, updatedInfo: Partial<Member>) => {
-		const updated = members.map((m) => {
-			if (m.id !== id) return m;
-
-			// Special merge for readNotifications to avoid overwriting
-			if (
-				Array.isArray(updatedInfo.readNotifications) &&
-				Array.isArray(m.readNotifications)
-			) {
-				const mergedSet = new Set([
-					...m.readNotifications,
-					...updatedInfo.readNotifications,
-				]);
-
-				return {
-					...m,
-					...updatedInfo,
-					readNotifications: Array.from(mergedSet),
-				};
+	const refreshMembers = async () => {
+		try {
+			const res = await fetch(API_BASE, {
+				credentials: "include",
+			});
+			if (!res.ok) throw new Error("Failed to fetch members");
+			const data: Member[] = await res.json();
+			setMembers(data);
+			writeMembersToStorage(data);
+		} catch (err) {
+			console.warn("Falling back to localStorage due to error:", err);
+			const local = readMembersFromStorage();
+			if (local.length === 0) {
+				local.push(DEMO_ADMIN);
+				writeMembersToStorage(local);
 			}
+			setMembers(local);
+		}
+	};
 
-			return { ...m, ...updatedInfo };
+	const addMember = async (member: Member): Promise<Member> => {
+		const res = await fetch(API_BASE, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(member),
+			credentials: "include",
 		});
 
-		setMembers(updated);
-		writeMembersToStorage(updated);
+		if (!res.ok) throw new Error("Failed to add member");
+		const newMember = await res.json();
+		await refreshMembers();
+		return newMember;
+	};
+
+	const deleteMember = async (id: string): Promise<boolean> => {
+		const res = await fetch(`${API_BASE}/${id}`, {
+			method: "DELETE",
+			credentials: "include",
+		});
+		await refreshMembers();
+		return res.ok;
+	};
+
+	const updateMember = async (
+		id: string,
+		updatedInfo: Partial<Member>
+	): Promise<"success" | "deleted" | "error"> => {
+		const { _id, createdAt, updatedAt, ...safeUpdates } = updatedInfo;
+
+		try {
+			const res = await fetch(`${API_BASE}/${id}`, {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(safeUpdates),
+				credentials: "include",
+			});
+
+			if (res.status === 401 || res.status === 404) {
+				return "deleted"; // User deleted or token invalid
+			}
+
+			if (res.ok) {
+				await refreshMembers();
+				return "success";
+			}
+
+			console.error("Failed to update member:", await res.text());
+			return "error";
+		} catch (err) {
+			console.error("Error updating member:", err);
+			return "error";
+		}
 	};
 	
-
-	const setRole = (id: number, role: "admin" | "member") => {
-		updateMember(id, { role });
-	};
-
-	const setActiveStatus = (id: number, isActive: boolean) => {
-		updateMember(id, { isActive });
-	};
-
-	const setLoanEligibility = (id: number, eligible: boolean) => {
-		updateMember(id, { loanEligible: eligible });
-	};
+	
 
 	const clearMembers = () => {
 		setMembers([]);
 		clearMembersFromStorage();
 	};
 
-	// Optional utility methods
-	const getMemberById = (id: number) => members.find((m) => m.id === id);
+	const getMemberById = (id: string) => members.find((m) => m._id === id);
 	const getAdmins = () => members.filter((m) => m.role === "admin");
 	const getActiveMembers = () => members.filter((m) => m.isActive);
 	const getInactiveMembers = () => members.filter((m) => !m.isActive);
@@ -142,9 +145,6 @@ export const MemberProvider = ({
 		addMember,
 		deleteMember,
 		updateMember,
-		setRole,
-		setActiveStatus,
-		setLoanEligibility,
 		refreshMembers,
 		clearMembers,
 		getMemberById,

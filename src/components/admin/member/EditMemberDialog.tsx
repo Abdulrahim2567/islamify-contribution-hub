@@ -17,7 +17,7 @@ interface EditMemberDialogProps {
 	onOpenChange: (open: boolean) => void;
 	member: Member | null;
 	onSave: (
-		id: number,
+		id: string,
 		data: { name: string; email: string; phone: string }
 	) => void;
 }
@@ -48,7 +48,7 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		onSave(member.id, form);
+		onSave(member._id, form);
 		onOpenChange(false);
 	};
 

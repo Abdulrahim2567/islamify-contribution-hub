@@ -95,7 +95,7 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 								<span className="dark:text-gray-300/80">
 									Joined on{" "}
 									{new Date(
-										member.joinDate
+										member.createdAt
 									).toLocaleDateString(undefined, {
 										year: "numeric",
 										month: "short",

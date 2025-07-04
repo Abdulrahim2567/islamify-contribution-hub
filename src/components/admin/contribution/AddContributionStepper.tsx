@@ -18,7 +18,7 @@ interface AddContributionStepperProps {
 	onOpenChange: (open: boolean) => void;
 	members: Member[]; // unused now
 	onSubmit: (data: {
-		memberId: number;
+		memberId: string;
 		amount: number;
 		type: "contribution";
 		date: string;
@@ -80,7 +80,7 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 		e.preventDefault();
 		if (!selectedMember) return;
 		onSubmit({
-			memberId: selectedMember.id,
+			memberId: selectedMember._id,
 			amount: parseFloat(formData.amount),
 			type: "contribution",
 			date: getNowString(),
@@ -96,9 +96,9 @@ const AddContributionStepper: React.FC<AddContributionStepperProps> = ({
 	if (!open) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center p-4 z-50   border">
+		<div className="fixed inset-0 bg-background/50 backdrop-blur  flex items-center justify-center p-4 z-50   border">
 			<div
-				className="dark:bg-[#020817] rounded-xl border dark:border-gray-800 shadow-xl w-full max-w-md animate-fade-in flex flex-col relative overflow-hidden"
+				className="dark:bg-[#020817] bg-background rounded-xl border dark:border-gray-800 shadow-xl w-full max-w-md animate-fade-in flex flex-col relative overflow-hidden"
 				style={{ height: "600px" }}
 			>
 				{/* Close Button */}

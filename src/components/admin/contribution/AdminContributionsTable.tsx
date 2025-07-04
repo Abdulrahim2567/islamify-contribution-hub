@@ -51,7 +51,7 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 	const paginatedContributions: ContributionRecord[] = contributions
 		.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 		.map((contribution) => {
-			const member = members.find((m) => m.id === contribution.memberId);
+			const member = members.find((m) => m._id === contribution.memberId);
 			return {
 				...contribution,
 				memberName: member ? member.name : "Unknown Member",
@@ -70,17 +70,17 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 		oldRecord: ContributionRecord
 	) => {
 		const idx = contributions.findIndex(
-			(x) => x.date === editing?.date && x.memberId === editing?.memberId
+			(x) => x.createdAt === editing?.createdAt && x.memberId === editing?.memberId
 		);
 		if (idx !== -1 && editing) {
 			// --- Update the member's totalContributions in islamify_members, for consistency ---
 			updateMemberContribution(
-				updatedContribution.id,
+				updatedContribution._id,
 				updatedContribution
 			);
 
 			const member: Member = members.find(
-				(m) => m.id === updatedContribution.memberId
+				(m) => m._id === updatedContribution.memberId
 			);
 
 			let amountDifference =
@@ -98,12 +98,10 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 				member.canApplyForLoan = true;
 			else member.canApplyForLoan = false;
 
-			updateMember(member.id, member);
+			updateMember(member._id, member);
 
 			// --- Add an admin activity for this edit ---
 			const adminActivity: AdminActivityLog = {
-				id: Date.now() + Math.random(),
-				timestamp: getNowString(),
 				type: "edit_contribution",
 				text: `Edited contribution for "${
 					updatedContribution.memberName
@@ -146,8 +144,6 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 
 			// --- Update ALL matching contributions in recent_activities ---
 			const editContributionActivity: AdminActivityLog = {
-				id: Date.now() + Math.random(),
-				timestamp: getNowString(),
 				type: "edit_contribution",
 				text:
 					editContributionText ||
@@ -183,13 +179,13 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 	const confirmDelete = () => {
 		if (!toDelete) return;
 		const filtered = contributions.filter(
-			(x) => !(x.id === toDelete.id && x.memberId === toDelete.memberId)
+			(x) => !(x._id === toDelete._id && x.memberId === toDelete.memberId)
 		);
 		//remove from local storage
-		deleteMemberContribution(toDelete.id);
+		deleteMemberContribution(toDelete._id);
 
 		//update member canApplyForLoan status
-		const memberFound = members.find((m) => m.id === toDelete.memberId);
+		const memberFound = members.find((m) => m._id === toDelete.memberId);
 		if (memberFound) {
 			const updatedMember: Member = {
 				...memberFound,
@@ -203,12 +199,10 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 				updatedMember.totalContributions = 0;
 			}
 
-			updateMember(updatedMember.id, updatedMember);
+			updateMember(updatedMember._id, updatedMember);
 		}
 		// --- Add an admin activity for this delete ---
 		const adminActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "delete_contribution",
 			text: `Deleted contribution for "${
 				toDelete.memberName
@@ -222,8 +216,6 @@ const AdminContributionsTable: React.FC<AdminContributionsTableProps> = ({
 		saveAdminActivity(adminActivity);
 		// --- Add a member activity for this delete ---
 		const memberActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "delete_contribution",
 			text: `Deleted contribution of${formatCurrency(toDelete.amount)}.`,
 			color: "red",

@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 type TabKey = "admin" | "contribution" | "loan";
 
 type LoanActivityItem = {
-	id: number;
+	id: string;
 	timestamp: string;
 	text: string;
 	color: string;
@@ -38,7 +38,7 @@ interface NotificationDropdownProps {
 	memberLoans?: MemberLoanActivity[];
 	user: Member;
 	onUpdateReadNotifications: (
-		memberId: number,
+		memberId: string,
 		updatedInfo: Partial<Member>
 	) => void;
 	itemsPerPage?: number;
@@ -67,7 +67,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		loan: 1,
 	});
 	const [searchTerm, setSearchTerm] = useState("");
-	const [readIds, setReadIds] = useState<Set<number>>(
+	const [readIds, setReadIds] = useState<Set<string>>(
 		new Set(user.readNotifications || [])
 	);
 
@@ -76,7 +76,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
 	const loans: LoanActivityItem[] = memberLoans.map((l) => ({
 		id: l.memberId,
-		timestamp: l.date,
+		timestamp: l.createdAt,
 		text: l.description,
 		color:
 			l.type === "loan_request"
@@ -88,11 +88,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 		type: l.type,
 	}));
 	const markCurrentTabAsRead = () => {
-		let idsToMark: number[] = [];
+		let idsToMark: string[] = [];
 
-		if (activeTab === "admin") idsToMark = notifications.map((n) => n.id);
+		if (activeTab === "admin") idsToMark = notifications.map((n) => n._id);
 		else if (activeTab === "contribution")
-			idsToMark = contributions.map((c) => c.id);
+			idsToMark = contributions.map((c) => c._id);
 		else if (activeTab === "loan") idsToMark = loans.map((l) => l.id);
 
 		const currentRead = new Set(readIds); // Use current local state
@@ -105,7 +105,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			setReadIds(updated);
 
 			// ✅ Persist just the new unread
-			onUpdateReadNotifications(user.id, {
+			onUpdateReadNotifications(user._id, {
 				readNotifications: newUnread,
 			});
 		}
@@ -183,11 +183,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 				items: filterBySearch(
 					[...notifications].sort(
 						(a, b) =>
-							new Date(b.timestamp).getTime() -
-							new Date(a.timestamp).getTime()
+							new Date(b.createdAt).getTime() -
+							new Date(a.createdAt).getTime()
 					)
 				),
-				unreadCount: notifications.filter((n) => !readIds.has(n.id))
+				unreadCount: notifications.filter((n) => !readIds.has(n._id))
 					.length,
 			},
 		}),
@@ -197,10 +197,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 			items: filterBySearch(
 				[...contributions].sort(
 					(a, b) =>
-						new Date(b.date).getTime() - new Date(a.date).getTime()
+						new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 				)
 			),
-			unreadCount: contributions.filter((n) => !readIds.has(n.id)).length,
+			unreadCount: contributions.filter((n) => !readIds.has(n._id)).length,
 		},
 		loan: {
 			label: "Loan Activities",
@@ -332,11 +332,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 						</div>
 					) : (
 						paginatedItems.map((item: any, index: number) => {
-							const id = item.id ?? index;
+							const id = item._id ?? index;
 							const title =
 								item.adminName || item.memberName || "System";
 							const text = item.text || item.description || "";
-							const timestamp = item.timestamp || item.date;
+							const timestamp = item.createdAt || item.createdAt;
 							const badge = item.type?.replace(/_/g, " ");
 							let color = item.color;
 							if (activeTab === "contribution")

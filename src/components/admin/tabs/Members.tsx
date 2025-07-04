@@ -35,6 +35,7 @@ import { useMembers } from "@/hooks/useMembers";
 import { useToast } from "@/hooks/use-toast";
 import SuccessModal from "../member/SuccessModal";
 import MemberDetailModal from "../../common/MemberDetailModal";
+import SearchComponent from "@/components/common/Search";
 
 // Add this type for the new member state
 type NewMember = {
@@ -137,12 +138,10 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		setMembersPage(page);
 	};
 
-	const handleRegisterMember = (e) => {
+	const handleRegisterMember = async (e) => {
 		e.preventDefault();
 		const password = generatePassword();
-		const id = Date.now(); // Use timestamp for uniqueness
 		const member: Member = {
-			id,
 			name: newMember.name,
 			email: newMember.email,
 			phone: newMember.phone,
@@ -153,7 +152,6 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			totalContributions: 0,
 			isActive: true,
 			loanEligible: false,
-			joinDate: getNowString(),
 			canApplyForLoan: false,
 		};
 
@@ -161,7 +159,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		setGeneratedPassword(password);
 
 		//add user to localStorage users
-		addMember(member);
+		const addedMember: Member = await addMember(member);
 
 		// Close register modal first
 		setShowRegisterModal(false);
@@ -174,15 +172,13 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 		// Activity log with admin name/email
 		const AdminActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "add_member",
 			text: `Added new member "${member.name}" (${member.email}) as ${member.role}`,
 			color: "emerald",
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: id, // Include member ID for reference
+			memberId: addedMember._id, // Include member ID for reference
 		};
 		saveAdminActivity(AdminActivity);
 
@@ -192,13 +188,11 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		});
 	};
 
-	const toggleMemberStatus = (memberId: number) => {
-		const member = members.find((m) => m.id === memberId);
+	const toggleMemberStatus = (memberId: string) => {
+		const member = members.find((m) => m._id === memberId);
 		member.isActive = !member.isActive;
-		updateMember(member.id, member);
+		updateMember(member._id, member);
 		const statusActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "toggle_status",
 			text: `Changed status of "${member?.name}" to ${
 				member?.isActive ? "Active" : "Inactive"
@@ -207,7 +201,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: member.id, // Include member ID for reference
+			memberId: member._id, // Include member ID for reference
 		};
 		saveAdminActivity(statusActivity);
 
@@ -217,14 +211,12 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		});
 	};
 
-	const toggleLoanEligibility = (memberId: number) => {
-		const member = members.find((m) => m.id === memberId);
+	const toggleLoanEligibility = (memberId: string) => {
+		const member = members.find((m) => m._id === memberId);
 		// Update loan eligibility in localStorage
 		member.loanEligible = !member.loanEligible;
-		updateMember(member.id, member);
+		updateMember(member._id, member);
 		const loanEligibilityActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "toggle_loan_eligibility",
 			text: `Changed loan eligibility for "${member?.name}" to ${
 				member?.loanEligible ? "Enabled" : "Disabled"
@@ -233,7 +225,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: member.id, // Include member ID for reference
+			memberId: member._id, // Include member ID for reference
 		};
 		// Add to activities
 		saveAdminActivity(loanEligibilityActivity);
@@ -245,26 +237,25 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		});
 	};
 
-	const handleDeleteMember = (memberId: number) => {
-		const member = members.find((m) => m.id === memberId);
+	const handleDeleteMember = (memberId: string) => {
+		const member = members.find((m) => m._id === memberId);
 
 		//delete member from storage
 		deleteMember(memberId);
 
 		const deleteActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
+			
 			type: "delete_member",
 			text: `Deleted member "${member?.name}" (${member?.email})`,
 			color: "red",
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: member.id, // Include member ID for reference
+			memberId: member._id, // Include member ID for reference
 		};
 		saveAdminActivity(deleteActivity);
 
-		if (deleteAllMemberContributions(member.id)) {
+		if (deleteAllMemberContributions(member._id)) {
 			toast({
 				title: "Member Deleted",
 				description: "Member has been removed from the system",
@@ -280,13 +271,13 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 		date,
 		description,
 	}: {
-		memberId: number;
+		memberId: string;
 		amount: number;
 		type: "contribution";
 		date: string;
 		description?: string;
 	}) => {
-		const member = members.find((m) => m.id === memberId);
+		const member = members.find((m) => m._id === memberId);
 
 		member.totalContributions += amount;
 		// Update loan eligibility if contributions exceed threshold
@@ -294,12 +285,11 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			member.canApplyForLoan = true;
 		}
 		//update member with new info
-		updateMember(member.id, member);
+		updateMember(member._id, member);
 
 		// Log in admin activities
 		const adminAddContributionActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
+			
 			type: "add_contribution",
 			text: `Added contribution of ${formatCurrency(amount)} for "${
 				member?.name
@@ -308,16 +298,14 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: member.id, // Include member ID for reference
+			memberId: member._id, // Include member ID for reference
 		};
 
 		saveAdminActivity(adminAddContributionActivity);
 
 		const newContribution: Contribution = {
-			id: Date.now() + Math.random(),
 			memberId,
 			amount,
-			date,
 			lastEdited: "",
 			description: description || "",
 			addedBy: user.name,
@@ -328,12 +316,10 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 		// Prepare activity object for member dashboard
 		const memberContributionActivity: ContributionRecordActivity = {
-			id: Date.now() + Math.random(),
 			type: "contribution",
 			amount,
 			memberId,
 			memberName: member?.name || "",
-			date,
 			lastEdited: "",
 			editedBy: user.name,
 			description: description || "",
@@ -353,18 +339,18 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 	// NEW: Change role handler
 	const handleChangeRole = (
-		memberId: number,
+		memberId: string,
 		newRole: "member" | "admin"
 	) => {
-		const member = members.find((m) => m.id === memberId);
+		const member = members.find((m) => m._id === memberId);
 		member.role = newRole;
-		updateMember(member.id, member);
+		updateMember(member._id, member);
 
 		// 💡 If the changed member is the logged-in user, update their localStorage too
 		const loggedInUser = JSON.parse(
 			localStorage.getItem("islamify_logged_in_user") || "{}"
 		);
-		if (loggedInUser.id === memberId) {
+		if (loggedInUser._id === memberId) {
 			const updatedUser = {
 				...loggedInUser,
 				role: newRole,
@@ -377,15 +363,14 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 		// Log the activity
 		const roleChangeActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
+			
 			type: "change_role",
 			text: `Changed role for "${member.name}" (${member.email}) to ${newRole}`,
 			color: "purple",
 			adminName: user.name,
 			adminEmail: user.email,
 			adminRole: user.role,
-			memberId: member.id,
+			memberId: member._id,
 		};
 		saveAdminActivity(roleChangeActivity);
 
@@ -397,15 +382,14 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 	// Edit member handler
 	const handleEditMember = (
-		id: number,
+		id: string,
 		data: { name: string; email: string; phone: string }
 	) => {
 		updateMember(id, { ...data });
 
 		//create edit activity
 		const edit_member_activity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
+			
 			type: "edit_member",
 			text: `Edited details for "${data.name}" (${data.email})`,
 			color: "blue",
@@ -425,11 +409,11 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 	// For admin, find "self" as a member record, e.g., by email
 	const thisAdminMember = members.find(
-		(m) => m.email === user.email || m.id === user.id
+		(m) => m.email === user.email || m._id === user._id
 	);
 
 	// For loan, use sum of admin's contributions (like member dashboard logic)
-	const adminMemberId = thisAdminMember?.id ?? user.id;
+	const adminMemberId = thisAdminMember?._id ?? user._id;
 
 	return (
 		<>
@@ -515,48 +499,11 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 
 			{/* Search and Pagination Controls */}
 			<div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-				<div className="relative flex-1 max-w-md">
-					<Search
-						size={16}
-						className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
-					/>
-					{/* Custom input */}
-					<Input
-						className="pl-9 pr-8 h-9 py-[22px] rounded-md text-sm border-gray-300 dark:border-gray-900 focus-visible:ring-emerald-300"
-						placeholder="Search by name or email"
-						value={searchTerm}
-						onChange={(e) => {
-							setSearchTerm(e.target.value);
-						}}
-					/>
-					{/* Right icon: spinner or tick */}
-					<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
-						{searchStatus === "typing" ? (
-							<svg
-								className="animate-spin h-4 w-4 text-blue-400"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<circle
-									className="opacity-25"
-									cx="12"
-									cy="12"
-									r="10"
-									stroke="currentColor"
-									strokeWidth="4"
-								></circle>
-								<path
-									className="opacity-75"
-									fill="currentColor"
-									d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-								></path>
-							</svg>
-						) : searchStatus === "done" ? (
-							<Check size={16} className="text-emerald-600" />
-						) : null}
-					</div>
-				</div>
+				<SearchComponent
+					searchTerm={searchTerm}
+					searchStatus={searchStatus}
+					setSearchTerm={setSearchTerm}
+				/>
 				{viewMode && viewMode === "card" && totalMembersPages > 1 && (
 					<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 bg-white/90 flex-shrink-0">
 						<div className="flex items-center gap-2 text-sm">
@@ -603,7 +550,7 @@ const Members: React.FC<MemberProps> = ({ user, settings, members }) => {
 					<div className="flex flex-row flex-grow flex-wrap lg:justify-start sx:justify-center min-h-[400px] w-full">
 						{paginatedMembers.map((member, idx) => (
 							<div
-								key={member.id}
+								key={member._id}
 								className={
 									cardsShouldAnimate
 										? "animate-fade-in animate-scale-in"

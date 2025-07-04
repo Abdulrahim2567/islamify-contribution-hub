@@ -11,14 +11,14 @@ import type { Member } from "../../../types/types";
 
 interface RoleSelectProps {
 	member: Member;
-	onRoleChange: (id: number, newRole: "member" | "admin") => void;
+	onRoleChange: (id: string, newRole: "member" | "admin") => void;
 }
 
 const RoleSelect: React.FC<RoleSelectProps> = ({ member, onRoleChange }) => (
 	<Select
 		value={member.role}
 		onValueChange={(newRole) =>
-			onRoleChange(member.id, newRole as "member" | "admin")
+			onRoleChange(member._id, newRole as "member" | "admin")
 		}
 	>
 		<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-emerald-300/80 rounded-full uppercase font-semibold tracking-widest w-[100px] flex justify-center mx-auto hover:bg-gray-100 dark:hover:bg-emerald-200/10 dark:border-emerald-200/30">

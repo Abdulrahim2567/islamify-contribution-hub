@@ -2,7 +2,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/calculations";
 import React, { useState } from "react";
 import AdminRecentActivity from "../dashboard/AdminRecentActivity";
-import LoanApplication from "@/components/member/LoanApplication";
+import LoanApplication from "@/components/common/forms/LoanApplication";
 import { AnimatedClockIcon } from "@/components/ui/AnimatedClock";
 import { CreditCard } from "lucide-react";
 import AdminStatsCards from "../dashboard/AdminStatsCards";

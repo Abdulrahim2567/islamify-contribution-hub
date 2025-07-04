@@ -42,9 +42,9 @@ export interface RecentActivitiesContextProps {
 	refresh: () => void;
 	// ✅ new helper methods using state
 	getAllContributionsActivitiesForMember: (
-		memberId: number
+		memberId: string
 	) => ContributionRecordActivity[];
-	getMemberLoanActivitiesByMember: (memberId: number) => MemberLoanActivity[];
+	getMemberLoanActivitiesByMember: (memberId: string) => MemberLoanActivity[];
 }
 
 export const RecentActivitiesProvider = ({
@@ -120,7 +120,7 @@ export const RecentActivitiesProvider = ({
 		refresh();
 	};
 
-	const getAllContributionsActivitiesForMember = (memberId: number) =>
+	const getAllContributionsActivitiesForMember = (memberId: string) =>
 		memberContributionActivities.filter((a) => a.memberId === memberId);
 
 	const getMemberLoanActivitiesByMember = (memberId) =>

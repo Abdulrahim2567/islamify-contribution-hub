@@ -1,7 +1,7 @@
 // LoanApplication.tsx
 import React, { useState } from "react";
 import { Check, CreditCard, X } from "lucide-react";
-import { formatCurrency, getNowString } from "../../utils/calculations";
+import { formatCurrency, getNowString } from "@/utils/calculations";
 import { useToast } from "@/hooks/use-toast";
 import {
 	AdminActivityLog,
@@ -13,14 +13,14 @@ import {
 	saveMemberLoanActivity,
 } from "@/utils/recentActivitiesStorage";
 import { useLoanRequests } from "@/hooks/useLoanRequests";
-import { Input } from "../ui/input";
+import { Input } from "../../ui/input";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "../ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 
 interface LoanApplicationProps {
 	open: boolean;
@@ -64,17 +64,15 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 		}
 
 		const loanRequest: LoanRequest = {
-			id: Date.now().toString(),
 			dueDate: undefined,
 			paymentInterval: undefined,
 			paymentIntervalAmount: undefined,
 			nextPaymentDate: undefined,
 			nextPaymentAmount: undefined,
-			memberId: parseInt(memberId),
+			memberId: memberId,
 			memberName,
 			amount,
 			purpose: formData.reason,
-			requestDate: getNowString(),
 			status: "pending",
 		};
 
@@ -83,16 +81,13 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 		const memberActivity: MemberLoanActivity = {
 			type: "loan_request",
 			amount,
-			memberId: parseInt(memberId),
+			memberId: memberId,
 			memberName,
-			date: getNowString(),
 			performedBy: memberName,
 			description: formData.reason,
 		};
 
 		const adminActivity: AdminActivityLog = {
-			id: Date.now() + Math.random(),
-			timestamp: getNowString(),
 			type: "loan_request",
 			text: `Loan request of ${formatCurrency(
 				amount
@@ -101,7 +96,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({
 			adminName: memberName,
 			adminEmail: memberEmail,
 			adminRole: "member",
-			memberId: parseInt(memberId),
+			memberId: memberId,
 		};
 
 		saveMemberLoanActivity(memberActivity);

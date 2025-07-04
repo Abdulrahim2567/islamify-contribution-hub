@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 import type { Member } from "../types/types";
 
-
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 
@@ -34,9 +33,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
 	const [activeTab, setActiveTab] = useState("dashboard");
 
 	// For admin, find "self" as a member record, e.g., by email
-	const thisAdminMember = members.find(
-		(m) => m.email === user.email || m.id === user.id
-	);
+	const thisAdminMember = user
 
 	return (
 		<SidebarProvider>
@@ -83,7 +80,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
 							<Contributions thisMember={thisAdminMember} />
 						)}
 
-						{activeTab === "loans" && <Loan user={thisAdminMember} />}
+						{activeTab === "loans" && (
+							<Loan user={thisAdminMember} />
+						)}
 					</div>
 				</SidebarInset>
 			</div>

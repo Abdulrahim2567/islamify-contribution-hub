@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Info, ShieldCheck, Lock, Check } from "lucide-react";
 import { Member } from "@/types/types";
+import { useMembers } from "@/hooks/useMembers";
 
 interface ChangePasswordFormProps {
 	member: Member;
-	updateMember: (id: number, member: Member) => void;
 	onSuccess: (updatedMember: Member) => void;
 	onCancel: () => void;
 	onLogout: () => void;
@@ -23,11 +23,12 @@ interface ChangePasswordFormProps {
 
 const ChangePasswordForm = ({
 	member,
-	updateMember,
 	onSuccess,
 	onCancel,
 	onLogout,
 }: ChangePasswordFormProps) => {
+	const { updateMember } = useMembers();
+	const [isLoading, setIsLoading] = useState(false);
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [passwordError, setPasswordError] = useState("");
@@ -42,7 +43,7 @@ const ChangePasswordForm = ({
 	const passwordsMatch =
 		newPassword === confirmPassword && confirmPassword.length > 1;
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setPasswordError("");
 		if (newPassword.length < 6) {
@@ -69,15 +70,39 @@ const ChangePasswordForm = ({
 			password: newPassword,
 			needsPasswordChange: false,
 		};
-		updateMember(updatedMember.id, updatedMember);
 
-		toast({
-			title: "Password Updated",
-			description: "Your password has been changed successfully",
-		});
-		setNewPassword("");
-		setConfirmPassword("");
-		onSuccess(updatedMember);
+		setIsLoading(true);
+
+		const updateStatus = await updateMember(member._id, updatedMember);
+
+		if (updateStatus === "success") {
+			setIsLoading(false);
+			toast({
+				title: "Password Updated",
+				description: "Your password has been changed successfully.",
+				variant: "default",
+			});
+			onSuccess(updatedMember);
+		} else if (updateStatus === "deleted") {
+			setIsLoading(false);
+			toast({
+				title: "Session Expired",
+				description:
+					"Session Expired. You will be redirected.",
+				variant: "destructive",
+			});
+
+			// Clear any user state and redirect
+			// onLogout();
+			// onCancel(); // optionally close the form
+		} else {
+			setIsLoading(false);
+			toast({
+				title: "Update Failed",
+				description: "There was an error updating your password.",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
@@ -205,7 +230,10 @@ const ChangePasswordForm = ({
 								className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white transition-colors"
 								disabled={!canUpdate}
 							>
-								Update Password
+								{
+									isLoading ? "Updating..." : "Update Password"
+								}
+								
 							</Button>
 						</div>
 					</form>

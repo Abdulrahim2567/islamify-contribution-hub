@@ -165,7 +165,7 @@ const MembersPage = ({ currentUser }: MembersPageProps) => {
 					<div className="flex flex-row flex-grow flex-wrap lg:justify-start sm:justify-center min-h-[400px] w-full">
 						{paginatedMembers.map((member, idx) => (
 							<div
-								key={member.id}
+								key={member._id}
 								className={
 									cardsShouldAnimate
 										? "animate-fade-in animate-scale-in"

@@ -27,18 +27,19 @@ import {
 	PaginationNext,
 } from "@/components/ui/pagination";
 import { formatCurrency } from "@/utils/calculations";
+import { PaginationControls } from "./PaginationControls";
 
 interface MemberTableProps {
 	members: Member[];
 	currentUser: Member;
 	onView: (member: Member) => void;
-	onStatusToggle: (id: number) => void;
-	onLoanToggle: (id: number) => void;
-	onDelete: (id: number) => void;
+	onStatusToggle: (id: string) => void;
+	onLoanToggle: (id: string) => void;
+	onDelete: (id: string) => void;
 	searchTerm: string;
-	onRoleChange: (id: number, newRole: "member" | "admin") => void;
+	onRoleChange: (id: string, newRole: "member" | "admin") => void;
 	onEdit?: (
-		id: number,
+		id: string,
 		data: { name: string; email: string; phone: string }
 	) => void;
 }
@@ -54,7 +55,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 	onRoleChange,
 	onEdit,
 }) => {
-	const [deleteId, setDeleteId] = useState<number | null>(null);
+	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [editMember, setEditMember] = useState<Member | null>(null);
 	const [editOpen, setEditOpen] = useState(false);
 
@@ -82,7 +83,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 	}, [filteredMembers, currentPage, itemsPerPage]);
 
 	const handleEditSave = (
-		id: number,
+		id: string,
 		data: { name: string; email: string; phone: string }
 	) => {
 		if (onEdit) onEdit(id, data);
@@ -136,7 +137,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 
 							return (
 								<tr
-									key={member.id}
+									key={member._id}
 									className="hover:bg-gray-50 dark:hover:bg-blue-400/5 animate-fade-in cursor-pointer"
 									style={{
 										animationDelay: `${idx * 50}ms`,
@@ -177,7 +178,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 												value={member.role}
 												onValueChange={(newRole) =>
 													onRoleChange(
-														member.id,
+														member._id,
 														newRole as
 															| "member"
 															| "admin"
@@ -243,7 +244,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 													onClick={(e) => {
 														e.stopPropagation();
 														onStatusToggle(
-															member.id
+															member._id
 														);
 													}}
 													className="flex items-center space-x-1"
@@ -270,7 +271,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 												<button
 													onClick={(e) => {
 														e.stopPropagation();
-														onLoanToggle(member.id);
+														onLoanToggle(member._id);
 													}}
 													className="flex items-center space-x-1"
 												>
@@ -320,7 +321,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 															onClick={(e) => {
 																e.stopPropagation();
 																setDeleteId(
-																	member.id
+																	member._id
 																);
 															}}
 															className="text-red-600 hover:text-red-900"
@@ -331,14 +332,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
 														<DeleteMemberDialog
 															open={
 																deleteId ===
-																member.id
+																member._id
 															}
 															onOpenChange={(
 																open: boolean
 															) =>
 																setDeleteId(
 																	open
-																		? member.id
+																		? member._id
 																		: null
 																)
 															}
@@ -350,7 +351,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 																	null
 																);
 																onDelete(
-																	member.id
+																	member._id
 																);
 															}}
 														/>
@@ -364,7 +365,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 												{member.phone}
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300/80">
-												{member.joinDate}
+												{member.createdAt}
 											</td>
 										</>
 									)}
@@ -376,81 +377,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
 			</div>
 
 			{/* Pagination + Items per page */}
-			{totalPages > 1 && (
-				<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 bg-background dark:border-gray-900 flex-shrink-0">
-					<div className="flex items-center gap-2 text-sm">
-						<span className="text-gray-500">Items per page:</span>
-						<Select
-							value={String(itemsPerPage)}
-							onValueChange={(value) => {
-								setItemsPerPage(Number(value));
-								setCurrentPage(1);
-							}}
-						>
-							<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 text-blue-700 dark:bg-blue-300/5 dark:text-blue-400/80 rounded-full capitalize font-semibold tracking-widest w-[140px] hover:bg-blue-100 flex justify-center mx-auto">
-								<SelectValue />
-							</SelectTrigger>
-
-							<SelectContent side="top">
-								{[5, 10, 20, 50].map((value) => (
-									<SelectItem
-										key={value}
-										value={String(value)}
-									>
-										{value} / page
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-
-					<Pagination>
-						<PaginationContent>
-							<PaginationItem>
-								<PaginationPrevious
-									href="#"
-									aria-disabled={currentPage === 1}
-									tabIndex={currentPage === 1 ? -1 : 0}
-									onClick={(e) => {
-										e.preventDefault();
-										setCurrentPage((prev) =>
-											Math.max(1, prev - 1)
-										);
-									}}
-								/>
-							</PaginationItem>
-							{Array.from({ length: totalPages }).map((_, i) => (
-								<PaginationItem key={i}>
-									<PaginationLink
-										href="#"
-										isActive={currentPage === i + 1}
-										onClick={(e) => {
-											e.preventDefault();
-											setCurrentPage(i + 1);
-										}}
-									>
-										{i + 1}
-									</PaginationLink>
-								</PaginationItem>
-							))}
-							<PaginationItem>
-								<PaginationNext
-									href="#"
-									aria-disabled={currentPage === totalPages}
-									tabIndex={
-										currentPage === totalPages ? -1 : 0
-									}
-									onClick={(e) => {
-										e.preventDefault();
-										setCurrentPage((prev) =>
-											Math.min(totalPages, prev + 1)
-										);
-									}}
-								/>
-							</PaginationItem>
-						</PaginationContent>
-					</Pagination>
-				</div>
+			{totalPages > 0 && (
+				<PaginationControls
+					totalPages={totalPages}
+					itemsPerPage={itemsPerPage}
+					setCurrentPage={setCurrentPage}
+					currentPage={currentPage}
+					setItemsPerPage={setItemsPerPage}
+				/>
 			)}
 
 			<EditMemberDialog

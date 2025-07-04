@@ -9,7 +9,7 @@ import { AppSidebar } from "./AppSidebar";
 import MembersPage from "./member/MembersPage";
 import { useToast } from "@/hooks/use-toast";
 import MemberContributionHistory from "./member/MemberContributionHistory";
-import LoanApplication from "./member/LoanApplication";
+import LoanApplication from "@/components/common/forms/LoanApplication";
 import { formatCurrency } from "../utils/calculations";
 import { UserDropdown } from "./user-dropdown/UserDropdown";
 import { NotificationDropdown } from "./notifications/NotificationDropdown";
@@ -37,7 +37,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	onLogout,
 }) => {
 	const { getTotalContributionsByMember } = useContributions();
-	const { members, updateMember } = useMembers();
+	const { updateMember } = useMembers();
 	const {
 		getAllContributionsActivitiesForMember,
 		getMemberLoanActivitiesByMember,
@@ -53,35 +53,37 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 	const [activeTab, setActiveTab] = useState<string>("dashboard");
 	const [showLoanModal, setShowLoanModal] = useState(false);
 
+
+	
 	// Load member's loans
 
 	// Find current member record for up-to-date fields
-	const thisMember = members.find((m) => m.id === user.id);
+	const thisMember = user
 	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	// Fetch member's real contributions from localStorage recent activities
 
-	const totalContributions = getTotalContributionsByMember(user.id);
+	const totalContributions = getTotalContributionsByMember(user._id);
 	// Use settings for registration fee and loan multiplier
 	const registrationFee = thisMember.registrationFee;
 	const maxLoanAmount = totalContributions * settings.maxLoanMultiplier;
 	const canApplyForLoan =
 		thisMember?.canApplyForLoan && thisMember?.loanEligible;
 
-	const memberLoans = getLoanRequestsByMemberId(thisMember.id);
+	const memberLoans = getLoanRequestsByMemberId(thisMember._id);
 
 	// Check if member has pending loan application
 	const hasPendingLoan = memberLoans.some(
 		(loan) => loan.status === "pending"
 	);
 
-	const pendingRequests = getPendingLoanRequests(user.id);
-	const approvedRequests = getApprovedLoanRequests(user.id);
-	const rejectedRequests = getRejectedLoanRequests(user.id);
+	const pendingRequests = getPendingLoanRequests(user._id);
+	const approvedRequests = getApprovedLoanRequests(user._id);
+	const rejectedRequests = getRejectedLoanRequests(user._id);
 
-	const memberLoanActivities = getMemberLoanActivitiesByMember(thisMember.id);
+	const memberLoanActivities = getMemberLoanActivitiesByMember(thisMember._id);
 	const memberContributionActivities = getAllContributionsActivitiesForMember(
-		thisMember.id
+		thisMember._id
 	);
 
 	const renderContent = () => {
@@ -122,7 +124,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 							<LoanApplication
 								open={showLoanModal}
 								onOpenChange={setShowLoanModal}
-								memberId={user.id.toString()}
+								memberId={user._id.toString()}
 								memberName={user.name}
 								memberEmail={user.email}
 								maxAmount={maxLoanAmount}
@@ -141,7 +143,7 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 						{/* Contribution History */}
 						<div className="mt-8">
 							<MemberContributionHistory
-								memberId={user.id}
+								memberId={user._id}
 								memberName={user.name}
 							/>
 						</div>
@@ -225,20 +227,28 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
 								{/* RIGHT SIDE: User Menu */}
 								<div className="ml-auto relative flex">
-									<UserDropdown
-										user={user}
-										onLogout={onLogout}
-									/>
-									<NotificationDropdown
-										memberLoans={memberLoanActivities}
-										contributions={
-											memberContributionActivities
-										}
-										itemsPerPage={10}
-										user={user}
-										notifications={[]}
-										onUpdateReadNotifications={updateMember}
-									/>
+									{user && (
+										<>
+											<UserDropdown
+												user={user}
+												onLogout={onLogout}
+											/>
+											<NotificationDropdown
+												memberLoans={
+													memberLoanActivities
+												}
+												contributions={
+													memberContributionActivities
+												}
+												itemsPerPage={10}
+												user={user}
+												notifications={[]}
+												onUpdateReadNotifications={
+													updateMember
+												}
+											/>
+										</>
+									)}
 									<button
 										onClick={() => setSettingsOpen(true)}
 										className="ml-2 p-2 text-gray-500 hover:text-gray-700"

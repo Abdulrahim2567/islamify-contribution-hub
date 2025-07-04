@@ -14,9 +14,9 @@ export function readMembersFromStorage(): Member[] {
 }
 
 /** Get a member by their ID from localStorage. */
-export function getMemberById(memberId: number): Member | undefined {
+export function getMemberById(memberId: string): Member | undefined {
   const members = readMembersFromStorage();
-  return members.find(m => m.id === memberId);
+  return members.find(m => m._id === memberId);
 }
 
 
@@ -36,47 +36,47 @@ export function addMemberToStorage(member: Member): void {
 }
 
 //**Remove a member from localStorage by email. */
-export function deleteMemberFromStorage(memberId: number): void {
+export function deleteMemberFromStorage(memberId: string): void {
   const members = readMembersFromStorage();
-  const updatedMembers = members.filter(m => m.id !== memberId);
+  const updatedMembers = members.filter(m => m._id !== memberId);
   writeMembersToStorage(updatedMembers);
 }
 
 /** Update a member's loan eligibility in localStorage. */
-export function updateMemberLoanEligibility(memberId: number, eligible: boolean): void {
+export function updateMemberLoanEligibility(memberId: string, eligible: boolean): void {
   const members = readMembersFromStorage();
   const updatedMembers = members.map(m => 
-    m.id === memberId ? { ...m, loanEligible: eligible } : m
+    m._id === memberId ? { ...m, loanEligible: eligible } : m
   );
   writeMembersToStorage(updatedMembers);
 }
 
 
 /** Update a member's role in localStorage. */
-export function updateMemberRole(memberId: number, newRole: "admin" | "member"): void {
+export function updateMemberRole(memberId: string, newRole: "admin" | "member"): void {
   const members = readMembersFromStorage();
   const updatedMembers = members.map(m => 
-    m.id === memberId ? { ...m, role: newRole } : m
+    m._id === memberId ? { ...m, role: newRole } : m
   );
   writeMembersToStorage(updatedMembers);
 }
 
 //updateMemberActiveStatus
 /** Update a member's active status in localStorage. */
-export function updateMemberActiveStatus(memberId: number, isActive: boolean): void {
+export function updateMemberActiveStatus(memberId: string, isActive: boolean): void {
   const members = readMembersFromStorage();
   const updatedMembers = members.map(m => 
-    m.id === memberId ? { ...m, isActive } : m
+    m._id === memberId ? { ...m, isActive } : m
   );
   writeMembersToStorage(updatedMembers);
 }
 
 //updatememberInfo
 /** Update a member's information in localStorage. */
-export function updateMemberInfo(memberId: number, updatedInfo: Partial<Member>): void {
+export function updateMemberInfo(memberId: string, updatedInfo: Partial<Member>): void {
   const members = readMembersFromStorage();
   const updatedMembers = members.map(m => 
-    m.id === memberId ? { ...m, ...updatedInfo } : m
+    m._id === memberId ? { ...m, ...updatedInfo } : m
   );
   writeMembersToStorage(updatedMembers);
 }

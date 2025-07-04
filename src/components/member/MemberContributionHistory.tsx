@@ -12,7 +12,7 @@ const PER_PAGE = 10;
 type Activity = ContributionRecordActivity;
 
 interface MemberContributionHistoryProps {
-	memberId: number;
+	memberId: string;
 	memberName: string;
 }
 
@@ -27,7 +27,7 @@ const MemberContributionHistory = ({
 	
 
 	// Load activities from localStorage
-	const loadActivities = (memberId: number) => {
+	const loadActivities = (memberId: string) => {
 		setIsLoading(true);
 		try {
 			const stored = getAllContributionsActivitiesForMember(memberId);
@@ -61,7 +61,7 @@ const MemberContributionHistory = ({
 
 	// Filter for contributions for THIS member only (type: contribution && memberId matches)
 	const filtered = activities.sort(
-		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+		(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 	);
 
 	const totalCount = filtered.length;
@@ -119,7 +119,7 @@ const MemberContributionHistory = ({
 									? "bg-emerald-50/50 dark:bg-emerald-300/5"
 									: "hover:bg-gray-50 dark:hover:bg-emerald-400/5"
 							}`}
-							key={activity.date + idx}
+							key={activity.createdAt + idx}
 						>
 							<div className="rounded-full bg-emerald-100 dark:bg-emerald-400/5 w-11 h-11 flex items-center justify-center shadow">
 								<CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-300/80" />
@@ -140,7 +140,7 @@ const MemberContributionHistory = ({
 									{activity.description
 										? activity.description + " • "
 										: ""}
-									{new Date(activity.date).toLocaleString(
+									{new Date(activity.createdAt).toLocaleString(
 										undefined,
 										{
 											dateStyle: "medium",
@@ -162,7 +162,7 @@ const MemberContributionHistory = ({
 					))
 				)}
 			</div>
-			{maxPage > 1 && (
+			{maxPage > 0 && (
 				<div className="flex items-center justify-between px-6 py-3 bg-background border-t border-gray-100 dark:border-gray-900">
 					<button
 						disabled={currentPage === 1}

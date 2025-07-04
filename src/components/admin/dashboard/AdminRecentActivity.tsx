@@ -20,6 +20,8 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AdminActivityLog } from "@/types/types";
 import { colorMap } from "@/utils/colorMap";
+import SearchComponent from "@/components/common/Search";
+import { PaginationControls } from "@/components/common/PaginationControls";
 
 interface AdminRecentActivityProps {
 	activities: AdminActivityLog[];
@@ -88,47 +90,11 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 				</h2>
 				<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:min-w-[320px]">
 					{/* Search */}
-					<div className="relative w-full">
-						<Search
-							size={16}
-							className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
-						/>
-						<Input
-							className="pl-9 pr-8 h-9 py-[19px] rounded-md text-sm border border-gray-300 dark:border-gray-900 focus-visible:ring-emerald-300 w-full"
-							placeholder="Search by admin or type"
-							value={searchTerm}
-							onChange={(e) => {
-								setSearchTerm(e.target.value);
-								setActivityPage(1);
-							}}
-						/>
-						<div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 z-10">
-							{searchStatus === "typing" ? (
-								<svg
-									className="animate-spin h-4 w-4 text-blue-400"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-									></circle>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-									></path>
-								</svg>
-							) : searchStatus === "done" ? (
-								<Check size={16} className="text-blue-600" />
-							) : null}
-						</div>
-					</div>
+					<SearchComponent
+						searchTerm={searchTerm}
+						searchStatus={searchStatus}
+						setSearchTerm={setSearchTerm}
+					/>
 
 					{/* Date format toggle */}
 					<Select
@@ -256,92 +222,16 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({
 						</ol>
 					)}
 				</div>
-
+ 
 				{/* Pagination */}
 				{totalPages > 1 && (
-					<div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 py-3 px-4 border-t border-gray-100 dark:border-gray-900 bg-transparent flex-shrink-0">
-						{" "}
-						<div className="flex items-center gap-2 text-sm">
-							<span className="text-gray-500">
-								Items per page:
-							</span>
-							<Select
-								value={String(itemsPerPage)}
-								onValueChange={(value) => {
-									setItemsPerPage(Number(value));
-									setActivityPage(1);
-								}}
-							>
-								<SelectTrigger className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-400/5 text-blue-700 dark:text-blue-300/80 rounded-full capitalize font-semibold tracking-widest w-[150px] hover:bg-blue-100 flex justify-center dark:border-gray-900 dark:focus-visible:border-gray-900">
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent side="top">
-									{[5, 10, 20, 50].map((value) => (
-										<SelectItem
-											key={value}
-											value={String(value)}
-											className="hover:cursor-pointer text-gray-200 dark:text-gray-300/80"
-										>
-											{value} / page
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<Pagination>
-							<PaginationContent>
-								<PaginationItem>
-									<PaginationPrevious
-										href="#"
-										aria-disabled={activityPage === 1}
-										tabIndex={activityPage === 1 ? -1 : 0}
-										onClick={(e) => {
-											e.preventDefault();
-											setActivityPage((prev) =>
-												Math.max(1, prev - 1)
-											);
-										}}
-									/>
-								</PaginationItem>
-								{Array.from({ length: totalPages }).map(
-									(_, i) => (
-										<PaginationItem key={i}>
-											<PaginationLink
-												href="#"
-												isActive={
-													activityPage === i + 1
-												}
-												onClick={(e) => {
-													e.preventDefault();
-													setActivityPage(i + 1);
-												}}
-												className="hover:bg-blue-400/5 text-gray-800 dark:text-gray-300/80"
-											>
-												{i + 1}
-											</PaginationLink>
-										</PaginationItem>
-									)
-								)}
-								<PaginationItem>
-									<PaginationNext
-										href="#"
-										aria-disabled={
-											activityPage === totalPages
-										}
-										tabIndex={
-											activityPage === totalPages ? -1 : 0
-										}
-										onClick={(e) => {
-											e.preventDefault();
-											setActivityPage((prev) =>
-												Math.min(totalPages, prev + 1)
-											);
-										}}
-									/>
-								</PaginationItem>
-							</PaginationContent>
-						</Pagination>
-					</div>
+					<PaginationControls
+						totalPages={totalPages}
+						itemsPerPage={itemsPerPage}
+						setCurrentPage={setActivityPage}
+						currentPage={activityPage}
+						setItemsPerPage={setItemsPerPage}
+					/>
 				)}
 			</div>
 		</div>

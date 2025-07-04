@@ -20,15 +20,15 @@ export interface LoanRequestsContextProps {
 	// Derived state accessors using `loanRequests` state
 	getLoanRequestsById: (id: string) => LoanRequest | null;
 	getTotalLoanRequests: () => number;
-	getTotalLoanRequestsByMember: (memberId: number) => number;
+	getTotalLoanRequestsByMember: (memberId: string) => number;
 	getLoanRequestsByStatus: (
 		status: "pending" | "approved" | "rejected"
 	) => LoanRequest[];
-	getLoanRequestsByMemberId: (memberId: number) => LoanRequest[];
+	getLoanRequestsByMemberId: (memberId: string) => LoanRequest[];
 	getLoanRequestsByDateRange: (start: string, end: string) => LoanRequest[];
-	getPendingLoanRequests: (memberId?: number) => LoanRequest[];
-	getApprovedLoanRequests: (memberId?: number) => LoanRequest[];
-	getRejectedLoanRequests: (memberId?: number) => LoanRequest[];
+	getPendingLoanRequests: (memberId?: string) => LoanRequest[];
+	getApprovedLoanRequests: (memberId?: string) => LoanRequest[];
+	getRejectedLoanRequests: (memberId?: string) => LoanRequest[];
 }
 
 export const LoanRequestsProvider = ({ children }: { children: React.ReactNode }) => {
@@ -63,11 +63,11 @@ export const LoanRequestsProvider = ({ children }: { children: React.ReactNode }
 	};
 
 	// Derived accessors using `loanRequests` state
-	const getLoanRequestsById = (id: string) => loanRequests.find((l) => l.id === id) || null;
+	const getLoanRequestsById = (id: string) => loanRequests.find((l) => l._id === id) || null;
 
 	const getTotalLoanRequests = () => loanRequests.reduce((sum, l) => sum + l.amount, 0);
 
-	const getTotalLoanRequestsByMember = (memberId: number) =>
+	const getTotalLoanRequestsByMember = (memberId: string) =>
 		loanRequests
 			.filter((l) => l.memberId === memberId)
 			.reduce((sum, l) => sum + l.amount, 0);
@@ -75,7 +75,7 @@ export const LoanRequestsProvider = ({ children }: { children: React.ReactNode }
 	const getLoanRequestsByStatus = (status: "pending" | "approved" | "rejected") =>
 		loanRequests.filter((l) => l.status === status);
 
-	const getLoanRequestsByMemberId = (memberId: number) =>
+	const getLoanRequestsByMemberId = (memberId: string) =>
 		loanRequests.filter((l) => l.memberId === memberId);
 
 	const getLoanRequestsByDateRange = (start: string, end: string) => {
@@ -87,21 +87,21 @@ export const LoanRequestsProvider = ({ children }: { children: React.ReactNode }
 		});
 	};
 
-	const getPendingLoanRequests = (memberId?: number) =>
+	const getPendingLoanRequests = (memberId?: string) =>
 		loanRequests.filter(
 			(l) =>
 				l.status === "pending" &&
 				(memberId === undefined || l.memberId === memberId)
 		);
 
-	const getApprovedLoanRequests = (memberId?: number) =>
+	const getApprovedLoanRequests = (memberId?: string) =>
 		loanRequests.filter(
 			(l) =>
 				l.status === "approved" &&
 				(memberId === undefined || l.memberId === memberId)
 		);
 
-	const getRejectedLoanRequests = (memberId?: number) =>
+	const getRejectedLoanRequests = (memberId?: string) =>
 		loanRequests.filter(
 			(l) =>
 				l.status === "rejected" &&

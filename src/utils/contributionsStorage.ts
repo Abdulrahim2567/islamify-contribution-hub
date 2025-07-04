@@ -14,7 +14,7 @@ export const getContributions = (): Contribution[] => {
 	return data ? JSON.parse(data) : [];
 };
 
-export const getTotalMemberContributions = (memberId: number): number => {
+export const getTotalMemberContributions = (memberId: string): number => {
     const contributions = getContributions();
     return contributions
         .filter(contribution => contribution.memberId === memberId)
@@ -34,9 +34,9 @@ export const addContribution = (contribution: Contribution) => {
 };
 
 //update member contribution amount and details
-export const updateMemberContribution = (contributionId: number, updatedContribution: Contribution) => {
+export const updateMemberContribution = (contributionId: string, updatedContribution: Contribution) => {
     const contributions = getContributions();
-    const index = contributions.findIndex(contribution => Number(contribution.id) === Number(contributionId));
+    const index = contributions.findIndex(contribution => Number(contribution._id) === Number(contributionId));
     if (index !== -1) {
         contributions[index] = updatedContribution;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contributions));
@@ -44,9 +44,9 @@ export const updateMemberContribution = (contributionId: number, updatedContribu
 };
 
 //delete contribution
-export const deleteContribution = (contributionId: number) => {
+export const deleteContribution = (contributionId: string) => {
     const contributions = getContributions();
-    const filtered = contributions.filter(contribution => Number(contribution.id) !== Number(contributionId));
+    const filtered = contributions.filter(contribution => Number(contribution._id) !== Number(contributionId));
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
 };
 

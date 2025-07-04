@@ -22,7 +22,7 @@ export const clearMemberContributionActivities = () => {
     localStorage.removeItem(MEMBER_CONTRIBUTION_ACTIVITY_KEY);
 };
 
-export const getAllContributionsActivitiesForMember = (memberId: number): ContributionRecordActivity[] => {
+export const getAllContributionsActivitiesForMember = (memberId: string): ContributionRecordActivity[] => {
     const activities = getMemberContributionActivities();
     return activities.filter(activity => activity.memberId === memberId);
 };
@@ -73,7 +73,7 @@ export const getMemberLoanActivities = (): MemberLoanActivity[] => {
     return data ? JSON.parse(data) : [];
 };
 
-export const getMemberLoanActivitiesByMember = (memberId: number): MemberLoanActivity[] => {
+export const getMemberLoanActivitiesByMember = (memberId: string): MemberLoanActivity[] => {
 	const allActivities = getMemberLoanActivities()
     return allActivities.filter(activity => activity.memberId === memberId);
 }

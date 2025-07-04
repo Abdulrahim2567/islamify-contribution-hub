@@ -14,11 +14,11 @@ export const getLoanRequests = (): LoanRequest[] => {
 };
 export const getLoanRequestById = (id: string): LoanRequest | null => {
     const requests = getLoanRequests();
-    return requests.find((request) => request.id === id) || null;
+    return requests.find((request) => request._id === id) || null;
 };
 export const updateLoanRequest = (id: string, updatedRequest: LoanRequest) => {
     const requests = getLoanRequests();
-    const index = requests.findIndex((request) => request.id === id);
+    const index = requests.findIndex((request) => request._id === id);
     if (index !== -1) {
         requests[index] = updatedRequest;
         localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(requests));
@@ -26,7 +26,7 @@ export const updateLoanRequest = (id: string, updatedRequest: LoanRequest) => {
 };
 export const deleteLoanRequest = (id: string) => {
     const requests = getLoanRequests();
-    const filtered = requests.filter((request) => request.id !== id);
+    const filtered = requests.filter((request) => request._id !== id);
     localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(filtered));
 };
 export const clearLoanRequests = () => {
@@ -36,13 +36,13 @@ export const getTotalLoanAmount = (): number => {
     const requests = getLoanRequests();
     return requests.reduce((total, request) => total + request.amount, 0);
 };
-export const getTotalMemberLoanAmount = (memberId: number): number => {
+export const getTotalMemberLoanAmount = (memberId: string): number => {
     const requests = getLoanRequests();
     return requests
         .filter((request) => request.memberId === memberId)
         .reduce((total, request) => total + request.amount, 0);
 };
-export const getPendingLoanRequests = (memberId?: number): LoanRequest[] => {
+export const getPendingLoanRequests = (memberId?: string): LoanRequest[] => {
     const requests = getLoanRequests();
     return requests.filter((request) => {
         const isStatusMatch = request.status === "pending";
@@ -51,7 +51,7 @@ export const getPendingLoanRequests = (memberId?: number): LoanRequest[] => {
     });
 };
 
-export const getApprovedLoanRequests = (memberId?: number): LoanRequest[] => {
+export const getApprovedLoanRequests = (memberId?: string): LoanRequest[] => {
     const requests = getLoanRequests();
     return requests.filter((request) => {
         const isStatusMatch = request.status === "approved";
@@ -60,7 +60,7 @@ export const getApprovedLoanRequests = (memberId?: number): LoanRequest[] => {
     });
 };
 
-export const getRejectedLoanRequests = (memberId?: number): LoanRequest[] => {
+export const getRejectedLoanRequests = (memberId?: string): LoanRequest[] => {
     const requests = getLoanRequests();
     return requests.filter((request) => {
         const isStatusMatch = request.status === "rejected";
@@ -69,7 +69,7 @@ export const getRejectedLoanRequests = (memberId?: number): LoanRequest[] => {
     });
 };
 
-export const getLoanRequestsByMemberId = (memberId: number): LoanRequest[] => {
+export const getLoanRequestsByMemberId = (memberId: string): LoanRequest[] => {
     const requests = getLoanRequests();
     return requests.filter((request) => request.memberId === memberId);
 };

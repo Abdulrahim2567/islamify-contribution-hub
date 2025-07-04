@@ -59,15 +59,19 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
 					{/* RIGHT SIDE: User Menu */}
 					<div className="ml-auto relative flex">
-						<UserDropdown user={user} onLogout={onLogout} />
-						<NotificationDropdown
-							notifications={adminActivities}
-							itemsPerPage={10}
-							user={user}
-							memberLoans={memberLoanActivities}
-							contributions={memberContributionActivities}
-							onUpdateReadNotifications={updateMember}
-						/>
+						{user && (
+							<>
+								<UserDropdown user={user} onLogout={onLogout} />
+								<NotificationDropdown
+									notifications={adminActivities}
+									itemsPerPage={10}
+									user={user}
+									memberLoans={memberLoanActivities}
+									contributions={memberContributionActivities}
+									onUpdateReadNotifications={updateMember}
+								/>
+							</>
+						)}
 						<button
 							onClick={() => setSettingsOpen(true)}
 							className="ml-2 p-2 text-gray-500 hover:text-gray-700"
